@@ -26,7 +26,7 @@
   box-sizing: border-box;
 }
 
-.login_page_cover {
+.Admin-login-component-holder {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -34,6 +34,7 @@
   height: 100vh;
   background-color: var(--bg-color);
   font-family: Arial, sans-serif;
+  
 }
 
 .login-container {
@@ -77,64 +78,6 @@ h2 {
   border: 1px solid var(--button-bg-color);
 }
 
-.options-container {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin: 0.5rem 0;
-}
-
-.checkbox-container {
-  display: flex;
-  align-items: center;
-}
-
-.checkbox-container input[type="checkbox"] {
-  margin-right: 5px;
-  position: relative;
-  width: 20px;
-  height: 20px;
-  background-color: #1e2939;
-  border-radius: 4px;
-  appearance: none;
-}
-
-.checkbox-container input[type="checkbox"]:checked {
-  background-color: rgb(159, 239, 0);
-  border-color: rgb(159, 239, 0);
-}
-
-.checkbox-container input[type="checkbox"]::before {
-  content: '';
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  font-size: 16px;
-  color: transparent;
-}
-
-.checkbox-container input[type="checkbox"]:checked::before {
-  content: '✔';
-  color: rgb(0, 0, 0);
-}
-
-.RememberMeLabel {
-  color: #8799b5;
-}
-
-.forgot-password {
-  font-size: 0.9rem;
-  color: #8799b5;
-  text-decoration: none;
-  transition: .1s ease-in;
-}
-
-.forgot-password:hover {
-  color: rgb(159, 239, 0);
-  text-decoration: underline;
-}
-
 .login-button {
   width: 100%;
   padding: 0.75rem;
@@ -146,32 +89,55 @@ h2 {
   font-weight: 600;
   color: var(--button-text-color);
   cursor: pointer;
-  transition: 0.2s ease;
+  transition: .2s ease;
 }
 
 .login-button:hover {
   background-color: var(--button-hover-color);
 }
 
-.Signup p{
-  color:#8799b5 ;
+.theme-toggle {
+  position: absolute;
+  bottom: 20px;
+  right: 20px;
+  cursor: pointer;
 }
-.Signup{
-margin: 3% 0 0 0 ;
-  width: 100%;
-  align-items: center;
-  justify-content: start;
-  display: flex;
-  gap: 5px;
+
+.theme-toggle img {
+  width: 30px;
+  height: 30px;
 }
-.create-account-link{
-  color: rgb(159, 239, 0);
-  text-decoration: none;
-  font-weight: 400;
-  transition: .2s ease;
+
+.footer{
+  position: absolute;
+  bottom: 20px;
+  left: 43%;
+  cursor: pointer;
 }
-.create-account-link:hover{
-  color: rgb(144, 215, 0);
-  text-decoration: underline;
-  font-weight: 500;
+.footer p{
+  color: var(--text-color);
+}
+/* AdminLogin.css */
+.alert {
+  position: fixed;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  background-color: #ff4d4d; /* Red background for error alerts */
+  color: white;
+  padding: 10px 20px;
+  border-radius: 5px;
+  font-size: 16px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  animation: fadeOut 5s forwards;
+}
+
+@keyframes fadeOut {
+  0% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    bottom: -50px;
+  }
 }

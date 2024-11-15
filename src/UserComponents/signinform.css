@@ -1,0 +1,127 @@
+/* Overall container for the signup page */
+.signup-form-page {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100vw;
+    height: 100vh;
+    background-color: #121c2b; 
+    font-family: Arial, sans-serif;
+  }
+  
+  .signup-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background-color: #182232; /* Slightly lighter dark background */
+    padding: 30px;
+    color: #e0e0e0; /* Light text for dark background */
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    width: 100%;
+    max-width: 450px;
+  }
+  
+  /* Logo container */
+  .logo-container {
+    text-align: center;
+    margin-bottom: 20px;
+  }
+  
+  .logo {
+    width: 100px;
+    height: auto;
+  }
+  
+  /* Title styling */
+  h2 {
+    font-size: 24px;
+    font-weight: bold;
+    color: #e0e0e0; /* Light color for text */
+    margin-top: 10px;
+  }
+  
+  /* Form Input Fields */
+  .input-field {
+    width: 100%;
+    padding: 0.75rem;
+    margin: 0.5rem 0;
+    border: none;
+    border-radius: 4px;
+    background-color: var(--input-bg-color);
+    color: var(--text-color);
+    font-size: 1rem;
+  }
+  
+  .input-field:focus {
+    border-color: rgb(159,239,0); /* Green border on focus */
+    outline: none;
+  }
+  
+  /* Signup button */
+  .signup-button {
+    width: 100%;
+    padding: 12px;
+    background-color: rgb(159,239,0); /* Green background */
+    color: rgb(0, 0, 0);
+    font-size: 16px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+  }
+  
+  .signup-button:hover {
+    background-color: rgb(125, 187, 0); /* Darker green on hover */
+  }
+  
+  /* Link Styles */
+  .Login p{
+    color:#8799b5 ;
+  }
+  .Login{
+  margin: 3% 0 0 0 ;
+    width: 100%;
+    align-items: center;
+    justify-content: start;
+    display: flex;
+    gap: 5px;
+  }
+  
+  .login-link:hover {
+    text-decoration: underline;
+  }
+  .login-link{
+    color: rgb(159, 239, 0);
+    text-decoration: none;
+    font-weight: 400;
+    transition: .2s ease;
+  }
+  .login-link:hover{
+    color: rgb(144, 215, 0);
+    text-decoration: underline;
+    font-weight: 500;
+  }
+  
+  /* Add spacing between inputs and buttons */
+  .input-field, .signup-button {
+    margin-bottom: 15px;
+  }
+  
+  /* Media Queries for responsiveness */
+  @media (max-width: 600px) {
+    .signup-container {
+      padding: 20px;
+      max-width: 100%;
+    }
+  
+    .input-field, .signup-button {
+      max-width: 100%;
+    }
+  
+    h2 {
+      font-size: 20px;
+    }
+  }
+  
