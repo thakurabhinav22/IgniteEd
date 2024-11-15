@@ -6,6 +6,7 @@ import { auth, database } from "../src/Admin/firebase";
 import Swal from "sweetalert2";
 import Cookies from "js-cookie";
 import "./App.css";
+import { Link } from 'react-router-dom';
 
 function App() {
   const [email, setEmail] = useState('');
@@ -145,7 +146,7 @@ function App() {
         <button onClick={handleLogin} className="login-button">Login</button>
         <div className="Signup">
           <p>Don't Have an Account?</p>
-          <a href="/signin" className="create-account-link">Create one</a>
+          <Link to="/signin" className="create-account-link">Create one</Link>
         </div>
       </div>
     </div>

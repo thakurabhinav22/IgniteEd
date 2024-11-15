@@ -4,7 +4,7 @@ import { createUserWithEmailAndPassword } from "firebase/auth";
 import { ref, set } from "firebase/database";
 import { auth, database } from "../Admin/firebase";
 import Swal from "sweetalert2";
-
+import { Link } from "react-router-dom";
 import "./signinform.css";
 
 function SignUpForm() {
@@ -134,7 +134,7 @@ function SignUpForm() {
         </button>
         <div className="Login">
           <p>Already have an account?</p>
-          <a href="/" className="login-link">Login</a>
+          <Link to="/" className="login-link">Login</Link>
         </div>
       </div>
     </div>
