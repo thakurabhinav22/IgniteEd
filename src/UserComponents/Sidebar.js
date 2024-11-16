@@ -3,13 +3,13 @@ import './Sidebar.css';
 import { Link } from 'react-router-dom';
 import { FaHome, FaCertificate, FaQuestionCircle, FaUser } from 'react-icons/fa';
 
-function Sidebar() {
+function Sidebar({ userName,SurName,Branch }) {
   return (
     <div className="sidebar">
       <div className="profile">
         <img src="https://www.gravatar.com/avatar/0c7e6d76754563b76c56afdff6327d79?d=robohash" alt="Profile" className="profile-img" />
-        <h3>iamnotspidey</h3>
-        <p>Free Plan</p>
+        <h3>{userName} {SurName}</h3>
+        <p>{Branch}</p>
       </div>
       <nav>
         <Link to="/Dashboard" className="nav-item">

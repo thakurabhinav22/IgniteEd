@@ -1,0 +1,11 @@
+
+.dashboard-container{
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100vw;
+    height: 100vh;
+    background-color: #121c2b; 
+    font-family: Arial, sans-serif;
+  
+}

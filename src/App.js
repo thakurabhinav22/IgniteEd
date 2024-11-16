@@ -24,13 +24,13 @@ function App() {
 
   const handleLogin = () => {
     const authInstance = getAuth();
-
+  
     // Firebase sign-in attempt
     signInWithEmailAndPassword(authInstance, email, password)
       .then((userCredential) => {
         const user = userCredential.user;
         const userId = user.uid;
-
+  
         // Check if the user exists in Firebase Realtime Database
         const adminRef = ref(database, `user/${userId}`);
         get(adminRef)
@@ -46,7 +46,7 @@ function App() {
                   // Store a session cookie (expires when the browser is closed)
                   Cookies.set('userSessionCred', userId, { expires: 1, secure: true, sameSite: 'Strict' });
                 }
-
+  
                 // Redirect to Dashboard
                 navigate('/Dashboard');
               }
@@ -60,10 +60,22 @@ function App() {
           });
       })
       .catch((error) => {
+        let errorMessage = "Invalid credentials.";
+  
+        // Check for specific Firebase error codes
+        if (error.code === "auth/user-disabled") {
+          errorMessage = "User banned from using this product.";
+        } else if (error.code === "auth/user-not-found") {
+          errorMessage = "No account found with this email.";
+        } else if (error.code === "auth/wrong-password") {
+          errorMessage = "Incorrect password.";
+        }
+  
         console.error("Login failed:", error);
-        showAlertMessage("Invalid credentials.", "error");
+        showAlertMessage(errorMessage, "error");
       });
   };
+  
 
   const handleForgotPassword = () => {
     if (email === '') {

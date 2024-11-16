@@ -77,7 +77,7 @@
   }
   
   /* Link Styles */
-  .Login p{
+  p{
     color:#8799b5 ;
   }
   .Login{
@@ -108,20 +108,42 @@
   .input-field, .signup-button {
     margin-bottom: 15px;
   }
-  
-  /* Media Queries for responsiveness */
-  @media (max-width: 600px) {
-    .signup-container {
-      padding: 20px;
-      max-width: 100%;
-    }
-  
-    .input-field, .signup-button {
-      max-width: 100%;
-    }
-  
-    h2 {
-      font-size: 20px;
-    }
+  select{
+    width: 100%;
+  }
+  .optionDiv{
+    width: 100%;
+  }
+  input[type="checkbox"] {
+    margin-right: 5px;
+    position: relative;
+    width: 20px;
+    height: 20px;
+    background-color: #1e2939;
+    border-radius: 4px;
+    appearance: none;
   }
   
+  input[type="checkbox"]:checked {
+    background-color: rgb(159, 239, 0);
+    border-color: rgb(159, 239, 0);
+  }
+  
+  input[type="checkbox"]::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 16px;
+    color: transparent;
+  }
+  
+input[type="checkbox"]:checked::before {
+    content: '✔';
+    color: rgb(0, 0, 0);
+  }
+  .showpasswordText{
+    color: #8799b5;
+    display: inline;
+  }
