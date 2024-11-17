@@ -1,54 +1,59 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { getAuth, signInWithEmailAndPassword, sendPasswordResetEmail } from "firebase/auth";
+import {
+  getAuth,
+  signInWithEmailAndPassword,
+  sendPasswordResetEmail,
+} from "firebase/auth";
 import { ref, get } from "firebase/database";
 import { auth, database } from "../src/Admin/firebase";
 import Swal from "sweetalert2";
 import Cookies from "js-cookie";
 import "./App.css";
-import { Link } from 'react-router-dom';
+import { Link } from "react-router-dom";
+import logo from "../src/icons/logo.png";
 
 function App() {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [rememberMe, setRememberMe] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
-    // Check if user is already logged in using cookies
-    const userSession = Cookies.get('userSessionCred');
+    const userSession = Cookies.get("userSessionCred");
     if (userSession) {
-      navigate('/Dashboard'); // Redirect to Dashboard if cookie exists
+      navigate("/Dashboard");
     }
   }, [navigate]);
 
   const handleLogin = () => {
     const authInstance = getAuth();
-  
-    // Firebase sign-in attempt
+
     signInWithEmailAndPassword(authInstance, email, password)
       .then((userCredential) => {
         const user = userCredential.user;
         const userId = user.uid;
-  
-        // Check if the user exists in Firebase Realtime Database
+
         const adminRef = ref(database, `user/${userId}`);
         get(adminRef)
           .then((snapshot) => {
             if (snapshot.exists()) {
               const userData = snapshot.val();
               if (userData) {
-                // Set cookie based on Remember Me checkbox
                 if (rememberMe) {
-                  // Store a cookie that expires in 1 year
-                  Cookies.set('userSessionCred', userId, { expires: 365, secure: true, sameSite: 'Strict' });
+                  Cookies.set("userSessionCred", userId, {
+                    expires: 365,
+                    secure: true,
+                    sameSite: "Strict",
+                  });
                 } else {
-                  // Store a session cookie (expires when the browser is closed)
-                  Cookies.set('userSessionCred', userId, { expires: 1, secure: true, sameSite: 'Strict' });
+                  Cookies.set("userSessionCred", userId, {
+                    expires: 1,
+                    secure: true,
+                    sameSite: "Strict",
+                  });
                 }
-  
-                // Redirect to Dashboard
-                navigate('/Dashboard');
+                navigate("/Dashboard");
               }
             } else {
               showAlertMessage("Account not found", "error");
@@ -61,7 +66,7 @@ function App() {
       })
       .catch((error) => {
         let errorMessage = "Invalid credentials.";
-  
+
         // Check for specific Firebase error codes
         if (error.code === "auth/user-disabled") {
           errorMessage = "User banned from using this product.";
@@ -70,15 +75,14 @@ function App() {
         } else if (error.code === "auth/wrong-password") {
           errorMessage = "Incorrect password.";
         }
-  
+
         console.error("Login failed:", error);
         showAlertMessage(errorMessage, "error");
       });
   };
-  
 
   const handleForgotPassword = () => {
-    if (email === '') {
+    if (email === "") {
       showAlertMessage("Please enter your email address first.", "warning");
       return;
     }
@@ -86,7 +90,10 @@ function App() {
     const authInstance = getAuth();
     sendPasswordResetEmail(authInstance, email)
       .then(() => {
-        showAlertMessage("Password reset email sent! Check your inbox.", "success");
+        showAlertMessage(
+          "Password reset email sent! Check your inbox.",
+          "success"
+        );
       })
       .catch((error) => {
         let errorMessage = "An error occurred. Please try again later.";
@@ -101,7 +108,7 @@ function App() {
     Swal.fire({
       title: message,
       icon: type,
-      position: 'top',
+      position: "top",
       toast: true,
       showConfirmButton: false,
       timer: 5000,
@@ -114,10 +121,12 @@ function App() {
       <div className="login-container">
         <div className="logo-container">
           <img
-            src="https://account.hackthebox.com/images/logos/logo-htb.svg"
+            src={logo}
             alt="Logo"
             className="logo"
+            style={{ width: "150px" }}
           />
+
           <h2>Login to your Account</h2>
         </div>
         <input
@@ -155,10 +164,14 @@ function App() {
             Forgot Password?
           </a>
         </div>
-        <button onClick={handleLogin} className="login-button">Login</button>
+        <button onClick={handleLogin} className="login-button">
+          Login
+        </button>
         <div className="Signup">
           <p>Don't Have an Account?</p>
-          <Link to="/signin" className="create-account-link">Create one</Link>
+          <Link to="/signin" className="create-account-link">
+            Create one
+          </Link>
         </div>
       </div>
     </div>

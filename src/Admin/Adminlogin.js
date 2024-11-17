@@ -8,6 +8,7 @@ import Swal from "sweetalert2";
 import './AdminLogin.css';
 import lightModeIcon from '../icons/lightMode.svg';
 import darkModeIcon from '../icons/darkMode.svg';
+import logo from "../icons/logo.png"
 
 function AdminLogin() {
   const [username, setUsername] = useState('');
@@ -88,7 +89,7 @@ function AdminLogin() {
 
       <div className="login-container">
         <div className="logo-container">
-          <img src="https://account.hackthebox.com/images/logos/logo-htb.svg" alt="Logo" className="logo" />
+          <img src={logo} alt="Logo" className="logo" style={{width : "150px"}}/>
           <h2>Login As Administrator</h2>
         </div>
         <input
