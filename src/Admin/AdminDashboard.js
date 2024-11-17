@@ -1,18 +1,22 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { ref, get } from "firebase/database";
 import { database } from "./firebase";
 import Cookies from "js-cookie";
 import Swal from "sweetalert2";
+import "./AdminDashboard.css"
+import AdminSidebar from "./adminSideBar";
 
-function Dashboard() {
+function AdminDashboard() {
   const navigate = useNavigate();
+  const [adminName, setAdminName] = useState("");
+  const [adminRole, setAdminRole] = useState("");
 
   useEffect(() => {
-    const userId = Cookies.get("userSessionCred");
+    document.title = "TheLearnMax - Admin Dashboard";
+    const userId = Cookies.get("userSessionCredAd");
 
     if (!userId) {
-      // No cookie, redirect to login
       navigate("/Admin");
       return;
     }
@@ -23,15 +27,13 @@ function Dashboard() {
         if (snapshot.exists()) {
           const userData = snapshot.val();
           if (userData.isAdmin) {
-            // Admin access granted
-            // alert("Welcome");
+            setAdminName(userData.Name || "Admin");
+            setAdminRole(userData.Role || "Administrator");
           } else {
-            // Not an admin, show session expired alert and logout
             showSessionExpiredMessage("Something Went Wrong. Please Login Again");
           }
         } else {
-          // User data not found, show session expired alert and logout
-          showSessionExpiredMessage("User data not found.");
+          showSessionExpiredMessage("Invalid Admin Session.");
         }
       })
       .catch((error) => {
@@ -42,24 +44,24 @@ function Dashboard() {
 
   const showSessionExpiredMessage = (errorMessage) => {
     Swal.fire({
-      title: "Error",
-      text: errorMessage || "Your session has expired due to some reason. Please log in again.",
+      title: errorMessage,
       icon: "error",
-      showConfirmButton: true,
-      timer: 5000, // Alert will close after 5 seconds
+      position: 'top',
+      toast: true,
+      showConfirmButton: false,
+      timer: 5000,
+      timerProgressBar: true,
     }).then(() => {
-      // Clear cookie and redirect to login after the alert
-      Cookies.remove("userSessionCred");
+      Cookies.remove("userSessionCredAd");
       navigate("/Admin");
     });
   };
 
   return (
-    <div>
-      <h1>Welcome to the Admin Dashboard</h1>
-      {/* Dashboard content goes here */}
+    <div className="Admin-page-cover">
+      <AdminSidebar AdminName={adminName} Role={adminRole} />
     </div>
   );
 }
 
-export default Dashboard;
+export default AdminDashboard;

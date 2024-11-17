@@ -6,6 +6,7 @@ import { useNavigate } from "react-router-dom"; // Import useNavigate
 import Sidebar from "../UserComponents/Sidebar";
 import "./Dashboard.css";
 import Swal from "sweetalert2";
+import DashboardContent from "./DashboardContent";
 
 function Dashboard() {
   const [userName, setUserName] = useState("");
@@ -28,7 +29,7 @@ function Dashboard() {
   };
 
   useEffect(() => {
-    // Get the user ID from the cookie
+    document.title = "TheLearnMax - Dashboard";
     const userId = Cookies.get("userSessionCred");
     if (!userId) {
       // If there's no userId in the cookie, redirect to the login page
@@ -74,6 +75,7 @@ function Dashboard() {
     <div className="dashboard-container">
       {/* Pass userName, SurName, and Branch as props */}
       <Sidebar userName={userName} SurName={Surname} Branch={userBranch} />
+      <DashboardContent/>
     </div>
   );
 }

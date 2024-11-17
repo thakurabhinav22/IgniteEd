@@ -8,7 +8,7 @@ import Swal from "sweetalert2";
 import './AdminLogin.css';
 import lightModeIcon from '../icons/lightMode.svg';
 import darkModeIcon from '../icons/darkMode.svg';
-import logo from "../icons/logo.png"
+import logo from "../icons/logo.png";
 
 function AdminLogin() {
   const [username, setUsername] = useState('');
@@ -17,19 +17,32 @@ function AdminLogin() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    const userId = Cookies.get('userSessionCred');
+    // Set the page title
+    document.title = "LearnMax - Admin Login";
+
+    // Check for cookie and validate admin status
+    const userId = Cookies.get('userSessionCredAd');
     if (userId) {
       const adminRef = ref(database, `admin/${userId}`);
-      get(adminRef).then((snapshot) => {
-        if (snapshot.exists()) {
-          const userData = snapshot.val();
-          if (userData && userData.isAdmin) {
-            navigate('/Admin/Dashboard');
+      get(adminRef)
+        .then((snapshot) => {
+          if (snapshot.exists()) {
+            const userData = snapshot.val();
+            if (userData?.isAdmin) {
+              navigate('/Admin/Dashboard'); // Redirect to dashboard if admin
+            } else {
+              navigate('/Admin'); // Redirect to login if not admin
+            }
+          } else {
+            Cookies.remove('userSessionCredAd'); // Remove invalid cookie
+            navigate('/Admin');
           }
-        }
-      }).catch((error) => {
-        console.error('Error checking user admin status:', error);
-      });
+        })
+        .catch((error) => {
+          console.error('Error verifying admin status:', error);
+          Cookies.remove('userSessionCredAd'); // Remove cookie on error
+          navigate('/Admin');
+        });
     }
   }, [navigate]);
 
@@ -42,26 +55,33 @@ function AdminLogin() {
         const userId = user.uid;
 
         const adminRef = ref(database, `admin/`);
-        get(adminRef).then((snapshot) => {
-          if (snapshot.exists()) {
-            const allAdminData = snapshot.val();
-            const userData = allAdminData[userId];
+        get(adminRef)
+          .then((snapshot) => {
+            if (snapshot.exists()) {
+              const allAdminData = snapshot.val();
+              const userData = allAdminData[userId];
 
-            if (userData && userData.isAdmin) {
-              Cookies.set('userSessionCred', userId, { secure: true, sameSite: 'Strict' });
-              navigate('/Admin/Dashboard');
+              if (userData?.isAdmin) {
+                Cookies.set('userSessionCredAd', userId, { secure: true, sameSite: 'Strict' });
+                navigate('/Admin/Dashboard');
+              } else {
+                showAlertMessage("Access denied: Admins only", "error");
+              }
             } else {
-              showAlertMessage("Access denied: Admins only", "error");
+              showAlertMessage("Error: No admin data found.", "error");
             }
-          } else {
-            showAlertMessage("Error: No admin data found.", "error");
-          }
-        }).catch(() => {
-          showAlertMessage("Error retrieving data from Firebase", "error");
-        });
+          })
+          .catch(() => {
+            showAlertMessage("Error retrieving data from Firebase", "error");
+          });
       })
       .catch((error) => {
-        showAlertMessage(error.code === 'auth/invalid-credential' ? 'Invalide Credential' : 'An error occurred during login', "error");
+        showAlertMessage(
+          error.code === 'auth/invalid-credential'
+            ? 'Invalid Credential'
+            : 'An error occurred during login',
+          "error"
+        );
       });
   };
 
@@ -72,9 +92,8 @@ function AdminLogin() {
       position: 'top',
       toast: true,
       showConfirmButton: false,
-      timer: 5000,  
+      timer: 5000,
       timerProgressBar: true,
-      
     });
   };
 
@@ -84,12 +103,10 @@ function AdminLogin() {
   };
 
   return (
-    <>
-        <div className = "Admin-login-component-holder">
-
+    <div className="Admin-login-component-holder">
       <div className="login-container">
         <div className="logo-container">
-          <img src={logo} alt="Logo" className="logo" style={{width : "150px"}}/>
+          <img src={logo} alt="Logo" className="logo" style={{ width: "150px" }} />
           <h2>Login As Administrator</h2>
         </div>
         <input
@@ -98,22 +115,23 @@ function AdminLogin() {
           value={username}
           onChange={(e) => setUsername(e.target.value)}
           className="input-field"
-          />
+        />
         <input
           type="password"
           placeholder="Password"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           className="input-field"
-          />
-        <button onClick={handleLogin} className="login-button">Login</button>
+        />
+        <button onClick={handleLogin} className="login-button">
+          Login
+        </button>
       </div>
 
       <div className="theme-toggle" onClick={toggleTheme}>
         <img src={isDarkMode ? lightModeIcon : darkModeIcon} alt="Theme Toggle" />
       </div>
-          </div>
-    </>
+    </div>
   );
 }
 

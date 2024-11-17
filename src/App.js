@@ -20,6 +20,7 @@ function App() {
   const navigate = useNavigate();
 
   useEffect(() => {
+    document.title = "LearnMax - Login";
     const userSession = Cookies.get("userSessionCred");
     if (userSession) {
       navigate("/Dashboard");
@@ -48,7 +49,6 @@ function App() {
                   });
                 } else {
                   Cookies.set("userSessionCred", userId, {
-                    expires: 1,
                     secure: true,
                     sameSite: "Strict",
                   });

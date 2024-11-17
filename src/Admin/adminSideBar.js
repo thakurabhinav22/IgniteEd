@@ -1,15 +1,19 @@
-import React from 'react';
-import './Sidebar.css';
-import { Link } from 'react-router-dom';
-import { FaHome, FaCertificate, FaQuestionCircle, FaUser } from 'react-icons/fa';
+import React from "react";
+import "./AdminSidebar.css";
+import { Link } from "react-router-dom";
+import { FaHome, FaCertificate, FaQuestionCircle, FaUser } from "react-icons/fa";
 
-function Sidebar({ userName,SurName,Branch }) {
+function AdminSidebar({ AdminName, Role }) {
   return (
     <div className="sidebar">
       <div className="profile">
-        <img src="https://www.gravatar.com/avatar/0c7e6d76754563b76c56afdff6327d79?d=robohash" alt="Profile" className="profile-img" />
-        <h3>{userName || "Loading..."} {SurName || ""}</h3>
-        <p>{Branch || "Loading..."}</p>
+        <img
+          src="https://thumbs.dreamstime.com/b/admin-user-icon-account-has-virtually-unlimited-access-to-all-programs-isolated-background-vector-illustration-322126763.jpg"
+          alt="Profile"
+          className="profile-img"
+        />
+        <h3>{AdminName || "Loading..."}</h3>
+        <p>{"Role: "+Role || "Loading..."}</p>
       </div>
       <nav>
         <Link to="/Dashboard" className="nav-item">
@@ -28,13 +32,12 @@ function Sidebar({ userName,SurName,Branch }) {
           <FaUser className="nav-icon" />
           <span>Paths</span>
         </Link>
-        {/* Add more navigation items here */}
       </nav>
       <div className="dark-mode">
-        <p>Subscribe now!</p>
+        <p>Logout</p>
       </div>
     </div>
   );
 }
 
-export default Sidebar;
+export default AdminSidebar;
