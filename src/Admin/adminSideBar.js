@@ -1,9 +1,19 @@
 import React from "react";
+import "boxicons"; 
 import "./AdminSidebar.css";
-import { Link } from "react-router-dom";
-import { FaHome, FaCertificate, FaQuestionCircle, FaUser } from "react-icons/fa";
+import { Link, Navigate } from "react-router-dom";
+import { FaHome} from "react-icons/fa";
+import { useNavigate } from "react-router-dom"; 
+
 
 function AdminSidebar({ AdminName, Role }) {
+  const navigate = useNavigate();
+  const handleLogout = () => {
+    document.cookie = "userSessionCredAd=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/";   
+    navigate("/Admin/");
+  };
+
+  
   return (
     <div className="sidebar">
       <div className="profile">
@@ -13,27 +23,31 @@ function AdminSidebar({ AdminName, Role }) {
           className="profile-img"
         />
         <h3>{AdminName || "Loading..."}</h3>
-        <p>{"Role: "+Role || "Loading..."}</p>
+        <p>{Role || "Loading..."}</p>
       </div>
       <nav>
-        <Link to="/Dashboard" className="nav-item">
-          <FaHome className="nav-icon" />
+        <Link to="/Admin/Dashboard" className="nav-item">
+        <box-icon type='solid' color="white" name='home'></box-icon>
           <span>Dashboard</span>
         </Link>
-        <Link to="/exams" className="nav-item">
-          <FaCertificate className="nav-icon" />
-          <span>Exams</span>
+        <Link to="/Admin/CreateCourse" className="nav-item">
+          <box-icon type="solid" name="file-plus" color="white" className="nav-icon" />
+          <span>Create Course</span>
         </Link>
-        <Link to="/modules" className="nav-item">
-          <FaQuestionCircle className="nav-icon" />
+        <Link to="#" className="nav-item">
+          <box-icon type="solid" name="book-bookmark" color="white" className="nav-icon" />
           <span>Modules</span>
         </Link>
-        <Link to="/paths" className="nav-item">
-          <FaUser className="nav-icon" />
-          <span>Paths</span>
+        <Link to="#" className="nav-item">
+          <box-icon type="solid" name="user-plus" color="white" className="nav-icon" />
+          <span>Add Team</span>
+        </Link>
+        <Link to="#" className="nav-item">
+          <box-icon type="solid" name="bell-plus" color="white" className="nav-icon" />
+          <span>Create Announcement</span>
         </Link>
       </nav>
-      <div className="dark-mode">
+      <div className="logout" onClick={handleLogout}>
         <p>Logout</p>
       </div>
     </div>

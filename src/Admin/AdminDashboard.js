@@ -6,6 +6,7 @@ import Cookies from "js-cookie";
 import Swal from "sweetalert2";
 import "./AdminDashboard.css"
 import AdminSidebar from "./adminSideBar";
+import AdminDashboardContent from "./AdminDashboardContent";
 
 function AdminDashboard() {
   const navigate = useNavigate();
@@ -60,6 +61,7 @@ function AdminDashboard() {
   return (
     <div className="Admin-page-cover">
       <AdminSidebar AdminName={adminName} Role={adminRole} />
+      <AdminDashboardContent/>
     </div>
   );
 }

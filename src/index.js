@@ -8,6 +8,7 @@ import reportWebVitals from './reportWebVitals';
 import { createBrowserRouter, RouterProvider } from 'react-router-dom';
 import Dashboard from './UserComponents/Dashboard';
 import SignUpForm from './UserComponents/SignupForm';
+import CreateCourse from './Admin/CreateCourse';
 
 
 const router = createBrowserRouter([
@@ -22,6 +23,10 @@ const router = createBrowserRouter([
   {
     path: "/Admin/Dashboard",
     element: <AdminDashboard />,
+  },
+  {
+    path: "/Admin/CreateCourse",
+    element: <CreateCourse />,
   },
   {
     path: "/Dashboard",
