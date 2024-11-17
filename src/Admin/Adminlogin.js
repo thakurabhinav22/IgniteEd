@@ -48,7 +48,7 @@ function AdminLogin() {
             const userData = allAdminData[userId];
 
             if (userData && userData.isAdmin) {
-              Cookies.set('userSessionCred', userId, { expires: 1, secure: true, sameSite: 'Strict' });
+              Cookies.set('userSessionCred', userId, { secure: true, sameSite: 'Strict' });
               navigate('/Admin/Dashboard');
             } else {
               showAlertMessage("Access denied: Admins only", "error");
