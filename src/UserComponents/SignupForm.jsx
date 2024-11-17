@@ -6,6 +6,7 @@ import { auth, database } from "../Admin/firebase";
 import Swal from "sweetalert2";
 import { Link } from "react-router-dom";
 import "./signinform.css";
+import logo from '../icons/logo.png'
 
 function SignUpForm() {
   const [name, setName] = useState("");
@@ -136,9 +137,10 @@ function SignUpForm() {
       <div className="signup-container">
         <div className="logo-container">
           <img
-            src="https://account.hackthebox.com/images/logos/logo-htb.svg"
+            src={logo}
             alt="Logo"
             className="logo"
+            style={{width : "150px"}}
           />
           <h2>Create your Account</h2>
         </div>
