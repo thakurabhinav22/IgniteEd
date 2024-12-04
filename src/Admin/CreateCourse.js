@@ -2,13 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Cookies from "js-cookie";
 import Swal from "sweetalert2";
-import {
-  FaFolderOpen,
-  FaFilePdf,
-  FaTrashAlt,
-  FaEye,
-  FaTimes,
-} from "react-icons/fa";
+import { FaFolderOpen, FaFilePdf, FaTrashAlt, FaEye, FaTimes } from "react-icons/fa";
 import AdminSidebar from "./adminSideBar";
 import { pdfjs } from "react-pdf";
 import { GoogleGenerativeAI } from "@google/generative-ai";
@@ -18,7 +12,7 @@ import "./CreateCourse.css";
 pdfjs.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.min.js`;
 
 // Initialize Google AI Model
-const API_KEY = "AIzaSyCWc15VkYtEbKsP6J3_8w1WhyPhzV1xpe0"; // Replace with your actual API key
+const API_KEY = "AIzaSyCWc15VkYtEbKsP6J3_8w1WhyPhzV1xpe0"; // Use environment variable for API key
 const genAI = new GoogleGenerativeAI(API_KEY);
 const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
@@ -275,51 +269,52 @@ export default function CreateCourse() {
             onClick={handleCreateCourse}
             disabled={isProcessing}
           >
-            {isProcessing ? "Generating..." : "Create Course"}
+            {isProcessing ? "Creating..." : "Generate Course"}
           </button>
         )}
-
-        {viewPdfContent && (
-          <div className="pdf-content-overlay">
-            <div className="pdf-content-box">
-              <button className="close-button" onClick={closeViewPdf}>
-                <FaTimes />
-              </button>
-              <div className="pdf-content-text">{viewPdfContent}</div>
-            </div>
-          </div>
-        )}
-
-        {repoPopup && (
-          <div className="repo-popup">
-            <div className="repo-popup-content">
-              <button onClick={toggleRepoPopup} className="close-button">
-                <FaTimes />
-              </button>
-              <h2>Select Courses from Repository</h2>
-              <ul>
-                {repoDummyData.map((course) => (
-                  <li key={course.name}>
-                    <input
-                      type="checkbox"
-                      checked={repoSelected.includes(course.name)}
-                      onChange={() => handleRepoSelection(course.name)}
-                    />
-                    {course.name}
-                  </li>
-                ))}
-              </ul>
-              <button
-                className="add-courses-button"
-                onClick={addSelectedToPdfList}
-              >
-                Add Selected
-              </button>
-              {/* <button onClick={toggleRepoPopup}>Cancel</button> */}
-            </div>
-          </div>
-        )}
       </div>
+
+      {/* Repository Popup */}
+      {repoPopup && (
+        <div className="repo-popup">
+          <div className="repo-popup-content">
+            <h2>Select Courses from Repository</h2>
+            <ul>
+              {repoDummyData.map((repo) => (
+                <li key={repo.name}>
+                  <input
+                    type="checkbox"
+                    checked={repoSelected.includes(repo.name)}
+                    onChange={() => handleRepoSelection(repo.name)}
+                  />
+                  {repo.name}
+                </li>
+              ))}
+            </ul>
+            <div className="popup-actions">
+              <button onClick={addSelectedToPdfList}>Add Selected Courses</button>
+              <button onClick={toggleRepoPopup}>Close</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* PDF View Modal */}
+      {viewPdfContent && (
+        <div className="pdf-view-modal">
+          <div className="modal-content">
+            <h2>PDF Content</h2>
+            <div className="modal-text">
+              <pre>{viewPdfContent}</pre>
+            </div>
+            <FaTimes
+              className="close-modal"
+              onClick={closeViewPdf}
+              title="Close PDF View"
+            />
+          </div>
+        </div>
+      )}
     </div>
   );
 }
