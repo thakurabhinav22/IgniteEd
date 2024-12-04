@@ -2,13 +2,25 @@ import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Cookies from "js-cookie";
 import Swal from "sweetalert2";
-import { FaFolderOpen, FaFilePdf, FaTrashAlt, FaEye, FaTimes } from "react-icons/fa";
+import {
+  FaFolderOpen,
+  FaFilePdf,
+  FaTrashAlt,
+  FaEye,
+  FaTimes,
+} from "react-icons/fa";
 import AdminSidebar from "./adminSideBar";
 import { pdfjs } from "react-pdf";
+import { GoogleGenerativeAI } from "@google/generative-ai";
 import "./CreateCourse.css";
 
 // Set PDF.js worker
 pdfjs.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.min.js`;
+
+// Initialize Google AI Model
+const API_KEY = "AIzaSyCWc15VkYtEbKsP6J3_8w1WhyPhzV1xpe0"; // Replace with your actual API key
+const genAI = new GoogleGenerativeAI(API_KEY);
+const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
 export default function CreateCourse() {
   const navigate = useNavigate();
@@ -24,6 +36,8 @@ export default function CreateCourse() {
     { name: "Course 2", content: "Dummy content for course 2" },
     { name: "Course 3", content: "Dummy content for course 3" },
   ]);
+  const [isProcessing, setIsProcessing] = useState(false); // Track if AI is processing
+  const [courseCreated, setCourseCreated] = useState(false); // Track if course is created
 
   useEffect(() => {
     document.title = "TheLearnMax - Admin Dashboard";
@@ -124,12 +138,16 @@ export default function CreateCourse() {
 
   const handleRepoSelection = (fileName) => {
     setRepoSelected((prev) =>
-      prev.includes(fileName) ? prev.filter((name) => name !== fileName) : [...prev, fileName]
+      prev.includes(fileName)
+        ? prev.filter((name) => name !== fileName)
+        : [...prev, fileName]
     );
   };
 
   const addSelectedToPdfList = () => {
-    const selectedCourses = repoDummyData.filter((course) => repoSelected.includes(course.name));
+    const selectedCourses = repoDummyData.filter((course) =>
+      repoSelected.includes(course.name)
+    );
     selectedCourses.forEach((course) => {
       if (!pdfFiles.some((file) => file.name === course.name)) {
         setPdfFiles((prev) => [...prev, { name: course.name }]);
@@ -142,7 +160,62 @@ export default function CreateCourse() {
     toggleRepoPopup(); // Close the popup after adding the courses
   };
 
-  const isAllProcessed = Object.values(pdfStatuses).every((status) => status.status === "Processed");
+  const handleCreateCourse = async () => {
+    if (isProcessing) return; // Prevent multiple submissions
+    setIsProcessing(true);
+
+    try {
+      let courseNames = [];
+      // Generate course content using AI
+      for (const file of pdfFiles) {
+        const pdfContent = pdfStatuses[file.name]?.content;
+        if (pdfContent) {
+          const result = await model.generateContent(`
+            Read the following content and generate a detailed course with sections and lessons based on the content. 
+            Content: ${pdfContent}
+          `);
+
+          const response = await result.response;
+          const generatedCourse = await response.text();
+
+          // Save the generated course text and file name
+          setPdfStatuses((prev) => ({
+            ...prev,
+            [file.name]: { status: "Course Created", content: generatedCourse },
+          }));
+
+          // Add file name to the courseNames array
+          courseNames.push(file.name);
+        }
+      }
+
+      // Show SweetAlert message for course creation
+      Swal.fire({
+        title: "Course Created!",
+        icon: "success",
+        position: "top",
+        toast: true,
+        showConfirmButton: false,
+        timer: 3000,
+      }).then(() => {
+        setCourseCreated(true);
+        // Display course names that were created
+        console.log("Created Courses:", courseNames);
+      });
+    } catch (error) {
+      Swal.fire({
+        title: "Error",
+        text: "An error occurred while generating the course.",
+        icon: "error",
+      });
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  const isAllProcessed = Object.values(pdfStatuses).every(
+    (status) => status.status === "Processed"
+  );
 
   return (
     <div className="CreateCourse-page-cover">
@@ -152,7 +225,13 @@ export default function CreateCourse() {
         <div className="create-course-actions">
           <label className="create-course-button">
             <FaFilePdf /> Select PDFs
-            <input type="file" accept="application/pdf" multiple onChange={handlePdfSelect} hidden />
+            <input
+              type="file"
+              accept="application/pdf"
+              multiple
+              onChange={handlePdfSelect}
+              hidden
+            />
           </label>
           <button className="create-course-button" onClick={toggleRepoPopup}>
             <FaFolderOpen /> Select from Repository
@@ -165,7 +244,11 @@ export default function CreateCourse() {
               <span>{fileName}</span>
               <div>
                 <span
-                  className={status.startsWith("Error") ? "error-status" : "processed-status"}
+                  className={
+                    status.startsWith("Error")
+                      ? "error-status"
+                      : "processed-status"
+                  }
                 >
                   {status}
                 </span>
@@ -186,8 +269,14 @@ export default function CreateCourse() {
           ))}
         </div>
 
-        {isAllProcessed && (
-          <button className="create-final-button">Create Course</button>
+        {isAllProcessed && !courseCreated && (
+          <button
+            className="create-final-button"
+            onClick={handleCreateCourse}
+            disabled={isProcessing}
+          >
+            {isProcessing ? "Generating..." : "Create Course"}
+          </button>
         )}
 
         {viewPdfContent && (
@@ -204,33 +293,29 @@ export default function CreateCourse() {
         {repoPopup && (
           <div className="repo-popup">
             <div className="repo-popup-content">
-              <button className="close-button" onClick={toggleRepoPopup}>
+              <button onClick={toggleRepoPopup} className="close-button">
                 <FaTimes />
               </button>
               <h2>Select Courses from Repository</h2>
               <ul>
-                {repoDummyData.map(({ name, content }) => (
-                  <li key={name}>
-                    <label>
-                      <input
-                        type="checkbox"
-                        checked={repoSelected.includes(name)}
-                        onChange={() => handleRepoSelection(name)}
-                        // onChange = {() => addSelectedToPdfList}
-                      />
-                      {name}
-                    </label>
-                    {/* <FaEye
-                      className="view-icon"
-                      onClick={() => handleViewPdf(name)}
-                      title="View Content"
-                    /> */}
+                {repoDummyData.map((course) => (
+                  <li key={course.name}>
+                    <input
+                      type="checkbox"
+                      checked={repoSelected.includes(course.name)}
+                      onChange={() => handleRepoSelection(course.name)}
+                    />
+                    {course.name}
                   </li>
                 ))}
               </ul>
-              <button className="add-courses-button" onClick={addSelectedToPdfList}>
-                Add Selected Courses
+              <button
+                className="add-courses-button"
+                onClick={addSelectedToPdfList}
+              >
+                Add Selected
               </button>
+              {/* <button onClick={toggleRepoPopup}>Cancel</button> */}
             </div>
           </div>
         )}
