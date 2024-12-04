@@ -278,6 +278,9 @@ export default function CreateCourse() {
       {repoPopup && (
         <div className="repo-popup">
           <div className="repo-popup-content">
+          <button onClick={toggleRepoPopup} className="close-button">
+                <FaTimes />
+              </button>
             <h2>Select Courses from Repository</h2>
             <ul>
               {repoDummyData.map((repo) => (
@@ -292,8 +295,8 @@ export default function CreateCourse() {
               ))}
             </ul>
             <div className="popup-actions">
-              <button onClick={addSelectedToPdfList}>Add Selected Courses</button>
-              <button onClick={toggleRepoPopup}>Close</button>
+              <button className = "create-course-button" onClick={addSelectedToPdfList}>Add Selected Courses</button>
+              {/* <button onClick={toggleRepoPopup}>Close</button> */}
             </div>
           </div>
         </div>
@@ -301,20 +304,15 @@ export default function CreateCourse() {
 
       {/* PDF View Modal */}
       {viewPdfContent && (
-        <div className="pdf-view-modal">
-          <div className="modal-content">
-            <h2>PDF Content</h2>
-            <div className="modal-text">
-              <pre>{viewPdfContent}</pre>
+          <div className="pdf-content-overlay">
+            <div className="pdf-content-box">
+              <button className="close-button" onClick={closeViewPdf}>
+                <FaTimes />
+              </button>
+              <div className="pdf-content-text">{viewPdfContent}</div>
             </div>
-            <FaTimes
-              className="close-modal"
-              onClick={closeViewPdf}
-              title="Close PDF View"
-            />
           </div>
-        </div>
-      )}
+        )}
     </div>
   );
 }
