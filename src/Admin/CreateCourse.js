@@ -2,11 +2,18 @@ import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Cookies from "js-cookie";
 import Swal from "sweetalert2";
-import { FaFolderOpen, FaFilePdf, FaTrashAlt, FaEye, FaTimes } from "react-icons/fa";
+import {
+  FaFolderOpen,
+  FaFilePdf,
+  FaTrashAlt,
+  FaEye,
+  FaTimes,
+} from "react-icons/fa";
 import AdminSidebar from "./adminSideBar";
 import { pdfjs } from "react-pdf";
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import "./CreateCourse.css";
+import loader from "../icons/loader.svg";
 
 // Set PDF.js worker
 pdfjs.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.min.js`;
@@ -157,45 +164,54 @@ export default function CreateCourse() {
   const handleCreateCourse = async () => {
     if (isProcessing) return; // Prevent multiple submissions
     setIsProcessing(true);
-
+  
     try {
-      let courseNames = [];
-      // Generate course content using AI
+      let combinedContent = ""; // Initialize a variable to store all PDF content
+  
+      // Concatenate all PDF content
       for (const file of pdfFiles) {
         const pdfContent = pdfStatuses[file.name]?.content;
         if (pdfContent) {
-          const result = await model.generateContent(`
-            Read the following content and generate a detailed course with sections and lessons based on the content. 
-            Content: ${pdfContent}
-          `);
-
-          const response = await result.response;
-          const generatedCourse = await response.text();
-
-          // Save the generated course text and file name
-          setPdfStatuses((prev) => ({
-            ...prev,
-            [file.name]: { status: "Course Created", content: generatedCourse },
-          }));
-
-          // Add file name to the courseNames array
-          courseNames.push(file.name);
+          combinedContent += pdfContent + "\n"; // Add content and a newline for separation
         }
       }
-
-      // Show SweetAlert message for course creation
-      Swal.fire({
-        title: "Course Created!",
-        icon: "success",
-        position: "top",
-        toast: true,
-        showConfirmButton: false,
-        timer: 3000,
-      }).then(() => {
-        setCourseCreated(true);
-        // Display course names that were created
-        console.log("Created Courses:", courseNames);
-      });
+  
+      if (combinedContent.trim()) {
+        // Generate course content using AI for the combined content
+        const result = await model.generateContent(`
+         Read the provided PDF content and create a module-wise course in clear and concise language. The course should have a meaningful title and be divided into logical modules, each focusing on specific key concepts, methodologies, findings, and practical applications. For each module, provide a title, a paragrap that covers the entire module concept , a detailed paragraph explanation of the core ideas, and examples or analogies to enhance understanding. Use external research, if necessary, to add relevant context or examples that align with the course theme.
+        
+         Content: ${combinedContent}
+        `);
+  
+        const response = await result.response;
+        const generatedCourse = await response.text();
+  
+        // Save the generated course text
+        setPdfStatuses((prev) => ({
+          ...prev,
+          ["Generated Course"]: { status: "Course Created", content: generatedCourse },
+        }));
+  
+        // Show SweetAlert message for course creation
+        Swal.fire({
+          title: "Course Created!",
+          icon: "success",
+          position: "top",
+          toast: true,
+          showConfirmButton: false,
+          timer: 3000,
+        }).then(() => {
+          setCourseCreated(true);
+          console.log("Generated Course:", generatedCourse);
+        });
+      } else {
+        Swal.fire({
+          title: "Error",
+          text: "No content to process from the uploaded PDFs.",
+          icon: "error",
+        });
+      }
     } catch (error) {
       Swal.fire({
         title: "Error",
@@ -206,6 +222,7 @@ export default function CreateCourse() {
       setIsProcessing(false);
     }
   };
+  
 
   const isAllProcessed = Object.values(pdfStatuses).every(
     (status) => status.status === "Processed"
@@ -268,8 +285,18 @@ export default function CreateCourse() {
             className="create-final-button"
             onClick={handleCreateCourse}
             disabled={isProcessing}
+            style={{
+              cursor: isProcessing ? "not-allowed" : "pointer",
+            }}
           >
-            {isProcessing ? "Creating..." : "Generate Course"}
+            {isProcessing ? (
+              <div className="generating-content">
+                <span className="generating-text">Generating</span>
+                <img src={loader} alt="Loading..." className="loader-icon" />
+              </div>
+            ) : (
+              "Generate Course"
+            )}
           </button>
         )}
       </div>
@@ -278,9 +305,9 @@ export default function CreateCourse() {
       {repoPopup && (
         <div className="repo-popup">
           <div className="repo-popup-content">
-          <button onClick={toggleRepoPopup} className="close-button">
-                <FaTimes />
-              </button>
+            <button onClick={toggleRepoPopup} className="close-button">
+              <FaTimes />
+            </button>
             <h2>Select Courses from Repository</h2>
             <ul>
               {repoDummyData.map((repo) => (
@@ -295,7 +322,12 @@ export default function CreateCourse() {
               ))}
             </ul>
             <div className="popup-actions">
-              <button className = "create-course-button" onClick={addSelectedToPdfList}>Add Selected Courses</button>
+              <button
+                className="create-course-button"
+                onClick={addSelectedToPdfList}
+              >
+                Add Selected Courses
+              </button>
               {/* <button onClick={toggleRepoPopup}>Close</button> */}
             </div>
           </div>
@@ -304,15 +336,15 @@ export default function CreateCourse() {
 
       {/* PDF View Modal */}
       {viewPdfContent && (
-          <div className="pdf-content-overlay">
-            <div className="pdf-content-box">
-              <button className="close-button" onClick={closeViewPdf}>
-                <FaTimes />
-              </button>
-              <div className="pdf-content-text">{viewPdfContent}</div>
-            </div>
+        <div className="pdf-content-overlay">
+          <div className="pdf-content-box">
+            <button className="close-button" onClick={closeViewPdf}>
+              <FaTimes />
+            </button>
+            <div className="pdf-content-text">{viewPdfContent}</div>
           </div>
-        )}
+        </div>
+      )}
     </div>
   );
 }
