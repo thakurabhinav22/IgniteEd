@@ -35,6 +35,10 @@ function AdminSidebar({ AdminName, Role }) {
           <span>Create Course</span>
         </Link>
         <Link to="#" className="nav-item">
+          <box-icon type="solid" name="data" color="white" className="nav-icon" />
+          <span>Manage Course DB</span>
+        </Link>
+        <Link to="#" className="nav-item">
           <box-icon type="solid" name="book-bookmark" color="white" className="nav-icon" />
           <span>Modules</span>
         </Link>

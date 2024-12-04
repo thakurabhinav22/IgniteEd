@@ -1,13 +1,10 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ref, get } from "firebase/database";
-import { database } from "./firebase";
 import Cookies from "js-cookie";
 import Swal from "sweetalert2";
-import { FaFolderOpen, FaFilePdf, FaTrashAlt } from "react-icons/fa";
+import { FaFolderOpen, FaFilePdf, FaTrashAlt, FaEye, FaTimes } from "react-icons/fa";
 import AdminSidebar from "./adminSideBar";
-import { Document, Page, pdfjs } from "react-pdf";
-import "react-pdf/dist/esm/Page/AnnotationLayer.css";
+import { pdfjs } from "react-pdf";
 import "./CreateCourse.css";
 
 // Set PDF.js worker
@@ -18,7 +15,15 @@ export default function CreateCourse() {
   const [adminName, setAdminName] = useState("");
   const [adminRole, setAdminRole] = useState("");
   const [pdfFiles, setPdfFiles] = useState([]);
-  const [pdfContents, setPdfContents] = useState([]); // To store extracted content
+  const [pdfStatuses, setPdfStatuses] = useState({});
+  const [viewPdfContent, setViewPdfContent] = useState(null);
+  const [repoPopup, setRepoPopup] = useState(false);
+  const [repoSelected, setRepoSelected] = useState([]);
+  const [repoDummyData, setRepoDummyData] = useState([
+    { name: "Course 1", content: "Dummy content for course 1" },
+    { name: "Course 2", content: "Dummy content for course 2" },
+    { name: "Course 3", content: "Dummy content for course 3" },
+  ]);
 
   useEffect(() => {
     document.title = "TheLearnMax - Admin Dashboard";
@@ -29,116 +34,115 @@ export default function CreateCourse() {
       return;
     }
 
-    const adminRef = ref(database, `admin/${userId}`);
-    get(adminRef)
-      .then((snapshot) => {
-        if (snapshot.exists()) {
-          const userData = snapshot.val();
-          if (userData.isAdmin) {
-            setAdminName(userData.Name || "Admin");
-            setAdminRole(userData.Role || "Administrator");
-          } else {
-            showSessionExpiredMessage("Something Went Wrong. Please Login Again");
-          }
-        } else {
-          showSessionExpiredMessage("Invalid Admin Session.");
-        }
-      })
-      .catch((error) => {
-        console.error("Error checking admin access:", error);
-        showSessionExpiredMessage("An error occurred while checking your status.");
-      });
+    // Dummy admin session check
+    setAdminName("Admin");
+    setAdminRole("Administrator");
   }, [navigate]);
 
-  const showSessionExpiredMessage = (errorMessage) => {
+  const handleSessionExpired = (message) => {
     Swal.fire({
-      title: errorMessage,
+      title: message,
       icon: "error",
       position: "top",
       toast: true,
       showConfirmButton: false,
       timer: 5000,
-      timerProgressBar: true,
     }).then(() => {
       Cookies.remove("userSessionCredAd");
       navigate("/Admin");
     });
   };
 
-  const handleCreateFromRepo = () => {
-    alert("Create from Repository clicked!");
-  };
-
   const handlePdfSelect = (event) => {
     const files = Array.from(event.target.files);
-
-    const validPdfs = files.filter((file) => file.type === "application/pdf");
-
-    if (validPdfs.length !== files.length) {
-      Swal.fire({
-        title: "Invalid File(s) Selected",
-        text: "Only PDF files are allowed.",
-        icon: "warning",
-        confirmButtonText: "OK",
-      });
-    }
-
-    setPdfFiles((prev) => [...prev, ...validPdfs]);
+    files.forEach((file) => processPdf(file));
   };
 
-  const handleDeletePdf = (index) => {
-    setPdfFiles((prev) => prev.filter((_, i) => i !== index));
-  };
-
-  const extractTextFromPdf = async (file) => {
-    const fileReader = new FileReader();
-    return new Promise((resolve) => {
-      fileReader.onload = async (e) => {
+  const processPdf = async (file) => {
+    const reader = new FileReader();
+    reader.onload = async (e) => {
+      try {
         const pdfData = new Uint8Array(e.target.result);
         const pdf = await pdfjs.getDocument({ data: pdfData }).promise;
-        let text = "";
 
+        let text = "";
         for (let i = 1; i <= pdf.numPages; i++) {
           const page = await pdf.getPage(i);
           const content = await page.getTextContent();
-          const pageText = content.items.map((item) => item.str).join(" ");
-          
-          // Remove page number from the text
-          const cleanedText = pageText.replace(/^Page \d+:\n/g, ""); // Remove 'Page x:' from start of each page
-
-          text += `${cleanedText}\n\n`; // Append cleaned text
+          text += content.items.map((item) => item.str).join(" ");
         }
-        resolve(text);
-      };
-      fileReader.readAsArrayBuffer(file);
+
+        if (text.trim()) {
+          setPdfFiles((prev) => [...prev, file]);
+          setPdfStatuses((prev) => ({
+            ...prev,
+            [file.name]: { status: "Processed", content: text },
+          }));
+        } else {
+          throw new Error("Empty content");
+        }
+      } catch {
+        setPdfFiles((prev) => [...prev, file]);
+        setPdfStatuses((prev) => ({
+          ...prev,
+          [file.name]: { status: "Error: Unable to process PDF" },
+        }));
+      }
+    };
+    reader.readAsArrayBuffer(file);
+  };
+
+  const handleRemovePdf = (fileName) => {
+    setPdfFiles((prev) => prev.filter((file) => file.name !== fileName));
+    setPdfStatuses((prev) => {
+      const { [fileName]: _, ...rest } = prev;
+      return rest;
     });
   };
 
-  const handleCreateCourse = async () => {
-    if (pdfFiles.length === 0) {
+  const handleViewPdf = (fileName) => {
+    const content = pdfStatuses[fileName]?.content;
+    if (content) {
+      setViewPdfContent(content);
+    } else {
       Swal.fire({
-        title: "No PDFs Selected",
-        text: "Please select at least one PDF to create a course.",
-        icon: "warning",
+        title: "Error",
+        text: "This PDF has no content to display.",
+        icon: "error",
         confirmButtonText: "OK",
       });
-      return;
     }
-
-    const allContents = [];
-    for (let file of pdfFiles) {
-      const text = await extractTextFromPdf(file);
-      allContents.push({ name: file.name, content: text });
-    }
-
-    setPdfContents(allContents); // Store the content for rendering
-    Swal.fire({
-      title: "Course Created",
-      text: "All selected PDFs have been processed and displayed below.",
-      icon: "success",
-      confirmButtonText: "OK",
-    });
   };
+
+  const closeViewPdf = () => {
+    setViewPdfContent(null);
+  };
+
+  const toggleRepoPopup = () => {
+    setRepoPopup(!repoPopup);
+  };
+
+  const handleRepoSelection = (fileName) => {
+    setRepoSelected((prev) =>
+      prev.includes(fileName) ? prev.filter((name) => name !== fileName) : [...prev, fileName]
+    );
+  };
+
+  const addSelectedToPdfList = () => {
+    const selectedCourses = repoDummyData.filter((course) => repoSelected.includes(course.name));
+    selectedCourses.forEach((course) => {
+      if (!pdfFiles.some((file) => file.name === course.name)) {
+        setPdfFiles((prev) => [...prev, { name: course.name }]);
+        setPdfStatuses((prev) => ({
+          ...prev,
+          [course.name]: { status: "Processed", content: course.content },
+        }));
+      }
+    });
+    toggleRepoPopup(); // Close the popup after adding the courses
+  };
+
+  const isAllProcessed = Object.values(pdfStatuses).every((status) => status.status === "Processed");
 
   return (
     <div className="CreateCourse-page-cover">
@@ -146,62 +150,88 @@ export default function CreateCourse() {
       <div className="content">
         <h1 className="create-course-header">Create a New Course</h1>
         <div className="create-course-actions">
-          {/* Button for creating from repository */}
-          <button
-            className="create-course-button"
-            onClick={handleCreateFromRepo}
-          >
-            <FaFolderOpen className="icon" />
-            Create from Repository
-          </button>
-
-          {/* Button for selecting PDFs */}
           <label className="create-course-button">
-            <FaFilePdf className="icon" />
-            Select PDFs
-            <input
-              type="file"
-              accept="application/pdf"
-              multiple
-              onChange={handlePdfSelect}
-              style={{ display: "none" }}
-            />
+            <FaFilePdf /> Select PDFs
+            <input type="file" accept="application/pdf" multiple onChange={handlePdfSelect} hidden />
           </label>
+          <button className="create-course-button" onClick={toggleRepoPopup}>
+            <FaFolderOpen /> Select from Repository
+          </button>
         </div>
 
-        {/* Display selected PDF files */}
         <div className="pdf-list">
-          {pdfFiles.map((file, index) => (
-            <div key={index} className="pdf-item">
-              <span>{file.name}</span>
-              <FaTrashAlt
-                className="delete-icon"
-                onClick={() => handleDeletePdf(index)}
-              />
+          {Object.entries(pdfStatuses).map(([fileName, { status }]) => (
+            <div key={fileName} className="pdf-item">
+              <span>{fileName}</span>
+              <div>
+                <span
+                  className={status.startsWith("Error") ? "error-status" : "processed-status"}
+                >
+                  {status}
+                </span>
+                {status !== "Error: Unable to process PDF" && (
+                  <FaEye
+                    className="view-icon"
+                    onClick={() => handleViewPdf(fileName)}
+                    title="View PDF Content"
+                  />
+                )}
+                <FaTrashAlt
+                  className="delete-icon"
+                  onClick={() => handleRemovePdf(fileName)}
+                  title="Remove PDF"
+                />
+              </div>
             </div>
           ))}
         </div>
 
-        {/* Create Course Button */}
-        <button
-          className="create-course-button create-final-button"
-          onClick={handleCreateCourse}
-        >
-          Create Course
-        </button>
+        {isAllProcessed && (
+          <button className="create-final-button">Create Course</button>
+        )}
 
-        {/* Display extracted PDF content */}
-        {pdfContents.length > 0 && (
-          <div className="pdf-content-display">
-            <h2>Extracted PDF Content:</h2>
-            {pdfContents.map((pdf, index) => (
-              <div key={index} className="pdf-content-item">
-                <h3>{pdf.name}</h3>
-                <div className="pdf-content-text">
-                  <pre>{pdf.content}</pre>
-                </div>
-              </div>
-            ))}
+        {viewPdfContent && (
+          <div className="pdf-content-overlay">
+            <div className="pdf-content-box">
+              <button className="close-button" onClick={closeViewPdf}>
+                <FaTimes />
+              </button>
+              <div className="pdf-content-text">{viewPdfContent}</div>
+            </div>
+          </div>
+        )}
+
+        {repoPopup && (
+          <div className="repo-popup">
+            <div className="repo-popup-content">
+              <button className="close-button" onClick={toggleRepoPopup}>
+                <FaTimes />
+              </button>
+              <h2>Select Courses from Repository</h2>
+              <ul>
+                {repoDummyData.map(({ name, content }) => (
+                  <li key={name}>
+                    <label>
+                      <input
+                        type="checkbox"
+                        checked={repoSelected.includes(name)}
+                        onChange={() => handleRepoSelection(name)}
+                        // onChange = {() => addSelectedToPdfList}
+                      />
+                      {name}
+                    </label>
+                    {/* <FaEye
+                      className="view-icon"
+                      onClick={() => handleViewPdf(name)}
+                      title="View Content"
+                    /> */}
+                  </li>
+                ))}
+              </ul>
+              <button className="add-courses-button" onClick={addSelectedToPdfList}>
+                Add Selected Courses
+              </button>
+            </div>
           </div>
         )}
       </div>
