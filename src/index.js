@@ -9,6 +9,8 @@ import { createBrowserRouter, RouterProvider } from 'react-router-dom';
 import Dashboard from './UserComponents/Dashboard';
 import SignUpForm from './UserComponents/SignupForm';
 import CreateCourse from './Admin/CreateCourse';
+import MagicEditor from "./Admin/magicEditor"
+import PublishCourse from './Admin/publishCourse';
 
 
 const router = createBrowserRouter([
@@ -36,6 +38,15 @@ const router = createBrowserRouter([
     path: "/Signin",
     element: <SignUpForm />,
   },
+  {
+    path: "/Admin/Magiceditor",
+    element: <MagicEditor />,
+  },
+  {
+    path: "/Admin/CreateCourse/publishcourse",
+    element: <PublishCourse />,
+  },
+
 ]);
 
 const root = ReactDOM.createRoot(document.getElementById('root'));

@@ -8,12 +8,14 @@ import {
   FaTrashAlt,
   FaEye,
   FaTimes,
+  FaEdit
 } from "react-icons/fa";
 import AdminSidebar from "./adminSideBar";
 import { pdfjs } from "react-pdf";
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import "./CreateCourse.css";
 import loader from "../icons/loader.svg";
+import MagicEditor from "../icons/MagicEditor.png";
 
 // Set PDF.js worker
 pdfjs.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.min.js`;
@@ -23,10 +25,11 @@ const API_KEY = "AIzaSyCWc15VkYtEbKsP6J3_8w1WhyPhzV1xpe0"; // Use environment va
 const genAI = new GoogleGenerativeAI(API_KEY);
 const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
-export default function CreateCourse() {
+export default function CreateCourse({ AdminName, Role }) {
+  document.title = "TheLearnMax - Admin Course Create ";
   const navigate = useNavigate();
-  const [adminName, setAdminName] = useState("");
-  const [adminRole, setAdminRole] = useState("");
+  const [adminName, setAdminName] = useState(AdminName);
+  const [adminRole, setAdminRole] = useState(Role);
   const [pdfFiles, setPdfFiles] = useState([]);
   const [pdfStatuses, setPdfStatuses] = useState({});
   const [viewPdfContent, setViewPdfContent] = useState(null);
@@ -48,10 +51,6 @@ export default function CreateCourse() {
       navigate("/Admin");
       return;
     }
-
-    // Dummy admin session check
-    setAdminName("Admin");
-    setAdminRole("Administrator");
   }, [navigate]);
 
   const handleSessionExpired = (message) => {
@@ -164,10 +163,10 @@ export default function CreateCourse() {
   const handleCreateCourse = async () => {
     if (isProcessing) return; // Prevent multiple submissions
     setIsProcessing(true);
-  
+
     try {
       let combinedContent = ""; // Initialize a variable to store all PDF content
-  
+
       // Concatenate all PDF content
       for (const file of pdfFiles) {
         const pdfContent = pdfStatuses[file.name]?.content;
@@ -175,24 +174,28 @@ export default function CreateCourse() {
           combinedContent += pdfContent + "\n"; // Add content and a newline for separation
         }
       }
-  
+
       if (combinedContent.trim()) {
         // Generate course content using AI for the combined content
         const result = await model.generateContent(`
-         Read the provided PDF content and create a module-wise course in clear and concise language. The course should have a meaningful title and be divided into logical modules, each focusing on specific key concepts, methodologies, findings, and practical applications. For each module, provide a title, a paragrap that covers the entire module concept , a detailed paragraph explanation of the core ideas, and examples or analogies to enhance understanding. Use external research, if necessary, to add relevant context or examples that align with the course theme.
+         Read the provided PDF content and create a module-wise course in clear and concise language. The course should have a meaningful title and be divided into logical modules, each focusing on specific key concepts, methodologies, findings, and practical applications. For each module, provide a title, a paragrap that covers the entire module concept , a detailed paragraph explanation of the core ideas, and examples or analogies to enhance understanding. 
         
          Content: ${combinedContent}
         `);
-  
+
         const response = await result.response;
         const generatedCourse = await response.text();
-  
+        
+
         // Save the generated course text
         setPdfStatuses((prev) => ({
           ...prev,
-          ["Generated Course"]: { status: "Course Created", content: generatedCourse },
+          ["Generated Course"]: {
+            status: "Course Created",
+            content: generatedCourse,
+          },
         }));
-  
+
         // Show SweetAlert message for course creation
         Swal.fire({
           title: "Course Created!",
@@ -222,7 +225,11 @@ export default function CreateCourse() {
       setIsProcessing(false);
     }
   };
-  
+  const handleEditCourse = (fileName, content) => {
+    navigate("/admin/magiceditor", {
+      state: { fileName, content },
+    });
+  };
 
   const isAllProcessed = Object.values(pdfStatuses).every(
     (status) => status.status === "Processed"
@@ -250,34 +257,43 @@ export default function CreateCourse() {
         </div>
 
         <div className="pdf-list">
-          {Object.entries(pdfStatuses).map(([fileName, { status }]) => (
-            <div key={fileName} className="pdf-item">
-              <span>{fileName}</span>
-              <div>
-                <span
-                  className={
-                    status.startsWith("Error")
-                      ? "error-status"
-                      : "processed-status"
-                  }
-                >
-                  {status}
-                </span>
-                {status !== "Error: Unable to process PDF" && (
-                  <FaEye
-                    className="view-icon"
-                    onClick={() => handleViewPdf(fileName)}
-                    title="View PDF Content"
+          {Object.entries(pdfStatuses).map(
+            ([fileName, { status, content }]) => (
+              <div key={fileName} className="pdf-item">
+                <span>{fileName}</span>
+                <div>
+                  <span
+                    className={
+                      status.startsWith("Error")
+                        ? "error-status"
+                        : "processed-status"
+                    }
+                  >
+                    {status}
+                  </span>
+                  {status === "Course Created" && (
+                    <img src= {MagicEditor}
+                      className="edit-icon"
+                      onClick={() => handleEditCourse(fileName, content)}
+                      title="Edit Course in Magic Editor"
+                    />
+                  )}
+                  {status !== "Error: Unable to process PDF" && (
+                    <FaEye
+                      className="view-icon"
+                      onClick={() => handleViewPdf(fileName)}
+                      title="View PDF Content"
+                    />
+                  )}
+                  <FaTrashAlt
+                    className="delete-icon"
+                    onClick={() => handleRemovePdf(fileName)}
+                    title="Remove PDF"
                   />
-                )}
-                <FaTrashAlt
-                  className="delete-icon"
-                  onClick={() => handleRemovePdf(fileName)}
-                  title="Remove PDF"
-                />
+                </div>
               </div>
-            </div>
-          ))}
+            )
+          )}
         </div>
 
         {isAllProcessed && !courseCreated && (

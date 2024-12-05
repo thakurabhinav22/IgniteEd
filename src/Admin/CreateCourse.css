@@ -242,4 +242,7 @@
     align-items: center;
     gap: 10px;
   }
-
+.edit-icon{
+  width: 25px;
+  margin-left: 5px;
+}
