@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Cookies from "js-cookie";
 import Swal from "sweetalert2";
+// require('dotenv').config()
 import {
   FaFolderOpen,
   FaFilePdf,
@@ -21,11 +22,13 @@ import MagicEditor from "../icons/MagicEditor.png";
 pdfjs.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.min.js`;
 
 // Initialize Google AI Model
-const API_KEY = "AIzaSyCWc15VkYtEbKsP6J3_8w1WhyPhzV1xpe0"; // Use environment variable for API key
+let API_KEY =  process.env.REACT_APP_GEMINI
+
 const genAI = new GoogleGenerativeAI(API_KEY);
 const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
 export default function CreateCourse({ AdminName, Role }) {
+
   document.title = "TheLearnMax - Admin Course Create ";
   const navigate = useNavigate();
   const [adminName, setAdminName] = useState(AdminName);
@@ -44,9 +47,8 @@ export default function CreateCourse({ AdminName, Role }) {
   const [courseCreated, setCourseCreated] = useState(false); // Track if course is created
 
   useEffect(() => {
-    document.title = "TheLearnMax - Admin Dashboard";
+    document.title = "TheLearnMax - Course Create";
     const userId = Cookies.get("userSessionCredAd");
-
     if (!userId) {
       navigate("/Admin");
       return;
@@ -206,7 +208,7 @@ export default function CreateCourse({ AdminName, Role }) {
           timer: 3000,
         }).then(() => {
           setCourseCreated(true);
-          console.log("Generated Course:", generatedCourse);
+          // console.log("Generated Course:", generatedCourse);
         });
       } else {
         Swal.fire({
@@ -216,6 +218,7 @@ export default function CreateCourse({ AdminName, Role }) {
         });
       }
     } catch (error) {
+      console.log(error)
       Swal.fire({
         title: "Error",
         text: "An error occurred while generating the course.",
@@ -234,9 +237,9 @@ export default function CreateCourse({ AdminName, Role }) {
   const isAllProcessed = Object.values(pdfStatuses).every(
     (status) => status.status === "Processed"
   );
-
   return (
     <div className="CreateCourse-page-cover">
+    
       <AdminSidebar AdminName={adminName} Role={adminRole} />
       <div className="content">
         <h1 className="create-course-header">Create a New Course</h1>
