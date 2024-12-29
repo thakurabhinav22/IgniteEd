@@ -1,15 +1,51 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import './Sidebar.css';
 import { Link } from 'react-router-dom';
 import { FaHome, FaCertificate, FaQuestionCircle, FaUser } from 'react-icons/fa';
+import { getDatabase, ref, get } from 'firebase/database'; // Firebase import for database
 
-function Sidebar({ userName,SurName,Branch }) {
+function Sidebar() {
+  const [userName, setUserName] = useState('');
+  const [surName, setSurName] = useState('');
+  const [branch, setBranch] = useState('');
+
+  useEffect(() => {
+    // Function to get cookie value by name
+    const getCookie = (name) => {
+      const value = `; ${document.cookie}`;
+      const parts = value.split(`; ${name}=`);
+      if (parts.length === 2) return parts.pop().split(';').shift();
+      return null;
+    };
+
+    const fetchUserData = async () => {
+      const cookieValue = getCookie('userSessionCred');
+      if (cookieValue) {
+        try {
+          const db = getDatabase();
+          const userRef = ref(db, `/user/${cookieValue}`);
+          const snapshot = await get(userRef);
+          if (snapshot.exists()) {
+            const userData = snapshot.val();
+            setUserName(userData.Name || '');
+            setSurName(userData.Surname || '');
+            setBranch(userData.Branch || '');
+          } 
+        } catch (error) {
+         
+        }
+      } 
+    };
+
+    fetchUserData();
+  }, []);
+
   return (
     <div className="sidebar">
       <div className="profile">
         <img src="https://www.gravatar.com/avatar/0c7e6d76754563b76c56afdff6327d79?d=robohash" alt="Profile" className="profile-img" />
-        <h3>{userName || "Loading..."} {SurName || ""}</h3>
-        <p>{Branch || "Loading..."}</p>
+        <h3>{userName || 'Loading...'} {surName || ''}</h3>
+        <p>{branch || 'Loading...'}</p>
       </div>
       <nav>
         <Link to="/Dashboard" className="nav-item">
@@ -20,18 +56,17 @@ function Sidebar({ userName,SurName,Branch }) {
           <FaCertificate className="nav-icon" />
           <span>Exams</span>
         </Link>
-        <Link to="/modules" className="nav-item">
+        <Link to="/Courses" className="nav-item">
           <FaQuestionCircle className="nav-icon" />
-          <span>Modules</span>
+          <span>Courses</span>
         </Link>
         <Link to="/paths" className="nav-item">
           <FaUser className="nav-icon" />
           <span>Paths</span>
         </Link>
-        {/* Add more navigation items here */}
       </nav>
       <div className="dark-mode">
-        <p>Subscribe now!</p>
+        <p>Logout</p>
       </div>
     </div>
   );

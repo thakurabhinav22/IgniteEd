@@ -70,18 +70,17 @@
   
   /* Dark Mode Button */
   .dark-mode {
+    font-size: 20px;
     text-align: center;
     margin-top: auto;
     padding: 10px;
     border-radius: 8px;
-    border: 1px solid #9fef00;
-    color: #9fef00;
+    border: 1px solid #ff0000;
     cursor: pointer;
     transition: background-color 0.2s ease, color 0.2s ease;
   }
   
   .dark-mode:hover {
-    background-color: #9fef00;
-    color: #000000;
+    background-color: #ef0000;
   }
   

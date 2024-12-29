@@ -11,6 +11,7 @@ import SignUpForm from './UserComponents/SignupForm';
 import CreateCourse from './Admin/CreateCourse';
 import MagicEditor from "./Admin/magicEditor"
 import PublishCourse from './Admin/publishCourse';
+import Courses from './UserComponents/Module';
 
 
 const router = createBrowserRouter([
@@ -46,7 +47,11 @@ const router = createBrowserRouter([
     path: "/Admin/CreateCourse/publishcourse",
     element: <PublishCourse />,
   },
-
+  {
+    path: "/Courses",
+    element: <Courses />,
+  },
+  
 ]);
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
