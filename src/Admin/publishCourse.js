@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import AdminSidebar from "./adminSideBar";
-import { FaTimes } from "react-icons/fa"; // Import the close icon
-import { getDatabase, ref, get, set } from "firebase/database"; // Import Firebase functions
-import Swal from "sweetalert2"; // Import SweetAlert for pop-up alerts
-import "./PublicCourse.css"; // Assuming you have custom styles in a CSS file
+import { FaTimes } from "react-icons/fa"; 
+import { getDatabase, ref, get, set } from "firebase/database"; 
+import Swal from "sweetalert2"; 
+import "./PublicCourse.css"; 
 import { GoogleGenerativeAI } from "@google/generative-ai";
 
 const PublishCourse = () => {
@@ -13,26 +13,25 @@ const PublishCourse = () => {
   const { fileName, editedContent } = location.state || {};
 
   const [courseName, setCourseName] = useState(fileName || "");
-  const [authorName, setAuthorName] = useState(""); // Added author name state
+  const [authorName, setAuthorName] = useState("");
   const [thumbnail, setThumbnail] = useState("");
-  const [bannerImage, setBannerImage] = useState(""); // Added banner image state
+  const [bannerImage, setBannerImage] = useState(""); 
   const [createAnnouncement, setCreateAnnouncement] = useState(false);
-  const [numQuestions, setNumQuestions] = useState(3); // Default number of questions per module
+  const [numQuestions, setNumQuestions] = useState(3); 
   const [isProcessing, setIsProcessing] = useState(false);
-  const [showContentModal, setShowContentModal] = useState(false); // State to control modal visibility
+  const [showContentModal, setShowContentModal] = useState(false); 
   const [courseCount, setCourseCount] = useState(0);
-  const [updatedContent, setUpdatedContent] = useState(editedContent); // State for updated content
+  const [updatedContent, setUpdatedContent] = useState(editedContent);
 
-  const API_KEY = "AIzaSyCWc15VkYtEbKsP6J3_8w1WhyPhzV1xpe0"; // Add your actual API key here
+  const API_KEY = process.env.REACT_APP_GEMINI 
   const genAI = new GoogleGenerativeAI(API_KEY);
   const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
   let generatedCourse;
   const handleGemini = async () => {
-    if (isProcessing) return; // Prevent multiple submissions
+    if (isProcessing) return;
     setIsProcessing(true);
 
     try {
-      // Generate course content using Gemini API
       const result = await model.generateContent(`
         convert this data into json keep all the data same only convert the data in json.Give only json nothing else. follow this format for converting into json
 
@@ -52,9 +51,6 @@ const PublishCourse = () => {
 
       console.log(generatedCourse);
 
-      // Log the JSON content to the console
-
-      // Show SweetAlert message for course creation
       Swal.fire({
         title: "Course Created!",
         icon: "success",
@@ -77,7 +73,7 @@ const PublishCourse = () => {
   };
 
   useEffect(() => {
-    const usercredAd = getCookie("usercredAd"); // Assuming usercredAd is stored as a cookie
+    const usercredAd = getCookie("usercredAd"); 
     if (usercredAd) {
       fetchCourseCount(usercredAd);
     }
@@ -98,7 +94,7 @@ const PublishCourse = () => {
       if (snapshot.exists()) {
         setCourseCount(snapshot.val());
       } else {
-        setCourseCount(0); // If no course count, initialize as 0
+        setCourseCount(0); 
       }
     } catch (error) {
       console.error("Error fetching course count:", error);
@@ -106,38 +102,32 @@ const PublishCourse = () => {
   };
 
   const handlePublish = async () => {
-    // Check if all required fields are filled
     if (!courseName || !authorName || !thumbnail) {
       alert("Please fill all the required fields!");
       return;
     }
 
-    if (isProcessing) return; // Prevent multiple submissions
+    if (isProcessing) return;
     setIsProcessing(true);
 
     try {
       await handleGemini();
       const usercredAd = getCookie("userSessionCredAd");
-      const userSessionCredAd = getCookie("userSessionCredAd"); // Assuming userSessionCredAd is stored as a cookie
+      const userSessionCredAd = getCookie("userSessionCredAd"); 
 
-      // Fetch the current course count from admin/usersessioncred/coursecount
       const db = getDatabase();
       const courseCountRef = ref(db, `admin/${userSessionCredAd}/courseCount`);
       const snapshot = await get(courseCountRef);
 
       let currentCourseCount = snapshot.exists() ? snapshot.val() : 0;
-      currentCourseCount += 1; // Increment the course count
+      currentCourseCount += 1; 
 
-      // Store the updated course count in admin/usersessioncred/coursecount
       await set(courseCountRef, currentCourseCount);
 
-      // Generate the new course ID
       const newCourseId = `${usercredAd}${currentCourseCount}`;
 
-      // Build the path where the course will be stored
       const coursePath = `admin/${usercredAd}/courses/${userSessionCredAd}${currentCourseCount}`;
 
-      // Store the course data under the new path
       const courseRef = ref(db, coursePath);
       await set(courseRef, {
         courseName,
@@ -149,7 +139,7 @@ const PublishCourse = () => {
         courseContent: generatedCourse, 
       });
 
-      // Also update the course count in the user's session data
+
       await set(ref(db, `Courses/${newCourseId}`), {
         courseName,
         authorName,
@@ -169,7 +159,7 @@ const PublishCourse = () => {
   };
 
   const handleShowContent = () => {
-    // Show the modal to display course content
+
     setShowContentModal(true);
   };
 
@@ -178,7 +168,7 @@ const PublishCourse = () => {
   };
 
   const handleContentChange = (event) => {
-    setUpdatedContent(event.target.value); // Update content when the user edits
+    setUpdatedContent(event.target.value); 
   };
 
   return (
