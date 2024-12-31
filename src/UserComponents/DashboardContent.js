@@ -99,7 +99,7 @@ function DashboardContent() {
                           className="continue-btn"
                           onClick={() => handleContinue(course.id)}
                         >
-                          {progress === 100 ? "Continue" : "Completed"}
+                          {progress !== 20 ? "Completed" : "Continue"}
                         </button>
                       </td>
                     </tr>
