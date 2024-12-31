@@ -1,7 +1,9 @@
 // firebase.js
 import { initializeApp } from "firebase/app"; // Import the initialization method
 import { getAuth } from "firebase/auth"; // Import auth method
-import { getDatabase } from "firebase/database"; // Import database method
+import { get, getDatabase } from "firebase/database"; // Import database method
+import { getStorage } from "firebase/storage"; // Import storage method
+
 
 // Your Firebase project configuration (from Firebase console)
 const firebaseConfig = {
@@ -23,3 +25,5 @@ const auth = getAuth(app);
 const database = getDatabase(app);
 
 export { auth, database };
+export const storage = getStorage(app);
+//

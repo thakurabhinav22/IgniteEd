@@ -1,11 +1,12 @@
 import React, { useEffect, useState } from "react";
 import Sidebar from "./Sidebar";
 import "./Module.css";
-// import placeholderImage from './placeholder.png'; // Replace with a valid placeholder image URL or path
 import { getDatabase, ref, onValue } from "firebase/database";
 
 function Module() {
   const [courses, setCourses] = useState([]);
+  const [searchQuery, setSearchQuery] = useState(""); 
+  const [filter, setFilter] = useState("recent"); 
 
   useEffect(() => {
     const db = getDatabase();
@@ -26,29 +27,69 @@ function Module() {
     console.log("Selected Course ID:", courseId);
   };
 
+  const filteredCourses = courses
+    .filter((course) =>
+      course.courseName?.toLowerCase().includes(searchQuery.toLowerCase())
+    )
+    .sort((a, b) => {
+      if (filter === "recent") {
+        return new Date(b.uploadDate) - new Date(a.uploadDate);
+      }
+      if (filter === "mostLiked") {
+        return b.likes - a.likes;
+      }
+      return 0; // Default: no additional sorting
+    });
+
   return (
     <div className="module-container">
       <Sidebar />
-      <div className="courses-container">
-        {courses.map((course) => (
-          <div
-            key={course.id}
-            className="course-card"
-            onClick={() => handleCourseClick(course.id)}
+      <div className="header-container">
+        <h1>Courses</h1>
+        <div className="filter-container">
+          <input
+            type="text"
+            placeholder="Search courses..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="search-input"
+          />
+          <select
+            value={filter}
+            onChange={(e) => setFilter(e.target.value)}
+            className="filter-select"
           >
-            <img
-              src={
-                course.imageURL ||
-                "https://academy.hackthebox.com/storage/modules/185/logo.png"
-              }
-              alt={course.courseName}
-              className="course-image"
-            />
-            <h3 className="course-title">{course.courseName}</h3>
-            <p className="course-author">By: {course.authorName}</p>
-            
-          </div>
-        ))}
+            <option value="recent">Recently Uploaded</option>
+            <option value="mostLiked">Most Liked</option>
+            <option value="category">Category</option>
+          </select>
+        </div>
+      </div>
+
+      {/* Courses List */}
+      <div className="courses-container">
+        {filteredCourses.length > 0 ? (
+          filteredCourses.map((course) => (
+            <div
+              key={course.id}
+              className="course-card"
+              onClick={() => handleCourseClick(course.id)}
+            >
+              <img
+                src={
+                  course.imageURL ||
+                  "https://academy.hackthebox.com/storage/modules/185/logo.png"
+                }
+                alt={course.courseName}
+                className="course-image"
+              />
+              <h3 className="course-title">{course.courseName}</h3>
+              <p className="course-author">By: {course.authorName}</p>
+            </div>
+          ))
+        ) : (
+          <p className="no-results">No courses found.</p>
+        )}
       </div>
     </div>
   );
