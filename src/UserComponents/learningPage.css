@@ -85,4 +85,24 @@
     font-size: 1.2em;
     color: #b3bccc;
   }
+  .previous-button , .next-button{
+    display: inline-block;
+    border: 1px solid #9fef00;
+    background-color: transparent;
+    color: #fff;
+    font-size: 1em;
+    font-weight: bold;
+    padding: 10px 20px;
+    border-radius: 8px;
+    cursor: pointer;
+    margin-top: 15px;
+    transition: background-color 0.3s ease;
+    margin: 10px 10px 0 10px;
+  }
+  
+  .previous-button:hover , .next-button:hover{
+    background-color: #9fef00;
+    color: black;
+  }
+  
   

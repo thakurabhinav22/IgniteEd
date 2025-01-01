@@ -39,11 +39,11 @@ const PublishCourse = () => {
             Title
             Introduction
             moduletitle1:
-            moduel1concept:
-            moduel1ExampleandAnalogy:
+            module1concept:
+            module1ExampleandAnalogy:
             moduletitle2
-            moduel2concept:
-            moduele2ExampleandAnalogy:
+            module2concept:
+            module2ExampleandAnalogy:
 
         Content: ${updatedContent}`);
 
