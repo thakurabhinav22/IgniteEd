@@ -1,38 +1,51 @@
 import React, { useEffect, useState } from "react";
-import { ref, get, onValue, off } from "firebase/database"; // Import off to remove listeners properly
+import { ref, get, onValue, off } from "firebase/database"; 
 import { database } from "../Admin/firebase";
 import { useNavigate } from "react-router-dom";
 import List from "../icons/List.svg";
 import "./DashboardContent.css";
 import Cookies from "js-cookie";
+import { CircularProgressbar, buildStyles } from "react-circular-progressbar";
+import 'react-circular-progressbar/dist/styles.css';
 
 function DashboardContent() {
   const [inProgressCourses, setInProgressCourses] = useState([]);
   const navigate = useNavigate();
   const userId = Cookies.get("userSessionCred");
 
+  const stats = [
+    { value: 50, color: "#e43a3c", label: "Completion Rate" },
+    { value: 1, color: "#9fef00", label: "Streaks" },
+    // { value: 10, color: "#0086ff", label: "Active Days" },
+  ];
+
+
   useEffect(() => {
     if (!userId) {
-      navigate("/"); // Redirect to login if no user session
+      navigate("/");
       return;
     }
 
     const userRef = ref(database, `user/${userId}/InProgressCourses`);
 
-    // Listen for real-time updates
     const unsubscribe = onValue(userRef, (snapshot) => {
       if (snapshot.exists()) {
         const coursesData = snapshot.val();
-        const coursesArray = Object.entries(coursesData).map(([id, data]) => ({ id, ...data }));
+        const coursesArray = Object.entries(coursesData).map(([id, data]) => ({
+          id,
+          ...data,
+        }));
 
-        // Fetch course names for each course ID
+
         const coursePromises = coursesArray.map(async (course) => {
           const courseRef = ref(database, `Courses/${course.id}/courseName`);
           const courseSnapshot = await get(courseRef);
 
           return {
             ...course,
-            courseName: courseSnapshot.exists() ? courseSnapshot.val() : "Name Not Available",
+            courseName: courseSnapshot.exists()
+              ? courseSnapshot.val()
+              : "Name Not Available",
           };
         });
 
@@ -44,9 +57,8 @@ function DashboardContent() {
       }
     });
 
-    // Cleanup listener when component unmounts
     return () => {
-      unsubscribe(); // Detach the listener by calling the unsubscribe function
+      unsubscribe(); 
     };
   }, [navigate, userId]);
 
@@ -62,7 +74,24 @@ function DashboardContent() {
     <div className="dashboard-content">
       <h1>Dashboard</h1>
 
-      <div className="stats-container"></div>
+      <div className="stats-container">
+  {stats.map((stat, index) => (
+    <div key={index} className="progress-circle">
+      <CircularProgressbar
+        value={stat.value}
+        maxValue={stat.label === "Streaks" ? 365 : 100} // Adjust maxValue if needed
+        text={stat.label === "Streaks" ? `${stat.value} Days` : `${stat.value.toFixed(2)}%`}
+        styles={buildStyles({
+          textColor: "#fff",
+          pathColor: stat.color,
+          trailColor: "#1c283c",
+        })}
+      />
+      <p style={{ color: stat.color }}>{stat.label}</p>
+    </div>
+  ))}
+</div>
+
 
       <div className="course-container">
         <div className="course-container-title">
@@ -82,7 +111,9 @@ function DashboardContent() {
               </thead>
               <tbody>
                 {inProgressCourses.map((course) => {
-                  const progress = (course.ModuleCovered / course.TotalModules) * 100;
+                  const progress =
+                    (course.ModuleCovered / course.TotalModules) * 100;
+                  
                   return (
                     <tr key={course.id}>
                       <td>{course.courseName}</td>
@@ -99,7 +130,7 @@ function DashboardContent() {
                           className="continue-btn"
                           onClick={() => handleContinue(course.id)}
                         >
-                          {progress !== 20 ? "Completed" : "Continue"}
+                          {progress === 100 ? "Completed" : "Continue"}
                         </button>
                       </td>
                     </tr>

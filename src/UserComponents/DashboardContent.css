@@ -84,7 +84,7 @@ h1 {
 }
 
 .courses-table tr:nth-child(odd) {
-  background-color: #1c283c;
+  background-color: #161f2e;
 }
 
 .courses-table td {
@@ -98,7 +98,7 @@ h1 {
 
 .progress-bar {
   background-color: #1c283c;
-  width: 50%;
+  width: 80%;
   height: 8px;
   border-radius: 5px;
 }
@@ -143,4 +143,46 @@ h1 {
 
 .no-courses button:hover {
   background-color: #0056b3;
+}
+.course-list {
+  max-height: 400px; /* Restrict the height to 400px */
+  overflow-y: auto;  /* Enable vertical scrolling */
+  scrollbar-width: thin; /* For modern browsers, make the scrollbar thin */
+  scrollbar-color: #9fef00 #1a2332; /* Custom scrollbar colors */
+}
+
+.course-list::-webkit-scrollbar {
+  width: 8px; /* Scrollbar width for Webkit browsers */
+}
+
+.course-list::-webkit-scrollbar-track {
+  background: #1a2332; /* Scrollbar track color */
+  border-radius: 5px;
+}
+
+.course-list::-webkit-scrollbar-thumb {
+  background-color: #9fef00; /* Scrollbar thumb color */
+  border-radius: 5px;
+  border: 2px solid #1a2332; /* Match the track background */
+}
+.stats-container {
+  display: flex;
+  justify-content: space-evenly;
+  align-items: center;
+  margin-top: 20px;
+  background-color: #1a2332;
+  border-radius: 17px;
+  padding: 20px;
+  height: 250px;
+}
+
+.progress-circle {
+  text-align: center;
+  width: 100px;
+  /* background-color: #161f2e; */
+}
+.progress-circle p {
+  margin-top: 10px;
+  font-size: 1rem;
+  font-weight: bold;
 }

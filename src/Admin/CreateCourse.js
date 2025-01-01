@@ -180,7 +180,7 @@ export default function CreateCourse({ AdminName, Role }) {
       if (combinedContent.trim()) {
         // Generate course content using AI for the combined content
         const result = await model.generateContent(`
-         Read the provided PDF content and create a module-wise course in clear and concise language. The course should have a meaningful title and be divided into logical modules, each focusing on specific key concepts, methodologies, findings, and practical applications. For each module, provide a title, a paragrap that covers the entire module concept , a detailed paragraph explanation of the core ideas, and examples or analogies to enhance understanding. 
+         Read the provided PDF content and create a module-wise course in clear and concise language. The course should have a meaningful title ,Introduction to Course (Brief the Course what we will learn from the course it should be about 2 paragraph) and be divided into logical modules, each focusing on specific key concepts, methodologies, findings, and practical applications. For each module, provide a title, a paragrap that covers the entire module concept , a detailed paragraph explanation of the core ideas, and examples or analogies to enhance understanding. 
         
          Content: ${combinedContent}
         `);

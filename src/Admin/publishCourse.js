@@ -35,6 +35,9 @@ const PublishCourse = () => {
       const result = await model.generateContent(`
         convert this data into json keep all the data same only convert the data in json.Give only json nothing else. follow this format for converting into json
 
+        noOfModules
+        Title
+        Introduction
         module 1
         module title:
         concept:

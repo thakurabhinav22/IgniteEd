@@ -12,6 +12,8 @@ import CreateCourse from './Admin/CreateCourse';
 import MagicEditor from "./Admin/magicEditor"
 import PublishCourse from './Admin/publishCourse';
 import Courses from './UserComponents/Module';
+import LearningPage from './UserComponents/learningPage';
+
 
 
 const router = createBrowserRouter([
@@ -50,6 +52,10 @@ const router = createBrowserRouter([
   {
     path: "/Courses",
     element: <Courses />,
+  },
+  {
+    path: "/Courses/learn",
+    element: <LearningPage />,
   },
   
 ]);

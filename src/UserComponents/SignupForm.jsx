@@ -53,7 +53,6 @@ function SignUpForm() {
       return;
     }
 
-    // Validate password length and match
     if (trimmedPassword.length < 7) {
       Swal.fire({
         title: "Password must be at least 7 characters long",
@@ -77,7 +76,6 @@ function SignUpForm() {
       return;
     }
 
-    // Proceed with Firebase signup
     createUserWithEmailAndPassword(auth, trimmedEmail, trimmedPassword)
       .then((userCredential) => {
         const user = userCredential.user;
@@ -92,6 +90,11 @@ function SignUpForm() {
           Surname: trimmedSurname,
           College: trimmedCollege,
           Branch: selectedBranch,
+          numberOfCourseApplied: 0,
+          currentCoure:null,
+          numberOfCourseCompleted:0,
+          joinDate: new Date().toISOString(),
+          Streaks: 0
         })
           .then(() => {
             Swal.fire({
@@ -118,6 +121,7 @@ function SignUpForm() {
       })
       .catch((error) => {
         let errorMessage = "An error occurred. Please try again later.";
+        console.error("Sign up error:", error);
         if (error.code === "auth/email-already-in-use") {
           errorMessage = "User already exists";
         }
