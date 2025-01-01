@@ -52,20 +52,22 @@
   
   .apply-button {
     display: inline-block;
-    background-color: #00b894;
+    border: 1px solid #9fef00;
+    background-color: transparent;
     color: #fff;
     font-size: 1em;
     font-weight: bold;
     padding: 10px 20px;
     border-radius: 8px;
-    border: none;
+    /* border: none; */
     cursor: pointer;
     margin-top: 15px;
     transition: background-color 0.3s ease;
   }
   
   .apply-button:hover {
-    background-color: #01966c;
+    background-color: #9fef00;
+    color: black;
   }
   
   .empty-content {

@@ -10,6 +10,7 @@ function LearningPage() {
   const { courseId } = location.state || {};
   const [contentVisible, setContentVisible] = useState(true);
   const [courseDetails, setCourseDetails] = useState(null);
+  const [isAlreadyApplied, setIsAlreadyApplied] = useState(false); // New state to track if the course is already applied
 
   const db = getDatabase();
   const courseRef = ref(db, `Courses/${courseId}`);
@@ -46,10 +47,30 @@ function LearningPage() {
     return null;
   };
 
+  // Check if the user has already applied for this course
+  useEffect(() => {
+    const userId = getUserIdFromCookie(); // Get the current user ID from the cookie
+    if (userId) {
+      const userCourseRef = ref(db, `user/${userId}/InProgressCourses/${courseId}`);
+      get(userCourseRef).then((snapshot) => {
+        if (snapshot.exists()) {
+          setIsAlreadyApplied(true); // If the course data exists, set to true
+          setContentVisible(false); // Hide content as the user already applied
+        }
+      });
+    }
+  }, [courseId]);
+
   const handleApplyClick = () => {
     const userId = getUserIdFromCookie(); // Get the current user ID from the cookie
     if (!userId) {
       alert("Please log in to apply for the course!");
+      return;
+    }
+
+    if (isAlreadyApplied) {
+      // Show an alert if the user is already enrolled
+      alert("You have already applied for this course!");
       return;
     }
 
@@ -63,7 +84,7 @@ function LearningPage() {
       ModuleCovered: 0,
       TotalModules: JSON.parse(courseDetails.courseContent).noOfModules || 0,
       Warning: 0,
-      CurrentModule:0
+      CurrentModule: 0
     };
 
     // Set the course data in Firebase
@@ -84,27 +105,43 @@ function LearningPage() {
       <div className="learning-content">
         {contentVisible ? (
           <>
-            {courseDetails && (
+            {isAlreadyApplied ? (
+              <div className="empty-content">
+                <h2>Thank you for applying!</h2>
+                <p>You have already enrolled in this course. You will receive further instructions in your registered email.</p>
+              </div>
+            ) : (
               <>
-                <h1 className="learning-title">{courseDetails.courseName}</h1>
-                <div className="course-info">
-                  <div className="course-section">
-                    <h2>Introduction</h2>
-                    <p>{courseDetails.courseContent && JSON.parse(courseDetails.courseContent).Introduction}</p> 
-                    {/* Displaying the Introduction from courseContent JSON */}
-                    <button className="apply-button" onClick={handleApplyClick}>
-                      Apply for Course
-                    </button>
-                  </div>
-                </div>
+                {courseDetails && (
+                  <>
+                    <h1 className="learning-title">{courseDetails.courseName}</h1>
+                    <div className="course-info">
+                      <div className="course-section">
+                        <h2>Introduction</h2>
+                        <p>{courseDetails.courseContent && JSON.parse(courseDetails.courseContent).Introduction}</p>
+                        <button className="apply-button" onClick={handleApplyClick}>
+                          Apply for Course
+                        </button>
+                      </div>
+                    </div>
+                  </>
+                )}
               </>
             )}
           </>
         ) : (
-          <div className="empty-content">
-            <h2>Thank you for applying!</h2>
-            <p>You will receive further instructions in your registered email.</p>
-          </div>
+          <>
+                    <h1 className="learning-title">{courseDetails.courseName}</h1>
+                    <div className="course-info">
+                      <div className="course-section">
+                        <h2>{JSON.parse(courseDetails.courseContent).moduletitle1}</h2>
+                        <h2 >Concept</h2>
+                        <p>{JSON.parse(courseDetails.courseContent).moduel1concept}</p>
+                        <h2 >Example and Analogy</h2>
+                        <p>{JSON.parse(courseDetails.courseContent).moduel1ExampleandAnalogy}</p>
+                      </div>
+                    </div>
+                  </>
         )}
       </div>
     </div>

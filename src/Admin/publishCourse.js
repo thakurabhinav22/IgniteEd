@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import AdminSidebar from "./adminSideBar";
-import { FaTimes } from "react-icons/fa"; 
-import { getDatabase, ref, get, set } from "firebase/database"; 
-import Swal from "sweetalert2"; 
-import "./PublicCourse.css"; 
+import { FaTimes } from "react-icons/fa";
+import { getDatabase, ref, get, set } from "firebase/database";
+import Swal from "sweetalert2";
+import "./PublicCourse.css";
 import { GoogleGenerativeAI } from "@google/generative-ai";
 
 const PublishCourse = () => {
@@ -15,15 +15,15 @@ const PublishCourse = () => {
   const [courseName, setCourseName] = useState(fileName || "");
   const [authorName, setAuthorName] = useState("");
   const [thumbnail, setThumbnail] = useState("");
-  const [bannerImage, setBannerImage] = useState(""); 
+  const [bannerImage, setBannerImage] = useState("");
   const [createAnnouncement, setCreateAnnouncement] = useState(false);
-  const [numQuestions, setNumQuestions] = useState(3); 
+  const [numQuestions, setNumQuestions] = useState(3);
   const [isProcessing, setIsProcessing] = useState(false);
-  const [showContentModal, setShowContentModal] = useState(false); 
+  const [showContentModal, setShowContentModal] = useState(false);
   const [courseCount, setCourseCount] = useState(0);
   const [updatedContent, setUpdatedContent] = useState(editedContent);
 
-  const API_KEY = process.env.REACT_APP_GEMINI 
+  const API_KEY = process.env.REACT_APP_GEMINI;
   const genAI = new GoogleGenerativeAI(API_KEY);
   const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
   let generatedCourse;
@@ -33,17 +33,17 @@ const PublishCourse = () => {
 
     try {
       const result = await model.generateContent(`
-        convert this data into json keep all the data same only convert the data in json.Give only json nothing else. follow this format for converting into json
+        convert this data into json keep all the data same only convert the data in json.Give only json nothing else. follow this format for converting into json. Covert
 
-        noOfModules
-        Title
-        Introduction
-        module 1
-        module title:
-        concept:
-        Example/Analogy:
-        module 2
-        module title 2
+            noOfModules
+            Title
+            Introduction
+            moduletitle1:
+            moduel1concept:
+            moduel1ExampleandAnalogy:
+            moduletitle2
+            moduel2concept:
+            moduele2ExampleandAnalogy:
 
         Content: ${updatedContent}`);
 
@@ -76,7 +76,7 @@ const PublishCourse = () => {
   };
 
   useEffect(() => {
-    const usercredAd = getCookie("usercredAd"); 
+    const usercredAd = getCookie("usercredAd");
     if (usercredAd) {
       fetchCourseCount(usercredAd);
     }
@@ -97,7 +97,7 @@ const PublishCourse = () => {
       if (snapshot.exists()) {
         setCourseCount(snapshot.val());
       } else {
-        setCourseCount(0); 
+        setCourseCount(0);
       }
     } catch (error) {
       console.error("Error fetching course count:", error);
@@ -116,14 +116,14 @@ const PublishCourse = () => {
     try {
       await handleGemini();
       const usercredAd = getCookie("userSessionCredAd");
-      const userSessionCredAd = getCookie("userSessionCredAd"); 
+      const userSessionCredAd = getCookie("userSessionCredAd");
 
       const db = getDatabase();
       const courseCountRef = ref(db, `admin/${userSessionCredAd}/courseCount`);
       const snapshot = await get(courseCountRef);
 
       let currentCourseCount = snapshot.exists() ? snapshot.val() : 0;
-      currentCourseCount += 1; 
+      currentCourseCount += 1;
 
       await set(courseCountRef, currentCourseCount);
 
@@ -139,9 +139,8 @@ const PublishCourse = () => {
         bannerImage,
         // createAnnouncement,
         numQuestions,
-        courseContent: generatedCourse, 
+        courseContent: generatedCourse,
       });
-
 
       await set(ref(db, `Courses/${newCourseId}`), {
         courseName,
@@ -151,7 +150,6 @@ const PublishCourse = () => {
         numQuestions,
         courseContent: generatedCourse,
       });
-      
 
       setIsProcessing(false);
       alert("Course Created!");
@@ -162,7 +160,6 @@ const PublishCourse = () => {
   };
 
   const handleShowContent = () => {
-
     setShowContentModal(true);
   };
 
@@ -171,7 +168,7 @@ const PublishCourse = () => {
   };
 
   const handleContentChange = (event) => {
-    setUpdatedContent(event.target.value); 
+    setUpdatedContent(event.target.value);
   };
 
   return (

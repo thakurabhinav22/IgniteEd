@@ -82,7 +82,7 @@ function Module() {
               <img
                 src={
                   course.imageURL ||
-                  "https://academy.hackthebox.com/storage/modules/185/logo.png"
+                  "https://academy.hackthebox.com/storage/modules/290/logo.png"
                 }
                 alt={course.courseName}
                 className="course-image"

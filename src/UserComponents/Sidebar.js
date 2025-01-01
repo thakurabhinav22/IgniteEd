@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import './Sidebar.css';
-import { Link } from 'react-router-dom';
+import { Link , useNavigate} from 'react-router-dom';
 import { FaHome, FaCertificate, FaQuestionCircle, FaUser } from 'react-icons/fa';
 import { getDatabase, ref, get } from 'firebase/database'; // Firebase import for database
 
@@ -8,6 +8,13 @@ function Sidebar() {
   const [userName, setUserName] = useState('');
   const [surName, setSurName] = useState('');
   const [branch, setBranch] = useState('');
+  const navigate = useNavigate();
+
+
+  const handleLogout = () => {
+    document.cookie = "userSessionCred=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/";   
+    navigate("/");
+  };
 
   useEffect(() => {
     // Function to get cookie value by name
@@ -65,7 +72,7 @@ function Sidebar() {
           <span>Paths</span>
         </Link>
       </nav>
-      <div className="dark-mode">
+      <div className="dark-mode" onClick={handleLogout}>
         <p>Logout</p>
       </div>
     </div>
