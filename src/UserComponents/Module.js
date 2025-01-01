@@ -2,11 +2,13 @@ import React, { useEffect, useState } from "react";
 import Sidebar from "./Sidebar";
 import "./Module.css";
 import { getDatabase, ref, onValue } from "firebase/database";
+import { useNavigate } from "react-router-dom"; 
 
 function Module() {
   const [courses, setCourses] = useState([]);
   const [searchQuery, setSearchQuery] = useState(""); 
-  const [filter, setFilter] = useState("recent"); 
+  const [filter, setFilter] = useState("recent");
+   const navigate = useNavigate(); 
 
   useEffect(() => {
     const db = getDatabase();
@@ -25,7 +27,9 @@ function Module() {
 
   const handleCourseClick = (courseId) => {
     console.log("Selected Course ID:", courseId);
+    navigate(`/courses/learn`, { state: { courseId } });
   };
+  
 
   const filteredCourses = courses
     .filter((course) =>

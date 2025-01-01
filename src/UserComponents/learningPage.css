@@ -1,0 +1,86 @@
+.learning-page-container {
+    overflow: hidden;
+    background-color: #121c2b;
+    font-family: "Arial", sans-serif;
+    color: #b3bccc;
+  }
+  
+  .learning-content {
+    padding: 25px;
+    width: calc(100% - 250px);
+    height: 100vh;
+    background-color: #121c2b;
+    margin-left: 290px;
+    overflow-y: auto;
+  }
+  
+  .learning-title {
+    color: #fff;
+    font-size: 2.2em;
+    font-weight: bold;
+    margin-bottom: 20px;
+    text-align: center;
+  }
+  
+  .course-info {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    background-color: #1a2332;
+    border-radius: 17px;
+    padding: 20px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+  }
+  
+  .course-section {
+    background-color: #1a2332;
+    border: 1px solid #2b3445;
+    border-radius: 12px;
+    padding: 20px;
+  }
+  
+  .course-section h2 {
+    color: #9fef00;
+    margin-bottom: 10px;
+    font-size: 1.5em;
+  }
+  
+  .course-section p {
+    color: #b3bccc;
+    line-height: 1.6;
+  }
+  
+  .apply-button {
+    display: inline-block;
+    background-color: #00b894;
+    color: #fff;
+    font-size: 1em;
+    font-weight: bold;
+    padding: 10px 20px;
+    border-radius: 8px;
+    border: none;
+    cursor: pointer;
+    margin-top: 15px;
+    transition: background-color 0.3s ease;
+  }
+  
+  .apply-button:hover {
+    background-color: #01966c;
+  }
+  
+  .empty-content {
+    text-align: center;
+    color: #fff;
+    margin-top: 100px;
+  }
+  
+  .empty-content h2 {
+    font-size: 2em;
+    color: #9fef00;
+  }
+  
+  .empty-content p {
+    font-size: 1.2em;
+    color: #b3bccc;
+  }
+  

@@ -67,7 +67,7 @@ function DashboardContent() {
   };
 
   const handleContinue = (courseId) => {
-    navigate(`/courses/${courseId}`);
+    navigate(`/courses/learn`, { state: { courseId } });
   };
 
   return (
