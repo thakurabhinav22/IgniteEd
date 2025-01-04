@@ -13,6 +13,8 @@ import MagicEditor from "./Admin/magicEditor"
 import PublishCourse from './Admin/publishCourse';
 import Courses from './UserComponents/Module';
 import LearningPage from './UserComponents/learningPage';
+import SampleUploadtoGoogleDrive from "./UserComponents/SampleUploadtoGoogleDrive"
+
 
 
 
@@ -56,7 +58,10 @@ const router = createBrowserRouter([
   {
     path: "/Courses/learn",
     element: <LearningPage />,
-  },
+  },{
+    path: "/uploads",
+    element: <SampleUploadtoGoogleDrive />,
+  }
   
 ]);
 

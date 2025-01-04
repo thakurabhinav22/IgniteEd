@@ -13,11 +13,16 @@ function LearningPage() {
   const [contentVisible, setContentVisible] = useState(true);
   const [courseDetails, setCourseDetails] = useState(null);
   const [isAlreadyApplied, setIsAlreadyApplied] = useState(false);
-  let [currentModule, setCurrentModule] = useState(1);
-  let [questionCount, setQuestionCount] = useState(3);
+  const [currentModule, setCurrentModule] = useState(1);
+  const [questionCount, setQuestionCount] = useState(3);
   const [moduleLength, setModuleLength] = useState(3);
   const [answers, setAnswers] = useState([]);
   const [isModuleCompleted, setIsModuleCompleted] = useState(false);
+  const [isCourseCompleted, setIsCourseCompleted] = useState(false);
+  const [showQuestions, setShowQuestions] = useState(false); // New state to control question visibility
+  const [aiQuestions, setAiQuestions] = useState([]);
+  const [isGenerating , setIsGenerating] = useState(false);
+
   const API_KEY = process.env.REACT_APP_GEMINI;
   const genAI = new GoogleGenerativeAI(API_KEY);
   const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
@@ -29,12 +34,11 @@ function LearningPage() {
     if (!courseId) {
       navigate(`/courses`);
     } else {
-      // Fetch course content from Firebase
       get(courseRef)
         .then((snapshot) => {
           if (snapshot.exists()) {
             const courseData = snapshot.val();
-            setCourseDetails(courseData); // Store course data in state
+            setCourseDetails(courseData);
           } else {
             alert("Course not found.");
           }
@@ -71,6 +75,7 @@ function LearningPage() {
           setContentVisible(false);
           setCurrentModule(userData.CurrentModule || 1);
           setModuleLength(userData.TotalModules || 1);
+          setIsCourseCompleted(userData.completed || false);
         }
       });
       get(CourseRef).then((snapshot) => {
@@ -105,6 +110,7 @@ function LearningPage() {
       TotalModules: JSON.parse(courseDetails.courseContent).noOfModules || 0,
       Warning: 0,
       CurrentModule: 1,
+      completed: false,
     };
   };
 
@@ -115,76 +121,103 @@ function LearningPage() {
     }
     setCurrentModule((prevModule) => prevModule - 1);
   };
-
   const handleNext = async () => {
+    // Check if AI is generating questions
+    if (isGenerating) {
+      alert("AI is still generating the questions. Please wait.");
+      return;
+    }
+  
     if (currentModule === moduleLength) {
-      return; // Stop navigation beyond the last module
+      return;
     }
-
-    const userCookie = getUserIdFromCookie();
-    const moduleRef = ref(
-      db,
-      `user/${userCookie}/InProgressCourses/${courseId}`
-    );
-
-    setContentVisible(false);
-    const nextModule = currentModule + 1;
-    setCurrentModule(nextModule);
-
-    // Check if the user has answered at least 60% of the current module's questions
-    const correctAnswers = answers.filter((answer) => answer.correct === true);
-    const percentage = (correctAnswers.length / questionCount) * 100;
-
-    if (currentModule < nextModule) {
-      try {
-        const moduleRef = ref(db, `user/${userCookie}/InProgressCourses/${courseId}`);
+  
+    try {
+      const userCookie = getUserIdFromCookie();
+      const moduleRef = ref(
+        db,
+        `user/${userCookie}/InProgressCourses/${courseId}`
+      );
+  
+      if (currentModule === moduleLength) {
         await update(moduleRef, {
-          ModuleCovered: nextModule,
-          CurrentModule: nextModule,
+          completed: true,
         });
-        console.log("User progress updated successfully!");
-      } catch (error) {
-        console.error("Error updating user progress:", error);
       }
-    } else {
-      console.log("No further module to progress.");
+  
+      setContentVisible(false);
+      const nextModule = currentModule + 1;
+      if(!isModuleCompleted){
+      generateQuestions(nextModule)
+      }
+  
+      // Prevent advancing to the next module before questions are generated
+      if (!isModuleCompleted) {
+        alert("Please complete the questions before proceeding.");
+        return;
+      }
+  
+      setCurrentModule(nextModule);
+  
+      const correctAnswers = answers.filter((answer) => answer.correct === true);
+      const percentage = (correctAnswers.length / questionCount) * 100;
+  
+      if (currentModule < nextModule) {
+        try {
+          if (!isModuleCompleted) {
+            await update(moduleRef, {
+              ModuleCovered: nextModule,
+              CurrentModule: nextModule,
+            });
+          }
+          if (nextModule === moduleLength) {
+            await update(moduleRef, {
+              completed: true,
+            });
+          }
+          console.log("User progress updated successfully!");
+        } catch (error) {
+          console.error("Error updating user progress:", error);
+        }
+      } else {
+        console.log("No further module to progress.");
+      }
+    } catch (error) {
+      console.error("Error during next module handling:", error);
     }
-    // Generate questions for next module
-    // await generateQuestions(nextModule);
   };
+  
 
   const generateQuestions = async (moduleNumber) => {
+    setIsGenerating(true);
     try {
       const result = await model.generateContent(`
         Generate ${questionCount} questions based on the below concept with 4 options in this format:
         
-        1. Question
-           <span className="q1Option1"></span>
-           <span className="q1Option2"></span>
-           <span className="q1Option3"></span>
-           <span className="q1Option4"></span>
-        
+       {
+  "questions": [
+    {
+      "question": "What is AWT header class in Java?",
+      "options": [
+        { "option": "Swing", "isCorrect": true },
+        { "option": "AWT", "isCorrect": false },
+        { "option": "JDK", "isCorrect": false },
+        { "option": "JRE", "isCorrect": false }
+      ]
+    }, etc ....        
         Content: 
-          Title: ${
-            JSON.parse(courseDetails.courseContent)[
-              `moduletitle${moduleNumber}`
-            ]
-          }
-          Concept: ${
-            JSON.parse(courseDetails.courseContent)[
-              `module${moduleNumber}concept`
-            ]
-          }
-          Example and Analogy: ${
-            JSON.parse(courseDetails.courseContent)[
-              `module${moduleNumber}ExampleandAnalogy`
-            ]
-          }
+          Title: ${JSON.parse(courseDetails.courseContent)[`moduletitle${moduleNumber}`]}
+          Concept: ${JSON.parse(courseDetails.courseContent)[`module${moduleNumber}concept`]}
+          Example and Analogy: ${JSON.parse(courseDetails.courseContent)[`module${moduleNumber}ExampleandAnalogy`]}
       `);
 
       const response = await result.response;
-
-      // Notify the user
+      const generatedQuestions = JSON.parse(response.text().replace('```json','').replace('```',''));
+      console.log(response.text())
+      
+      
+      setAiQuestions(generatedQuestions.questions); 
+      setIsGenerating(false);
       Swal.fire({
         title: "Questions Generated!",
         icon: "success",
@@ -193,7 +226,8 @@ function LearningPage() {
         showConfirmButton: false,
         timer: 3000,
       });
-      setIsModuleCompleted(true); // Set module completion status
+      setIsModuleCompleted(true);
+      setShowQuestions(true); // Set this to true when questions are ready
     } catch (error) {
       Swal.fire({
         title: "Error",
@@ -203,6 +237,45 @@ function LearningPage() {
       console.error(error);
     }
   };
+  const handleQuestionValidate = () => {
+    let correctAnswersCount = 0;
+  
+    // Loop through each AI-generated question
+    aiQuestions.forEach((question, index) => {
+      // Get the user's selected answer
+      const selectedOption = document.querySelector(`input[name="question-${index}"]:checked`);
+      
+      if (selectedOption) {
+        // Check if the selected option is the correct one
+        const userAnswer = selectedOption.value;
+        const correctOption = question.options.find(option => option.isCorrect).option;
+        
+        if (userAnswer === correctOption) {
+          correctAnswersCount++;
+        }
+      }
+    });
+  
+    // Show alert with the result
+    const totalQuestions = aiQuestions.length;
+    const score = (correctAnswersCount / totalQuestions) * 100;
+    Swal.fire({
+      title: `Your score: ${score}%`,
+      text: `You got ${correctAnswersCount} out of ${totalQuestions} correct.`,
+      icon: score === 100 ? "success" : "error",
+      confirmButtonText: "OK",
+    });
+  
+   
+    if (score === 100) {
+      setIsModuleCompleted(true);
+      setShowQuestions(false); 
+      handleNext()
+      setIsModuleCompleted(false);
+
+    }
+  };
+  
 
   return (
     <div className="learning-page-container">
@@ -220,18 +293,15 @@ function LearningPage() {
               </div>
             ) : (
               <>
-                {courseDetails && (
+                {courseDetails ? (
                   <>
-                    <h1 className="learning-title">
-                      {courseDetails.courseName}
-                    </h1>
+                    <h1 className="learning-title">{courseDetails.courseName}</h1>
                     <div className="course-info">
                       <div className="course-section">
                         <h2>Introduction</h2>
                         <p>
                           {courseDetails.courseContent &&
-                            JSON.parse(courseDetails.courseContent)
-                              .Introduction}
+                            JSON.parse(courseDetails.courseContent).Introduction}
                         </p>
                         <button
                           className="apply-button"
@@ -242,6 +312,8 @@ function LearningPage() {
                       </div>
                     </div>
                   </>
+                ) : (
+                  <div>Loading course details...</div>
                 )}
               </>
             )}
@@ -278,7 +350,28 @@ function LearningPage() {
                 {isModuleCompleted ? (
                   <>
                     <h2>Answer the Questions</h2>
-                    {/* Render questions for the user to answer */}
+                    {showQuestions && ( 
+                      <div className="question-course-info">
+                        {aiQuestions.map((question, index) => (
+                          <div key={index} className="question-course-section">
+                            <h3>{index + 1}. {question.question}</h3>
+                            <div className="options-container">
+                              {question.options.map((option, optionIndex) => (
+                                <label key={optionIndex}>
+                                  <input
+                                    type="radio"
+                                    value={option.option}
+                                    name={`question-${index}`}
+                                  />
+                                  <span className="option-label">{option.option}</span>
+                                </label>
+                              ))}
+                            </div>
+                          </div>
+                        ))}
+                        <button className="NextQuestion" onClick={handleQuestionValidate}>Next</button>
+                      </div>
+                    )}
                   </>
                 ) : (
                   <div>
