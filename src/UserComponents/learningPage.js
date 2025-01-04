@@ -121,72 +121,6 @@ function LearningPage() {
     }
     setCurrentModule((prevModule) => prevModule - 1);
   };
-  const handleNext = async () => {
-    // Check if AI is generating questions
-    if (isGenerating) {
-      alert("AI is still generating the questions. Please wait.");
-      return;
-    }
-  
-    if (currentModule === moduleLength) {
-      return;
-    }
-  
-    try {
-      const userCookie = getUserIdFromCookie();
-      const moduleRef = ref(
-        db,
-        `user/${userCookie}/InProgressCourses/${courseId}`
-      );
-  
-      if (currentModule === moduleLength) {
-        await update(moduleRef, {
-          completed: true,
-        });
-      }
-  
-      setContentVisible(false);
-      const nextModule = currentModule + 1;
-      if(!isModuleCompleted){
-      generateQuestions(nextModule)
-      }
-  
-      // Prevent advancing to the next module before questions are generated
-      if (!isModuleCompleted) {
-        alert("Please complete the questions before proceeding.");
-        return;
-      }
-  
-      setCurrentModule(nextModule);
-  
-      const correctAnswers = answers.filter((answer) => answer.correct === true);
-      const percentage = (correctAnswers.length / questionCount) * 100;
-  
-      if (currentModule < nextModule) {
-        try {
-          if (!isModuleCompleted) {
-            await update(moduleRef, {
-              ModuleCovered: nextModule,
-              CurrentModule: nextModule,
-            });
-          }
-          if (nextModule === moduleLength) {
-            await update(moduleRef, {
-              completed: true,
-            });
-          }
-          console.log("User progress updated successfully!");
-        } catch (error) {
-          console.error("Error updating user progress:", error);
-        }
-      } else {
-        console.log("No further module to progress.");
-      }
-    } catch (error) {
-      console.error("Error during next module handling:", error);
-    }
-  };
-  
 
   const generateQuestions = async (moduleNumber) => {
     setIsGenerating(true);
@@ -244,12 +178,12 @@ function LearningPage() {
     aiQuestions.forEach((question, index) => {
       // Get the user's selected answer
       const selectedOption = document.querySelector(`input[name="question-${index}"]:checked`);
-      
+  
       if (selectedOption) {
         // Check if the selected option is the correct one
         const userAnswer = selectedOption.value;
         const correctOption = question.options.find(option => option.isCorrect).option;
-        
+  
         if (userAnswer === correctOption) {
           correctAnswersCount++;
         }
@@ -266,15 +200,80 @@ function LearningPage() {
       confirmButtonText: "OK",
     });
   
-   
+    // If the score is 100%, mark the module as completed and move to the next module
     if (score === 100) {
       setIsModuleCompleted(true);
-      setShowQuestions(false); 
-      handleNext()
-      setIsModuleCompleted(false);
-
+      setShowQuestions(false);
+      handleNext(); // Proceed to the next module after validating answers
     }
   };
+  
+  const handleNext = async () => {
+    // Check if AI is generating questions
+    if (isGenerating) {
+      alert("AI is still generating the questions. Please wait.");
+      return;
+    }
+  
+    // Prevent proceeding if the current module is the last one
+    if (currentModule === moduleLength) {
+      return;
+    }
+  
+    try {
+      const userCookie = getUserIdFromCookie();
+      const moduleRef = ref(
+        db,
+        `user/${userCookie}/InProgressCourses/${courseId}`
+      );
+  
+      // If the current module is completed, update Firebase progress
+      if (currentModule === moduleLength) {
+        await update(moduleRef, {
+          completed: true,
+        });
+      }
+  
+      setContentVisible(false);
+      const nextModule = currentModule + 1;
+  
+      // Generate questions for the next module if not already completed
+      if (!isModuleCompleted) {
+        generateQuestions(nextModule);
+      }
+  
+      // Ensure questions are generated before proceeding to the next module
+      if (!isModuleCompleted) {
+        alert("Please complete the questions before proceeding.");
+        return;
+      }
+  
+      setCurrentModule(nextModule);
+  
+      // Update Firebase with the progress to the next module
+      try {
+        if (isModuleCompleted) {
+          await update(moduleRef, {
+            ModuleCovered: nextModule,
+            CurrentModule: nextModule,
+          });
+        }
+  
+        // If the next module is the last one, mark the course as completed
+        if (nextModule === moduleLength) {
+          await update(moduleRef, {
+            completed: true,
+          });
+        }
+        console.log("User progress updated successfully!");
+      } catch (error) {
+        console.error("Error updating user progress:", error);
+      }
+    } catch (error) {
+      console.error("Error during next module handling:", error);
+    }
+  };
+  
   
 
   return (
