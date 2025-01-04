@@ -89,20 +89,23 @@ function LearningPage() {
 
   const handleApplyClick = () => {
     const userId = getUserIdFromCookie();
+    
+    // Check if the user is logged in
     if (!userId) {
       alert("Please log in to apply for the course!");
       return;
     }
-
+  
+    // Check if the user has already applied for the course
     if (isAlreadyApplied) {
       alert("You have already applied for this course!");
       return;
     }
-
-    const userCourseRef = ref(
-      db,
-      `user/${userId}/InProgressCourses/${courseId}`
-    );
+  
+    // Reference to the user's progress in the course
+    const userCourseRef = ref(db, `user/${userId}/InProgressCourses/${courseId}`);
+    
+    // Prepare the data to be saved to Firebase
     const courseData = {
       CorrectAnswer: 0,
       noOfQuestion: 3,
@@ -112,7 +115,20 @@ function LearningPage() {
       CurrentModule: 1,
       completed: false,
     };
+  
+    // Set the course data in Firebase
+    set(userCourseRef, courseData)
+      .then(() => {
+        alert("You have successfully applied for this course!");
+        setIsAlreadyApplied(true); // Update the state to reflect the application status
+        setContentVisible(false); // Hide the apply button once applied
+      })
+      .catch((error) => {
+        console.error("Error applying for the course: ", error);
+        alert("An error occurred while applying for the course. Please try again.");
+      });
   };
+  
 
   const handlePrevious = () => {
     if (currentModule === 1) {
@@ -348,9 +364,9 @@ function LearningPage() {
                 </p>
                 {isModuleCompleted ? (
                   <>
-                    <h2>Answer the Questions</h2>
                     {showQuestions && ( 
                       <div className="question-course-info">
+                        <h2>Answer the Questions</h2>
                         {aiQuestions.map((question, index) => (
                           <div key={index} className="question-course-section">
                             <h3>{index + 1}. {question.question}</h3>
