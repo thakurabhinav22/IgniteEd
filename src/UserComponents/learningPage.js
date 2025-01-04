@@ -19,18 +19,59 @@ function LearningPage() {
   const [answers, setAnswers] = useState([]);
   const [isModuleCompleted, setIsModuleCompleted] = useState(false);
   const [isCourseCompleted, setIsCourseCompleted] = useState(false);
-  const [showQuestions, setShowQuestions] = useState(false); // New state to control question visibility
+  const [showQuestions, setShowQuestions] = useState(false);
   const [aiQuestions, setAiQuestions] = useState([]);
-  const [isGenerating , setIsGenerating] = useState(false);
-
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [isQuestionGenerated, setIsQuestionGenerated] = useState(false);
+  const [isQuestionAnswered, setIsQuestionAnswerd] = useState(false);
+  const [popupWindow, setPopupWindow] = useState(null); 
   const API_KEY = process.env.REACT_APP_GEMINI;
   const genAI = new GoogleGenerativeAI(API_KEY);
   const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
-
   const db = getDatabase();
   const courseRef = ref(db, `Courses/${courseId}`);
 
+
   useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'hidden' && !isQuestionAnswered && isQuestionGenerated) {
+        Swal.fire({
+          title: "Critical Warning",
+          text: "Tab Switching have been recorded",
+          icon: "error",
+          confirmButtonText: "Okay"
+        });
+      }
+    };
+    const handleWindowFocus = () => {
+      if (popupWindow && popupWindow.closed) {
+        // Popup window was closed, show the warning
+        if (!isQuestionAnswered && isQuestionGenerated) {
+          Swal.fire({
+            title: "Critical Warning",
+            text: "You cannot leave the page until you answer the questions.",
+            icon: "error",
+            confirmButtonText: "Okay"
+          });
+        }
+      }
+    };
+    const openPopup = () => {
+      const popup = window.open('/your-popup-url', '_blank', 'width=600,height=400');
+      setPopupWindow(popup);
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    window.addEventListener('focus', handleWindowFocus);
+
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      window.removeEventListener('focus', handleWindowFocus);
+    };
+  }, [isQuestionAnswered, isQuestionGenerated,popupWindow]);
+
+  useEffect(() => {
+    // Fetch course details if courseId exists
     if (!courseId) {
       navigate(`/courses`);
     } else {
@@ -47,7 +88,65 @@ function LearningPage() {
           alert("Error fetching course data: " + error.message);
         });
     }
-  }, [courseId, navigate]);
+
+    // Define the handleMouseLeave function to warn the user if they try to leave the page
+    const handleMouseLeave = (event) => {
+      if (event.clientY < 10 && !isQuestionAnswered && isQuestionGenerated) {
+        Swal.fire({
+          title: "You cannot Leave the Page",
+          text: "You haven't answered the question. Warning has been recorded.",
+          icon: "warning",
+        });
+      }
+    };
+
+    // Block sidebar navigation if the question is not answered
+    const blockSidebarNavigation = (event) => {
+      if (!isQuestionAnswered && isQuestionGenerated) {
+        event.preventDefault();
+        Swal.fire({
+          title: "Warning",
+          text: "You cannot navigate away from this page until you answer the questions.",
+          icon: "warning",
+        });
+      }
+    };
+
+    // Prevent the user from leaving the page or closing the tab
+    const handleBeforeUnload = (event) => {
+      if (!isQuestionAnswered && isQuestionGenerated) {
+        const message = "You haven't answered the question. Are you sure you want to leave?";
+        event.returnValue = message; // Standard for most browsers
+        return message; // For some browsers
+      }
+    };
+
+    // Add event listeners for mouse leave, before unload, and sidebar navigation block
+    if (!isQuestionAnswered && isQuestionGenerated) {
+      window.addEventListener("mouseout", handleMouseLeave);
+      window.addEventListener("beforeunload", handleBeforeUnload);
+
+      // Assuming the sidebar navigation elements have a class of 'sidebar-nav'
+      const sidebarLinks = document.querySelectorAll(".sidebar-nav");
+      sidebarLinks.forEach((link) => {
+        link.addEventListener("click", blockSidebarNavigation);
+      });
+    }
+
+    // Cleanup event listeners on component unmount or conditions change
+    return () => {
+      window.removeEventListener("mouseout", handleMouseLeave);
+      window.removeEventListener("beforeunload", handleBeforeUnload);
+
+      // Cleanup sidebar navigation block
+      const sidebarLinks = document.querySelectorAll(".sidebar-nav");
+      sidebarLinks.forEach((link) => {
+        link.removeEventListener("click", blockSidebarNavigation);
+      });
+    };
+  }, [courseId, isQuestionAnswered, isQuestionGenerated, navigate]);
+
+  
 
   const getUserIdFromCookie = () => {
     const cookieValue = document.cookie
@@ -89,22 +188,25 @@ function LearningPage() {
 
   const handleApplyClick = () => {
     const userId = getUserIdFromCookie();
-    
+
     // Check if the user is logged in
     if (!userId) {
       alert("Please log in to apply for the course!");
       return;
     }
-  
+
     // Check if the user has already applied for the course
     if (isAlreadyApplied) {
       alert("You have already applied for this course!");
       return;
     }
-  
+
     // Reference to the user's progress in the course
-    const userCourseRef = ref(db, `user/${userId}/InProgressCourses/${courseId}`);
-    
+    const userCourseRef = ref(
+      db,
+      `user/${userId}/InProgressCourses/${courseId}`
+    );
+
     // Prepare the data to be saved to Firebase
     const courseData = {
       CorrectAnswer: 0,
@@ -114,8 +216,9 @@ function LearningPage() {
       Warning: 0,
       CurrentModule: 1,
       completed: false,
+      CriticalWarning: 0,
     };
-  
+
     // Set the course data in Firebase
     set(userCourseRef, courseData)
       .then(() => {
@@ -125,10 +228,11 @@ function LearningPage() {
       })
       .catch((error) => {
         console.error("Error applying for the course: ", error);
-        alert("An error occurred while applying for the course. Please try again.");
+        alert(
+          "An error occurred while applying for the course. Please try again."
+        );
       });
   };
-  
 
   const handlePrevious = () => {
     if (currentModule === 1) {
@@ -156,18 +260,32 @@ function LearningPage() {
       ]
     }, etc ....        
         Content: 
-          Title: ${JSON.parse(courseDetails.courseContent)[`moduletitle${moduleNumber}`]}
-          Concept: ${JSON.parse(courseDetails.courseContent)[`module${moduleNumber}concept`]}
-          Example and Analogy: ${JSON.parse(courseDetails.courseContent)[`module${moduleNumber}ExampleandAnalogy`]}
+          Title: ${
+            JSON.parse(courseDetails.courseContent)[
+              `moduletitle${moduleNumber}`
+            ]
+          }
+          Concept: ${
+            JSON.parse(courseDetails.courseContent)[
+              `module${moduleNumber}concept`
+            ]
+          }
+          Example and Analogy: ${
+            JSON.parse(courseDetails.courseContent)[
+              `module${moduleNumber}ExampleandAnalogy`
+            ]
+          }
       `);
 
       const response = await result.response;
-      const generatedQuestions = JSON.parse(response.text().replace('```json','').replace('```',''));
-      console.log(response.text())
-      
-      
-      setAiQuestions(generatedQuestions.questions); 
+      const generatedQuestions = JSON.parse(
+        response.text().replace("```json", "").replace("```", "")
+      );
+      console.log(response.text());
+
+      setAiQuestions(generatedQuestions.questions);
       setIsGenerating(false);
+      setIsQuestionGenerated(true);
       Swal.fire({
         title: "Questions Generated!",
         icon: "success",
@@ -187,25 +305,30 @@ function LearningPage() {
       console.error(error);
     }
   };
+
   const handleQuestionValidate = () => {
     let correctAnswersCount = 0;
-  
+
     // Loop through each AI-generated question
     aiQuestions.forEach((question, index) => {
       // Get the user's selected answer
-      const selectedOption = document.querySelector(`input[name="question-${index}"]:checked`);
-  
+      const selectedOption = document.querySelector(
+        `input[name="question-${index}"]:checked`
+      );
+
       if (selectedOption) {
         // Check if the selected option is the correct one
         const userAnswer = selectedOption.value;
-        const correctOption = question.options.find(option => option.isCorrect).option;
-  
+        const correctOption = question.options.find(
+          (option) => option.isCorrect
+        ).option;
+
         if (userAnswer === correctOption) {
           correctAnswersCount++;
         }
       }
     });
-  
+
     // Show alert with the result
     const totalQuestions = aiQuestions.length;
     const score = (correctAnswersCount / totalQuestions) * 100;
@@ -215,57 +338,66 @@ function LearningPage() {
       icon: score === 100 ? "success" : "error",
       confirmButtonText: "OK",
     });
-  
+
     // If the score is 100%, mark the module as completed and move to the next module
     if (score === 100) {
+      setIsQuestionAnswerd(true);
       setIsModuleCompleted(true);
       setShowQuestions(false);
-      handleNext(); // Proceed to the next module after validating answers
+      handleNext(); 
     }
   };
-  
+
   const handleNext = async () => {
     // Check if AI is generating questions
     if (isGenerating) {
-      alert("AI is still generating the questions. Please wait.");
+      Swal.fire({
+        title: "Warning",
+        text: "Questions are still being generated. Please wait before proceeding.",
+        icon: "warning",
+      });
       return;
     }
-  
+
     // Prevent proceeding if the current module is the last one
     if (currentModule === moduleLength) {
       return;
     }
-  
+
     try {
       const userCookie = getUserIdFromCookie();
       const moduleRef = ref(
         db,
         `user/${userCookie}/InProgressCourses/${courseId}`
       );
-  
+
       // If the current module is completed, update Firebase progress
       if (currentModule === moduleLength) {
         await update(moduleRef, {
           completed: true,
         });
       }
-  
+
       setContentVisible(false);
       const nextModule = currentModule + 1;
-  
+
       // Generate questions for the next module if not already completed
       if (!isModuleCompleted) {
         generateQuestions(nextModule);
       }
-  
+
       // Ensure questions are generated before proceeding to the next module
       if (!isModuleCompleted) {
-        alert("Please complete the questions before proceeding.");
+        Swal.fire({
+          title: "Warning",
+          text: "Please complete the questions before proceeding.",
+          icon: "warning",
+        });
         return;
       }
-  
+
       setCurrentModule(nextModule);
-  
+
       // Update Firebase with the progress to the next module
       try {
         if (isModuleCompleted) {
@@ -274,7 +406,7 @@ function LearningPage() {
             CurrentModule: nextModule,
           });
         }
-  
+
         // If the next module is the last one, mark the course as completed
         if (nextModule === moduleLength) {
           await update(moduleRef, {
@@ -289,12 +421,13 @@ function LearningPage() {
       console.error("Error during next module handling:", error);
     }
   };
-  
-  
 
   return (
     <div className="learning-page-container">
-      <Sidebar />
+    <Sidebar
+        isQuestionAnswered={isQuestionAnswered}
+        isQuestionGenerated={isQuestionGenerated}
+      />
       <div className="learning-content">
         {contentVisible ? (
           <>
@@ -310,13 +443,16 @@ function LearningPage() {
               <>
                 {courseDetails ? (
                   <>
-                    <h1 className="learning-title">{courseDetails.courseName}</h1>
+                    <h1 className="learning-title">
+                      {courseDetails.courseName}
+                    </h1>
                     <div className="course-info">
                       <div className="course-section">
                         <h2>Introduction</h2>
                         <p>
                           {courseDetails.courseContent &&
-                            JSON.parse(courseDetails.courseContent).Introduction}
+                            JSON.parse(courseDetails.courseContent)
+                              .Introduction}
                         </p>
                         <button
                           className="apply-button"
@@ -364,12 +500,14 @@ function LearningPage() {
                 </p>
                 {isModuleCompleted ? (
                   <>
-                    {showQuestions && ( 
+                    {showQuestions && (
                       <div className="question-course-info">
                         <h2>Answer the Questions</h2>
                         {aiQuestions.map((question, index) => (
                           <div key={index} className="question-course-section">
-                            <h3>{index + 1}. {question.question}</h3>
+                            <h3>
+                              {index + 1}. {question.question}
+                            </h3>
                             <div className="options-container">
                               {question.options.map((option, optionIndex) => (
                                 <label key={optionIndex}>
@@ -378,13 +516,20 @@ function LearningPage() {
                                     value={option.option}
                                     name={`question-${index}`}
                                   />
-                                  <span className="option-label">{option.option}</span>
+                                  <span className="option-label">
+                                    {option.option}
+                                  </span>
                                 </label>
                               ))}
                             </div>
                           </div>
                         ))}
-                        <button className="NextQuestion" onClick={handleQuestionValidate}>Next</button>
+                        <button
+                          className="NextQuestion"
+                          onClick={handleQuestionValidate}
+                        >
+                          Next
+                        </button>
                       </div>
                     )}
                   </>
