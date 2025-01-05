@@ -29,6 +29,7 @@ function LearningPage() {
   const genAI = new GoogleGenerativeAI(API_KEY);
   const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
   const db = getDatabase();
+  let nextModule 
   const courseRef = ref(db, `Courses/${courseId}`);
 
 
@@ -37,15 +38,24 @@ function LearningPage() {
       if (document.visibilityState === 'hidden' && !isQuestionAnswered && isQuestionGenerated) {
         Swal.fire({
           title: "Critical Warning",
-          text: "Tab Switching have been recorded",
+          text: "Our System has detected Tab Switiching",
           icon: "error",
           confirmButtonText: "Okay"
         });
+        Swal.fire({
+          title: "Tab Switched!! Generating new Question",
+          icon: "error",
+          position: "top",
+          toast: true,
+          showConfirmButton: false,
+          timer: 3000,
+        });
+        setShowQuestions(false);
+        generateQuestions(nextModule)
       }
     };
     const handleWindowFocus = () => {
       if (popupWindow && popupWindow.closed) {
-        // Popup window was closed, show the warning
         if (!isQuestionAnswered && isQuestionGenerated) {
           Swal.fire({
             title: "Critical Warning",
@@ -379,7 +389,7 @@ function LearningPage() {
       }
 
       setContentVisible(false);
-      const nextModule = currentModule + 1;
+      nextModule = currentModule + 1;
 
       // Generate questions for the next module if not already completed
       if (!isModuleCompleted) {
