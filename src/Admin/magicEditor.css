@@ -11,10 +11,7 @@
       gap: 20px;
       background-color: #1a2332;
     }
-    ::selection{
-      background-color: #9fef00;
-      color: black;
-  }
+    
   
   /* Header */
   .editor-header {

@@ -5,6 +5,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { getDatabase, ref, get, set, update } from "firebase/database";
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import Swal from "sweetalert2";
+import Loading from "../icons/Loading.gif"
 
 function LearningPage() {
   const location = useLocation();
@@ -42,14 +43,7 @@ function LearningPage() {
           icon: "error",
           confirmButtonText: "Okay"
         });
-        Swal.fire({
-          title: "Tab Switched!! Generating new Question",
-          icon: "error",
-          position: "top",
-          toast: true,
-          showConfirmButton: false,
-          timer: 3000,
-        });
+        
         setShowQuestions(false);
         generateQuestions(nextModule)
       }
@@ -451,7 +445,7 @@ function LearningPage() {
               </div>
             ) : (
               <>
-                {courseDetails ? (
+                { courseDetails ? (
                   <>
                     <h1 className="learning-title">
                       {courseDetails.courseName}
@@ -474,7 +468,7 @@ function LearningPage() {
                     </div>
                   </>
                 ) : (
-                  <div>Loading course details...</div>
+                  <div className="loading-container"><img src={Loading} className="loading-gif"></img></div>
                 )}
               </>
             )}
