@@ -73,10 +73,11 @@ export default function ManagementDb() {
     });
   };
 
-  const handleViewRepoContent = (repoId) => {
+  const viewPdfContentHandler = (repoId, fileName) => {
+    const sanitizedFileName = sanitizeFileName(fileName); // Sanitize the file name
     const db = getDatabase();
-    const repoRef = ref(db, `admin/${username}/Database/${repoId}`);
-
+    const repoRef = ref(db, `admin/${username}/Database/${repoId}/${sanitizedFileName}`);
+  
     onValue(repoRef, (snapshot) => {
       const data = snapshot.val();
       if (data) {
@@ -93,20 +94,34 @@ export default function ManagementDb() {
       }
     });
   };
+  
+  const viewPdf = (repoId, fileName) => {
+    const pdfContent = Object.values(pdfStatuses)
+      .map((file) => file.content)
+      .join("\n\n");
+      setViewPdfContent(pdfContent); // Display in the modal
+      setShowContentModal(true);
+  };
+  
+  
+  const sanitizeFileName = (fileName) => {
+    if (fileName) {
+      // Replace invalid characters and spaces with underscores
+      return fileName
+        .replace(/[.#$[\]]/g, '_')  // Replace invalid characters
+        .replace(/\s+/g, '_')        // Replace spaces with underscores
+        .replace(/\/+$/, '')         // Remove trailing slashes
+        .replace(/^\/+/, '');        // Remove leading slashes if any
+    }
+    return ''; // Return an empty string if fileName is undefined or null
+  };
+  
+  
+    
 
-
-  // Add these states for controlling the content modal
-
+  // Closing modals
   const closeContentModal = () => {
-    setShowContentModal(false); // Close the content modal
-  };
-
-  const closeViewRepoContent = () => {
-    setViewPdfContent(null); // Close the content view modal
-  };
-
-  const handleManualTextChange = (event) => {
-    setManualText(event.target.value);
+    setShowContentModal(false);
   };
 
   // Firebase Repository Management
@@ -129,7 +144,6 @@ export default function ManagementDb() {
       });
 
       fetchRepos();
-
       setNewRepoTitle("");
       setManualText("");
       setShowUploadModal(false);
@@ -153,13 +167,13 @@ export default function ManagementDb() {
           }));
           setRepos(reposArray);
         } else {
-          setRepos([]); // Clear repos if no data exists
+          setRepos([]);
         }
-        setLoading(false); // Stop loading when data is fetched
+        setLoading(false);
       },
       (error) => {
         console.error("Error fetching repos:", error);
-        setLoading(false); // Stop loading on error
+        setLoading(false);
       }
     );
   };
@@ -184,7 +198,7 @@ export default function ManagementDb() {
 
   useEffect(() => {
     if (username) {
-      fetchRepos(); // Fetch repos only after username is set
+      fetchRepos();
     }
   }, [username]);
 
@@ -199,7 +213,6 @@ export default function ManagementDb() {
       <Sidebar />
       <div className="Repo-container">
         <h1 className="welcome-title">Manage Your Repository</h1>
-
         {loading ? (
           <div>Loading...</div>
         ) : repos.length === 0 ? (
@@ -229,7 +242,7 @@ export default function ManagementDb() {
                     </button>
                     <button
                       className="view-btn"
-                      onClick={() => handleViewRepoContent(repo.id)}
+                      onClick={() => viewPdfContentHandler(repo.id)} // Using new function
                     >
                       <FaEye />
                     </button>
@@ -283,7 +296,7 @@ export default function ManagementDb() {
                         {status}
                       </span>
                       {status !== "Error: Unable to process PDF" && (
-                        <button onClick={() => handleViewRepoContent(fileName)}>
+                        <button onClick={() => viewPdf(fileName)}>
                           <FaEye />
                         </button>
                       )}
@@ -297,7 +310,7 @@ export default function ManagementDb() {
 
               <textarea
                 value={manualText}
-                onChange={handleManualTextChange}
+                onChange={(e) => setManualText(e.target.value)}
                 placeholder="Edit processed content or add manually"
                 className="manual-textarea"
               />
@@ -321,32 +334,33 @@ export default function ManagementDb() {
       {viewPdfContent && (
         <div className="pdf-modal-overlay">
           <div className="pdf-modal-content">
-            <div className="modal-close-btn" onClick={closeViewRepoContent}>
+            <div className="modal-close-btn" onClick={closeContentModal}>
               &times;
             </div>
             <pre>{viewPdfContent}</pre>
           </div>
         </div>
       )}
+
       {showContentModal && (
-          <div className="content-modal-overlay">
-            <div className="content-modal-content">
-              <button className="modal-close-btn" onClick={closeContentModal}>
-                &times; {/* Close icon */}
-              </button>
-              <h2>Repository Content</h2>
-              <div className="repo-content">
-                <div>
-                  {viewPdfContent ? (
-                    <p>{viewPdfContent}</p> // Display content in paragraph
-                  ) : (
-                    <p>No content available.</p>
-                  )}
-                </div>
+        <div className="content-modal-overlay">
+          <div className="content-modal-content">
+            <button className="modal-close-btn" onClick={closeContentModal}>
+              &times;
+            </button>
+            <h2>Repository Content</h2>
+            <div className="repo-content">
+              <div>
+                {viewPdfContent ? (
+                  <p>{viewPdfContent}</p>
+                ) : (
+                  <p>No content available.</p>
+                )}
               </div>
             </div>
           </div>
-        )}
+        </div>
+      )}
     </div>
   );
 }
