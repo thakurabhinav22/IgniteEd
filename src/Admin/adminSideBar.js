@@ -34,7 +34,7 @@ function AdminSidebar({ AdminName, Role }) {
           <box-icon type="solid" name="file-plus" color="white" className="nav-icon" />
           <span>Create Course</span>
         </Link>
-        <Link to="#" className="nav-item">
+        <Link to="/Admin/ManageRepo" className="nav-item">
           <box-icon type="solid" name="data" color="white" className="nav-icon" />
           <span>Manage Course DB</span>
         </Link>

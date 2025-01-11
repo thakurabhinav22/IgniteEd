@@ -14,6 +14,7 @@ import PublishCourse from './Admin/publishCourse';
 import Courses from './UserComponents/Module';
 import LearningPage from './UserComponents/learningPage';
 import SampleUploadtoGoogleDrive from "./UserComponents/SampleUploadtoGoogleDrive"
+import ManagementDb from './Admin/ManagementDb';
 
 
 
@@ -34,6 +35,10 @@ const router = createBrowserRouter([
   {
     path: "/Admin/CreateCourse",
     element: <CreateCourse />,
+  },
+  {
+    path: "/Admin/ManageRepo",
+    element: <ManagementDb />,
   },
   {
     path: "/Dashboard",
