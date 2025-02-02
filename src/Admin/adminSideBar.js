@@ -4,6 +4,7 @@ import "./AdminSidebar.css";
 import { Link, Navigate } from "react-router-dom";
 import { FaHome} from "react-icons/fa";
 import { useNavigate } from "react-router-dom"; 
+import crawler from '../icons/web.png'
 
 
 function AdminSidebar({ AdminName, Role }) {
@@ -39,8 +40,8 @@ function AdminSidebar({ AdminName, Role }) {
           <span>Manage Course DB</span>
         </Link>
         <Link to="#" className="nav-item">
-          <box-icon type="solid" name="book-bookmark" color="white" className="nav-icon" />
-          <span>Modules</span>
+          <img src={crawler} alt="Crawler" name="book-bookmark" style={{ width: "30px" }} className="nav-icon" />
+          <span>Crawler Spider</span>
         </Link>
         <Link to="#" className="nav-item">
           <box-icon type="solid" name="user-plus" color="white" className="nav-icon" />
