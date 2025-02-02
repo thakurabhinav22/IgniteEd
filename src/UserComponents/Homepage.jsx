@@ -1,24 +1,28 @@
 import React from 'react';
 import './HomePage.css';
+import { Link } from 'react-router-dom';
+
 
 export default function HomePage() {
   return (
     <div className="homepage">
-      <header className="header">
-        <div className="container">
-          <div className="logo">
-            LearnMax 
-          </div>
-          <nav>
-            <a href="#">Courses</a>
-            <a href="#">Labs</a>
-            <a href="#">Pricing</a>
-            <a href="#">Blog</a>
-            <a href="#">Login</a>
-            <a className="cta-button" href="#">Start Free</a>
-          </nav>
-        </div>
-      </header>
+<header className="header">
+  <div className="container">
+    <div className="logo">
+      LearnMax
+    </div>
+    <nav>
+      <a href="#">Courses</a>
+      <a href="#">Labs</a>
+      <a href="#">Pricing</a>
+      <a href="#">Blog</a>
+      <Link to="/login">Login</Link> {/* Use Link for React Router */}
+      <Link className="cta-button"to="/signin">Signup</Link> {/* Use Link for React Router */}
+      
+    </nav>
+  </div>
+</header>
+
 
       <main className="main">
         <section className="hero text-center">
