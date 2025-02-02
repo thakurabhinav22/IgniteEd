@@ -15,6 +15,7 @@ import Courses from './UserComponents/Module';
 import LearningPage from './UserComponents/learningPage';
 import SampleUploadtoGoogleDrive from "./UserComponents/SampleUploadtoGoogleDrive"
 import ManagementDb from './Admin/ManagementDb';
+import Homepage from './UserComponents/Homepage';
 
 
 
@@ -22,6 +23,10 @@ import ManagementDb from './Admin/ManagementDb';
 const router = createBrowserRouter([
   {
     path: "/",
+    element: <Homepage />,
+  },
+  {
+    path: "/login",
     element: <App />,
   },
   {
