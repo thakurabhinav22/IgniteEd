@@ -13,8 +13,9 @@
 
 .Progress-content-cover h1 {
     font-size: 2em;
-    margin-bottom: 10px;
+    margin-bottom: 20px;
     color: #ffffff; 
+    font-weight: bold;
 }
 
 .Progress-content-cover p {
@@ -22,19 +23,111 @@
     font-size: 1.1em;
     margin-bottom: 20px;
 }
-.Progress-content{
+
+.Progress-content {
     margin: 20px;
     width: 96%;
     background-color: #1a2332;
     height: 91%;
     border-radius: 17px;
+    padding: 20px;
+    box-shadow: 0px 4px 15px rgba(0, 0, 0, 0.4);
+}
+
+/* Table styling */
+.courses-table {
+  width: 100%;
+  border-collapse: collapse;
+  background-color: #1a2332;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.courses-table th,
+.courses-table td {
+  padding: 16px 24px;
+  text-align: left;
+  font-size: 1em;
+  color: #e1e1e1;
+}
+
+.courses-table th {
+  background-color: #161f2e;
+  font-weight: bold;
+}
+
+.courses-table td {
+  background-color: #1a2332;
+  border-top: 1px solid #333;
+}
+
+.odd-row {
+  background-color: #161f2e;
+}
+
+.even-row {
+  background-color: #1a2332;
+}
+
+.courses-table tr:hover {
+  background-color: #1b2735;
+}
+
+.no-courses {
+  text-align: center;
+  color: #ccc;
+  font-style: italic;
+  padding: 20px;
+  background-color: #2a3545;
+}
+
+/* Button styling */
+.action-btn {
+  padding: 10px 20px;
+  font-size: 14px;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  margin-right: 15px;
+  transition: all 0.3s ease;
+}
+
+.stats-btn {
+  background-color: #9fef00;
+  color: #1a2332;
+  font-weight: bold;
+}
+
+.modify-btn {
+  background-color: #007bff;
+  color: white;
+  font-weight: bold;
+}
+
+.delete-btn {
+  background-color: #ff4c4c;
+  color: white;
+  font-weight: bold;
+}
+
+.action-btn:active {
+  transform: scale(0.98);
 }
 
 /* Responsive design */
 @media (max-width: 768px) {
-    .Progress-content-cover {
-        width: 100%; /* Adjust to full width for smaller screens */
-        margin-left: 0;
-        height: auto; /* Allow flexible height for smaller devices */
-    }
+  .Progress-content-cover {
+    width: 100%;
+    margin-left: 0;
+    height: auto;
+  }
+
+  .courses-table th, .courses-table td {
+    font-size: 14px;
+  }
+
+  .action-btn {
+    font-size: 12px;
+    padding: 8px 15px;
+  }
 }
