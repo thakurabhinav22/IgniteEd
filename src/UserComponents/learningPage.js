@@ -250,12 +250,13 @@ function LearningPage() {
     setIsGenerating(true);
     try {
       const result = await model.generateContent(`
-        Generate ${questionCount} questions based on the below concept with 4 options in this format:
+        Generate ${questionCount} questions based on the below concept with 4 options in this format.
+        Note Question should be only based Content :
         
        {
   "questions": [
     {
-      "question": "Questiobn Based on Module",
+      "question": "Questiobn Should be Based on Content only",
       "options": [
         { "option": "Option A", "isCorrect": true },
         { "option": "Option B", "isCorrect": false },
