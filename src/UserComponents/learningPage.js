@@ -255,12 +255,12 @@ function LearningPage() {
        {
   "questions": [
     {
-      "question": "What is AWT header class in Java?",
+      "question": "Questiobn Based on Module",
       "options": [
-        { "option": "Swing", "isCorrect": true },
-        { "option": "AWT", "isCorrect": false },
-        { "option": "JDK", "isCorrect": false },
-        { "option": "JRE", "isCorrect": false }
+        { "option": "Option A", "isCorrect": true },
+        { "option": "Option B", "isCorrect": false },
+        { "option": "Option C", "isCorrect": false },
+        { "option": "Option D", "isCorrect": false }
       ]
     }, etc ....        
         Content: 
