@@ -39,7 +39,7 @@ function AdminSidebar({ AdminName, Role }) {
           <box-icon type="solid" name="data" color="white" className="nav-icon" />
           <span>Manage Course DB</span>
         </Link>
-        <Link to="#" className="nav-item">
+        <Link to="/Admin/webcrawler" className="nav-item">
           <img src={crawler} alt="Crawler" name="book-bookmark" style={{ width: "30px" }} className="nav-icon" />
           <span>Crawler Spider</span>
         </Link>

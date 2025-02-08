@@ -16,6 +16,7 @@ import LearningPage from './UserComponents/learningPage';
 import SampleUploadtoGoogleDrive from "./UserComponents/SampleUploadtoGoogleDrive"
 import ManagementDb from './Admin/ManagementDb';
 import Homepage from './UserComponents/Homepage';
+import Webcrawler from './Admin/webcrawler';
 
 
 
@@ -71,7 +72,11 @@ const router = createBrowserRouter([
   },{
     path: "/uploads",
     element: <SampleUploadtoGoogleDrive />,
-  }
+  },
+  {
+    path: "/Admin/webcrawler",
+    element: <Webcrawler />,
+  },
   
 ]);
 
