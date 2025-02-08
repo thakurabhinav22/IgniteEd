@@ -250,17 +250,18 @@ function LearningPage() {
     setIsGenerating(true);
     try {
       const result = await model.generateContent(`
-        Generate ${questionCount} questions based on the below concept with 4 options in this format:
+        Generate ${questionCount} questions based on the below concept with 4 options in this format.
+        Note Question should be only based Content :
         
        {
   "questions": [
     {
-      "question": "What is AWT header class in Java?",
+      "question": "Questiobn Should be Based on Content only",
       "options": [
-        { "option": "Swing", "isCorrect": true },
-        { "option": "AWT", "isCorrect": false },
-        { "option": "JDK", "isCorrect": false },
-        { "option": "JRE", "isCorrect": false }
+        { "option": "Option A", "isCorrect": true },
+        { "option": "Option B", "isCorrect": false },
+        { "option": "Option C", "isCorrect": false },
+        { "option": "Option D", "isCorrect": false }
       ]
     }, etc ....        
         Content: 
