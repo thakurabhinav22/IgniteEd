@@ -126,6 +126,9 @@
     resize: none;
     outline: none;
     scroll-behavior: smooth;
+    resize: none; /* Prevent resizing from the bottom right corner */
+    overflow-y: auto; /* Enable vertical scrolling when content overflows */
+    transition: border-color 0.2s ease;
   }
   
   .course-textarea::placeholder {
@@ -133,20 +136,7 @@
     opacity: 1;
   }
   
-  /* 🖱 Scrollbar Styling */
-  .course-textarea::-webkit-scrollbar {
-    width: 8px;
-  }
-  
-  .course-textarea::-webkit-scrollbar-track {
-    background: rgba(0,0,0,0.05);
-  }
-  
-  .course-textarea::-webkit-scrollbar-thumb {
-    background: rgba(0,0,0,0.15);
-    border-radius: 4px;
-  }
-  
+
   /* 🚀 Enhanced Interactions */
   .course-textarea:focus {
     box-shadow: inset 0 0 0 2px var(--accent-color);
@@ -486,5 +476,117 @@ button:active {
 .modal-content modal-save:hover {
   background-color: rgb(0, 216, 0);
   color: white;
+}
+
+
+/* Modal Overlay */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5); /* Semi-transparent background */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+/* Modal Container */
+.modal {
+  background-color: #fff;
+  border-radius: 8px;
+  padding: 20px;
+  max-width: 500px;
+  width: 100%;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+  animation: modalFadeIn 0.3s ease-in-out;
+}
+
+/* Modal Title */
+.modal-title {
+  font-size: 1.5rem;
+  font-weight: bold;
+  color: #333;
+  margin-bottom: 20px;
+  border-bottom: 2px solid #f0f0f0;
+  padding-bottom: 10px;
+}
+
+/* Draft List */
+.draft-list {
+  margin: 0;
+  padding-left: 20px;
+  list-style-type: none;
+}
+
+.draft-item {
+  margin: 10px 0;
+}
+
+.draft-label {
+  font-size: 1rem;
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  transition: color 0.3s ease;
+  color: black;
+}
+
+.draft-label:hover {
+  color: #007bff; /* Hover effect */
+}
+
+.draft-checkbox {
+  margin-right: 10px;
+}
+
+/* Modal Buttons */
+.modal-actions {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 20px;
+}
+
+.modal-btn {
+  padding: 10px 20px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 1rem;
+  transition: background-color 0.3s ease, transform 0.2s;
+}
+
+.modal-btn:hover {
+  transform: translateY(-2px);
+}
+
+.modal-btn.load-draft {
+  background-color: lime;
+  color: rgb(0, 0, 0);
+}
+
+.modal-btn.load-draft:hover {
+  background-color: limegreen;
+}
+
+.modal-btn.close-draft {
+  background-color: #ff0000;
+  color: #000000;
+}
+
+
+
+/* Modal Animation */
+@keyframes modalFadeIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
 }
 

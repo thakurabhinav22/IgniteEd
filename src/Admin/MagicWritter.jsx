@@ -6,7 +6,7 @@ import Swal from "sweetalert2";
 import loading from "../icons/Loading.gif";
 import { BiPencil, BiRefresh, BiMicrophone, BiSend } from "react-icons/bi";
 import { FaCompressArrowsAlt, FaExpandArrowsAlt, FaSave, FaUpload, FaPencilAlt } from 'react-icons/fa';
-import { getDatabase, ref, set, push } from "firebase/database";
+import { getDatabase, ref, set, push, get } from "firebase/database";
 import Cookies from "js-cookie";
 
 function MagicWritter() {
@@ -23,6 +23,76 @@ function MagicWritter() {
     const [isAiGenerated, setIsAiGenerated] = useState(false); // Track if AI content was generated
     const textareaRef = useRef(null);
     const lineNumbersRef = useRef(null);
+    const [drafts, setDrafts] = useState([]);
+    const [isDraftModalOpen, setIsDraftModalOpen] = useState(false); // State for draft selection modal
+    const [selectedDrafts, setSelectedDrafts] = useState([]);
+
+    // Fetcg Draft
+    const handleCloseDraftModal = () => {
+        setIsDraftModalOpen(false);
+        setSelectedDrafts([]); // Clear selected drafts
+    };
+
+    const handleOpenDraftModal = () => {
+        fetchDrafts(); // Fetch drafts from Firebase
+        setIsDraftModalOpen(true);
+    };
+
+    const handleDraftSelection = (draftId) => {
+        if (selectedDrafts.includes(draftId)) {
+            setSelectedDrafts(selectedDrafts.filter(id => id !== draftId)); // Deselect
+        } else {
+            setSelectedDrafts([...selectedDrafts, draftId]); // Select
+        }
+    };
+
+    // Handle loading the selected draft for editing
+    const handleLoadSelectedDraft = () => {
+        if (selectedDrafts.length === 0) {
+            Swal.fire({
+                title: "No Draft Selected",
+                text: "Please select at least one draft to edit.",
+                icon: "warning",
+            });
+            return;
+        }
+
+        const selectedDraft = drafts.find(draft => draft.id === selectedDrafts[0]); // Load the first selected draft
+        if (selectedDraft) {
+            setCourseContent(selectedDraft.content);
+            setProjectTitle(selectedDraft.title);
+            setIsDraftModalOpen(false); // Close the modal
+        }
+    };
+
+    // Fetch drafts from Firebase
+    const fetchDrafts = async () => {
+        const uid = Cookies.get("userSessionCredAd");
+        if (!uid) {
+            alert("User not logged in!");
+            return;
+        }
+
+        const db = getDatabase();
+        const draftRef = ref(db, `admin/${uid}/Database/`);
+
+        try {
+            const snapshot = await get(draftRef);
+            if (snapshot.exists()) {
+                const data = snapshot.val();
+                const draftList = Object.keys(data).map(key => ({
+                    id: key,
+                    title: data[key].title,
+                    content: data[key].content,
+                }));
+                setDrafts(draftList);
+            } else {
+                alert("No drafts found!");
+            }
+        } catch (error) {
+            console.error("Error fetching drafts:", error);
+        }
+    };
 
 
 
@@ -57,7 +127,7 @@ function MagicWritter() {
                     content: courseContent,
                 });
 
-               
+
                 setTitleModalOpen(false); // Close modal after saving
             } catch (error) {
                 console.error("Error saving project:", error);
@@ -238,6 +308,7 @@ function MagicWritter() {
                             aria-label="Course content editor"
                             onMouseUp={handleTextSelection}
                         />
+
                     </div>
                 </div>
             </div>
@@ -354,7 +425,7 @@ function MagicWritter() {
             {/* Draft and Publish Action Buttons */}
 
             <div className="action-buttons-container">
-                <button className="edit-draft">
+                <button onClick={handleOpenDraftModal} className="edit-draft">
                     < FaPencilAlt /> Edit Draft
                 </button>
                 <button onClick={handleSaveClick} className="save-draft">
@@ -377,6 +448,36 @@ function MagicWritter() {
                         />
                         <button className="modal-cancel" onClick={() => setTitleModalOpen(false)}>Cancel</button>
                         <button className="modal-save" onClick={handleSaveProject}>Save</button>
+                    </div>
+                </div>
+            )}
+            {isDraftModalOpen && (
+                <div className="modal-overlay">
+                    <div className="modal">
+                        <h3 className="modal-title">Select Draft to Edit</h3>
+                        <ul className="draft-list">
+                            {drafts.map((draft) => (
+                                <li key={draft.id} className="draft-item">
+                                    <label className="draft-label">
+                                        <input
+                                            type="checkbox"
+                                            checked={selectedDrafts.includes(draft.id)}
+                                            onChange={() => handleDraftSelection(draft.id)}
+                                            className="draft-checkbox"
+                                        />
+                                        {draft.title}
+                                    </label>
+                                </li>
+                            ))}
+                        </ul>
+                        <div className="modal-actions">
+                            <button className="modal-btn secondary close-draft" onClick={handleCloseDraftModal}>
+                                Cancel
+                            </button>
+                            <button className="modal-btn primary load-draft" onClick={handleLoadSelectedDraft}>
+                                Load Selected Draft
+                            </button>
+                        </div>
                     </div>
                 </div>
             )}
