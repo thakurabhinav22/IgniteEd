@@ -170,40 +170,73 @@ function MagicWritter() {
 
             {/* Display AI response in a new modal */}
             {aiResponse && (
-                <div className="ai-response-modal">
-                    <div className="ai-response-container">
-                        <button
-                            className="ai-response-close"
-                            onClick={() => setAiResponse("")}
-                        >
-                            ×
-                        </button>
-                        <h3>Magic Writer:</h3>
-                        <p>{aiResponse}</p>
+    <div className="ai-response-modal">
+        <div className="ai-response-container" style={{ padding: "20px", maxWidth: "800px", margin: "0 auto", backgroundColor: "#fff", borderRadius: "10px", boxShadow: "0px 4px 8px rgba(0, 0, 0, 0.1)" }}>
+            
+            <h3 style={{ textAlign: "center", marginBottom: "20px" }}>Magic Writer:</h3>
+            <p style={{ textAlign: "center", marginBottom: "20px" }}>{aiResponse}</p>
 
-                        <div className="ai-response-buttons">
-                            <button
-                                onClick={() => {
-                                    setCourseContent((prevContent) =>
-                                        prevContent.replace("##", aiResponse)
-                                    );
-                                    setAiResponse(""); // Clear response after inserting
-                                }}
-                            >
-                                Insert
-                            </button>
-                            <button onClick={() => {
-                                generateAIResponse(modalText); // Regenerate AI response
-                                setAiResponse(""); // Close the AI response modal
-                                setIsModalOpen(false); // Optional: Close the thoughts modal if needed
-                            }}>
-                                Regenerate
-                            </button>
+            <div className="ai-response-buttons" style={{ display: "flex", justifyContent: "center", gap: "10px" }}>
+                {/* Close button with a different color */}
+                <button
+                    className="ai-response-close"
+                    onClick={() => setAiResponse("")}   
+                    style={{
+                        backgroundColor: "#ff4d4d", // Red background for close button
+                        color: "#fff", // White text color
+                        borderRadius: "50%",
+                        width: "30px",
+                        height: "30px",
+                        fontSize: "18px",
+                        display: "flex",
+                        justifyContent: "center",
+                        alignItems: "center",
+                        border: "none",
+                        cursor: "pointer",
+                    }}
+                >
+                    ×
+                </button>
+                <button
+                    onClick={() => {
+                        setCourseContent((prevContent) =>
+                            prevContent.replace("##", aiResponse)
+                        );
+                        setAiResponse(""); // Clear response after inserting
+                    }}
+                    style={{
+                        backgroundColor: "#4CAF50", // Green for 'Insert' button
+                        color: "#fff",
+                        border: "none",
+                        padding: "10px 20px",
+                        borderRadius: "5px",
+                        cursor: "pointer",
+                    }}
+                >
+                    Insert
+                </button>
+                <button
+                    onClick={() => {
+                        generateAIResponse(modalText); // Regenerate AI response
+                        setAiResponse(""); // Close the AI response modal
+                        setIsModalOpen(false); // Optional: Close the thoughts modal if needed
+                    }}
+                    style={{
+                        backgroundColor: "#ff9800", // Orange for 'Regenerate' button
+                        color: "#fff",
+                        border: "none",
+                        padding: "10px 20px",
+                        borderRadius: "5px",
+                        cursor: "pointer",
+                    }}
+                >
+                    Regenerate
+                </button>
+            </div>
+        </div>
+    </div>
+)}
 
-                        </div>
-                    </div>
-                </div>
-            )}
         </div>
     );
 }
