@@ -25,7 +25,7 @@ const PublishCourse = () => {
 
   const API_KEY = process.env.REACT_APP_GEMINI;
   const genAI = new GoogleGenerativeAI(API_KEY);
-  const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+  const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
   let generatedCourse;
   const handleGemini = async () => {
     if (isProcessing) return;

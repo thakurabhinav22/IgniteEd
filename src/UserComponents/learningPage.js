@@ -28,7 +28,7 @@ function LearningPage() {
   const [popupWindow, setPopupWindow] = useState(null); 
   const API_KEY = process.env.REACT_APP_GEMINI;
   const genAI = new GoogleGenerativeAI(API_KEY);
-  const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+  const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
   const db = getDatabase();
   let nextModule 
   const courseRef = ref(db, `Courses/${courseId}`);

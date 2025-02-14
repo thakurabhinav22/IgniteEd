@@ -133,7 +133,7 @@ function MagicWritter() {
         let prompt = '';
 
         // Alert selected text to ensure it's being passed
-        alert(selectedText);
+        // alert(selectedText);
 
         // Case where no text is selected
         if (selectedText.trim() === '') {
@@ -146,7 +146,7 @@ function MagicWritter() {
             const API_KEY = process.env.REACT_APP_GEMINI;
             const genAI = new GoogleGenerativeAI(API_KEY);
 
-            const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+            const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
             const result = await model.generateContent(prompt);
             const response = await result.response;
             let generatedText = await response.text();
