@@ -5,7 +5,9 @@ import { GoogleGenerativeAI } from "@google/generative-ai";
 import Swal from "sweetalert2";
 import loading from "../icons/Loading.gif";
 import { BiPencil, BiRefresh, BiMicrophone, BiSend } from "react-icons/bi";
-import { FaCompressArrowsAlt, FaExpandArrowsAlt } from 'react-icons/fa';
+import { FaCompressArrowsAlt, FaExpandArrowsAlt, FaSave, FaUpload, FaPencilAlt } from 'react-icons/fa';
+import { getDatabase, ref, set, push } from "firebase/database";
+import Cookies from "js-cookie";
 
 function MagicWritter() {
     const [courseContent, setCourseContent] = useState("");
@@ -15,10 +17,58 @@ function MagicWritter() {
     const [aiResponse, setAiResponse] = useState("");
     const [isProcessing, setIsProcessing] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
+    const [isTitleModalOpen, setTitleModalOpen] = useState(false);  // Renamed state variable
+    const [projectTitle, setProjectTitle] = useState('');  // Renamed state variable
     const [selectedText, setSelectedText] = useState("");
     const [isAiGenerated, setIsAiGenerated] = useState(false); // Track if AI content was generated
     const textareaRef = useRef(null);
     const lineNumbersRef = useRef(null);
+
+
+
+    // Handle Save To Repo button click
+    const handleSaveClick = () => {
+        setTitleModalOpen(true); // Open the modal
+    };
+
+
+    const handleSaveProject = async () => {
+        if (projectTitle) {
+            const uid = Cookies.get("userSessionCredAd");  // Get user UID from cookies
+
+            if (!uid) {
+                alert('User not logged in!');
+                return;
+            }
+
+            try {
+                // Get Firebase Database instance
+                const db = getDatabase();
+
+                // Reference to the project's path in Firebase
+                const projectRef = ref(db, `admin/${uid}/Database/`);
+
+                // Push a new entry and get the unique key
+                const newProjectRef = push(projectRef);
+
+                // Store project data in Firebase
+                await set(newProjectRef, {
+                    title: projectTitle,
+                    content: courseContent,
+                });
+
+               
+                setTitleModalOpen(false); // Close modal after saving
+            } catch (error) {
+                console.error("Error saving project:", error);
+                alert('There was an error saving the project.');
+            }
+        } else {
+            alert('Please enter a project title.');
+        }
+    };
+
+
 
     useEffect(() => {
         const updateLineNumbers = () => {
@@ -282,6 +332,7 @@ function MagicWritter() {
             )}
 
 
+
             <div className="toolbar-container">
                 <button className="toolbar-btn" onClick={handleEditButtonClick} title="Modify the Selected Content">
                     <BiPencil />
@@ -300,6 +351,35 @@ function MagicWritter() {
                 </button>
             </div>
 
+            {/* Draft and Publish Action Buttons */}
+
+            <div className="action-buttons-container">
+                <button className="edit-draft">
+                    < FaPencilAlt /> Edit Draft
+                </button>
+                <button onClick={handleSaveClick} className="save-draft">
+                    <FaSave /> Save To Repo
+                </button>
+                <button className="publish">
+                    <FaUpload /> Publish
+                </button>
+            </div>
+
+            {isTitleModalOpen && (
+                <div className="modal-overlay">
+                    <div className="modal-content">
+                        <h3>Enter Project Title</h3>
+                        <input
+                            type="text"
+                            value={projectTitle}
+                            onChange={(e) => setProjectTitle(e.target.value)}
+                            placeholder="Enter title"
+                        />
+                        <button className="modal-cancel" onClick={() => setTitleModalOpen(false)}>Cancel</button>
+                        <button className="modal-save" onClick={handleSaveProject}>Save</button>
+                    </div>
+                </div>
+            )}
 
 
         </div>
