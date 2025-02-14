@@ -5,6 +5,7 @@ import { GoogleGenerativeAI } from "@google/generative-ai";
 import Swal from "sweetalert2";
 import loading from "../icons/Loading.gif";
 import { BiPencil, BiRefresh, BiMicrophone, BiSend } from "react-icons/bi";
+import { FaCompressArrowsAlt, FaExpandArrowsAlt } from 'react-icons/fa';
 
 function MagicWritter() {
     const [courseContent, setCourseContent] = useState("");
@@ -48,7 +49,7 @@ function MagicWritter() {
     const handleChange = (e) => {
         const newContent = e.target.value;
         setCourseContent(newContent);
-    
+
         // Reset the AI generation state if ## is typed again, so the modal can open
         if (newContent.includes("##") && !isModalOpen) {
             if (isAiGenerated) {
@@ -57,7 +58,7 @@ function MagicWritter() {
             setIsModalOpen(true); // Show the modal
         }
     };
-    
+
 
     const handleTextSelection = () => {
         const selected = window.getSelection().toString();
@@ -280,21 +281,27 @@ function MagicWritter() {
                 </div>
             )}
 
+
             <div className="toolbar-container">
-                <button className="toolbar-btn" onClick={handleEditButtonClick}>
+                <button className="toolbar-btn" onClick={handleEditButtonClick} title="Modify the Selected Content">
                     <BiPencil />
                 </button>
 
-                <button className="toolbar-btn">
+                <button className="toolbar-btn" title="Regenerate the Selected Content">
                     <BiRefresh />
                 </button>
-                <button className="toolbar-btn">
-                    <BiMicrophone />
+
+                <button className="toolbar-btn" title="Summarize the selected content">
+                    <FaCompressArrowsAlt />
                 </button>
-                <button className="toolbar-btn">
-                    <BiSend />
+
+                <button className="toolbar-btn" title="Expand the select content">
+                    <FaExpandArrowsAlt />
                 </button>
             </div>
+
+
+
         </div>
     );
 }
