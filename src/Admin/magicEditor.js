@@ -19,7 +19,7 @@ const MagicEditor = () => {
   const handleSave = () => {
     // Navigate to the publish course page with edited data
     navigate("/Admin/CreateCourse/publishcourse", {
-      state: { fileName, editedContent },
+      state: {  editedContent },
     });
   };
 

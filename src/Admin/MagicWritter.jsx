@@ -8,6 +8,8 @@ import { BiPencil, BiRefresh, BiMicrophone, BiSend } from "react-icons/bi";
 import { FaCompressArrowsAlt, FaExpandArrowsAlt, FaSave, FaUpload, FaPencilAlt } from 'react-icons/fa';
 import { getDatabase, ref, set, push, get } from "firebase/database";
 import Cookies from "js-cookie";
+import { addCourse } from './publishCourse';
+import { useNavigate } from 'react-router-dom';
 
 function MagicWritter() {
     const [courseContent, setCourseContent] = useState("");
@@ -26,6 +28,21 @@ function MagicWritter() {
     const [drafts, setDrafts] = useState([]);
     const [isDraftModalOpen, setIsDraftModalOpen] = useState(false); // State for draft selection modal
     const [selectedDrafts, setSelectedDrafts] = useState([]);
+    const navigate = useNavigate();
+
+
+    const handlePublish = () => {
+        // Check if both projectTitle and courseContent are not empty
+        if (!projectTitle || !courseContent) {
+            alert("Please make sure both title and content are filled in before publishing.");
+            return; // Prevent navigation if either title or content is missing
+        }
+
+        // Navigate to the publish course page with state
+        navigate("/Admin/CreateCourse/publishcourse", {
+            state: { projectTitle, courseContent },
+        });
+    };
 
     // Fetcg Draft
     const handleCloseDraftModal = () => {
@@ -431,7 +448,7 @@ function MagicWritter() {
                 <button onClick={handleSaveClick} className="save-draft">
                     <FaSave /> Save To Repo
                 </button>
-                <button className="publish">
+                <button onClick={handlePublish} className="publish">
                     <FaUpload /> Publish
                 </button>
             </div>
