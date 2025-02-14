@@ -17,6 +17,7 @@ import SampleUploadtoGoogleDrive from "./UserComponents/SampleUploadtoGoogleDriv
 import ManagementDb from './Admin/ManagementDb';
 import Homepage from './UserComponents/Homepage';
 import Webcrawler from './Admin/webcrawler';
+import MagicWritter from './Admin/MagicWritter';
 
 
 
@@ -76,6 +77,10 @@ const router = createBrowserRouter([
   {
     path: "/Admin/webcrawler",
     element: <Webcrawler />,
+  },
+  {
+    path: "/Admin/MagicWritter",
+    element: <MagicWritter />,
   },
   
 ]);

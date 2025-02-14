@@ -15,6 +15,7 @@ const getCookie = (name) => {
     if (cookieName === name) {
       return decodeURIComponent(cookieValue);
     }
+    // if (cookieName === null ||)
   }
   return null;
 };
@@ -78,7 +79,7 @@ function AdminSidebar() {
           <img src={crawler} alt="Crawler" style={{ width: "30px" }} className="nav-icon" />
           <span>Crawler Spider</span>
         </Link>
-        <Link to="#" className="nav-item">
+        <Link to="/Admin/MagicWritter" className="nav-item">
           <img src={magicWritter} alt="Magic Writter" style={{ width: "25px" }} className="nav-icon" />
           <span>Magic Writter</span>
         </Link>
