@@ -4,6 +4,7 @@ import AdminSidebar from "./adminSideBar";
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import Swal from "sweetalert2";
 import loading from "../icons/Loading.gif";
+import { BiPencil, BiRefresh, BiMicrophone, BiSend } from "react-icons/bi";
 
 function MagicWritter() {
     const [courseContent, setCourseContent] = useState("");
@@ -12,9 +13,10 @@ function MagicWritter() {
     const [modalText, setModalText] = useState("");
     const [aiResponse, setAiResponse] = useState("");
     const [isProcessing, setIsProcessing] = useState(false);
-    const [isLoading, setIsLoading] = useState(false); // Loading state
+    const [isLoading, setIsLoading] = useState(false);
     const textareaRef = useRef(null);
     const lineNumbersRef = useRef(null);
+
 
     // Dynamic line numbering with scroll sync
     useEffect(() => {
@@ -58,9 +60,7 @@ function MagicWritter() {
         setIsLoading(true); // Show loading GIF
 
         try {
-            // Make an API call to Gemini or any text-generation service you are using
             const generatedContent = await handleGemini(text);
-
             setAiResponse(generatedContent); // Set AI response in the state
             setIsProcessing(false);
             setIsLoading(false); // Hide loading GIF
@@ -90,11 +90,8 @@ function MagicWritter() {
             const API_KEY = process.env.REACT_APP_GEMINI;
             const genAI = new GoogleGenerativeAI(API_KEY);
 
-            // Initialize the Gemini model with the specific model name.
             const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
-            console.log(API_KEY);
             const result = await model.generateContent(inputText);
-            // Extract the generated text or return an error message if it fails.
             const response = await result.response;
             let generatedText = await response.text();
             return generatedText;
@@ -111,11 +108,25 @@ function MagicWritter() {
         }
     };
 
+    // Insert the AI response into the course content
+    const insertText = () => {
+        setCourseContent(prevContent => prevContent.replace("##", aiResponse));
+        setAiResponse(""); // Clear the AI response after inserting
+    };
+
+    // Regenerate the AI response with the current modal text
+    // Regenerate AI content based on modal text
+    const regenerateContent = () => {
+        setAiResponse(""); // Clear the current AI response
+        setIsModalOpen(false); // Close the modal
+        generateAIResponse(modalText); // Regenerate AI content based on the new modal text
+    };
+
+
     return (
         <div className="magic-writter-container">
-            <div className="admin-sidebar">
+            
                 <AdminSidebar />
-            </div>
             <div className="editor-container">
                 <div className="editor">
                     <div className="editor-header">
@@ -170,74 +181,85 @@ function MagicWritter() {
 
             {/* Display AI response in a new modal */}
             {aiResponse && (
-    <div className="ai-response-modal">
-        <div className="ai-response-container" style={{ padding: "20px", maxWidth: "800px", margin: "0 auto", backgroundColor: "#fff", borderRadius: "10px", boxShadow: "0px 4px 8px rgba(0, 0, 0, 0.1)" }}>
-            
-            <h3 style={{ textAlign: "center", marginBottom: "20px" }}>Magic Writer:</h3>
-            <p style={{ textAlign: "center", marginBottom: "20px" }}>{aiResponse}</p>
+                <div className="ai-response-modal">
+                    <div className="ai-response-container" style={{ padding: "20px", maxWidth: "800px", margin: "0 auto", backgroundColor: "#fff", borderRadius: "10px", boxShadow: "0px 4px 8px rgba(0, 0, 0, 0.1)" }}>
+                        <h3 style={{ textAlign: "center", marginBottom: "20px" }}>Magic Writer:</h3>
+                        <p style={{ textAlign: "center", marginBottom: "20px" }}>{aiResponse}</p>
 
-            <div className="ai-response-buttons" style={{ display: "flex", justifyContent: "center", gap: "10px" }}>
-                {/* Close button with a different color */}
-                <button
-                    className="ai-response-close"
-                    onClick={() => setAiResponse("")}   
-                    style={{
-                        backgroundColor: "#ff4d4d", // Red background for close button
-                        color: "#fff", // White text color
-                        borderRadius: "50%",
-                        width: "30px",
-                        height: "30px",
-                        fontSize: "18px",
-                        display: "flex",
-                        justifyContent: "center",
-                        alignItems: "center",
-                        border: "none",
-                        cursor: "pointer",
-                    }}
-                >
-                    ×
+                        <div className="ai-response-buttons" style={{ display: "flex", justifyContent: "center", gap: "10px" }}>
+                            {/* Insert Button */}
+                            <button
+                                onClick={insertText}
+                                style={{
+                                    backgroundColor: "#4CAF50", // Green background for insert button
+                                    color: "#fff",
+                                    borderRadius: "5px",
+                                    padding: "10px 20px",
+                                    border: "none",
+                                    cursor: "pointer",
+                                }}
+                            >
+                                Insert
+                            </button>
+
+                            {/* Regenerate Button */}
+                            <button
+                                onClick={regenerateContent}
+                                style={{
+                                    backgroundColor: "#2196F3", // Blue background for regenerate button
+                                    color: "#fff",
+                                    borderRadius: "5px",
+                                    padding: "10px 20px",
+                                    border: "none",
+                                    cursor: "pointer",
+                                }}
+                            >
+                                Regenerate
+                            </button>
+
+                            {/* Close button */}
+                            <button
+                                className="ai-response-close"
+                                onClick={() => setAiResponse("")}
+                                style={{
+                                    backgroundColor: "#ff4d4d", // Red background for close button
+                                    color: "#fff", // White text color
+                                    borderRadius: "50%",
+                                    width: "30px",
+                                    height: "30px",
+                                    fontSize: "18px",
+                                    display: "flex",
+                                    justifyContent: "center",
+                                    alignItems: "center",
+                                    border: "none",
+                                    cursor: "pointer",
+                                }}
+                            >
+                                ×
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+
+            <div className="toolbar-container">
+                <button className="toolbar-btn" >
+                    <BiPencil />
                 </button>
-                <button
-                    onClick={() => {
-                        setCourseContent((prevContent) =>
-                            prevContent.replace("##", aiResponse)
-                        );
-                        setAiResponse(""); // Clear response after inserting
-                    }}
-                    style={{
-                        backgroundColor: "#4CAF50", // Green for 'Insert' button
-                        color: "#fff",
-                        border: "none",
-                        padding: "10px 20px",
-                        borderRadius: "5px",
-                        cursor: "pointer",
-                    }}
-                >
-                    Insert
+                <button className="toolbar-btn">
+                    <BiRefresh />
                 </button>
-                <button
-                    onClick={() => {
-                        generateAIResponse(modalText); // Regenerate AI response
-                        setAiResponse(""); // Close the AI response modal
-                        setIsModalOpen(false); // Optional: Close the thoughts modal if needed
-                    }}
-                    style={{
-                        backgroundColor: "#ff9800", // Orange for 'Regenerate' button
-                        color: "#fff",
-                        border: "none",
-                        padding: "10px 20px",
-                        borderRadius: "5px",
-                        cursor: "pointer",
-                    }}
-                >
-                    Regenerate
+                <button className="toolbar-btn">
+                    <BiMicrophone />
+                </button>
+                <button className="toolbar-btn">
+                    <BiSend />
                 </button>
             </div>
         </div>
-    </div>
-)}
 
-        </div>
+
     );
 }
 
