@@ -14,11 +14,17 @@ function MagicWritter() {
     const [aiResponse, setAiResponse] = useState("");
     const [isProcessing, setIsProcessing] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
+    const [selectedText, setSelectedText] = useState("");
     const textareaRef = useRef(null);
     const lineNumbersRef = useRef(null);
 
+    useEffect(() => {
+        // Focus the textarea when the modal opens
+        if (isModalOpen && textareaRef.current) {
+            textareaRef.current.focus();
+        }
+    }, [isModalOpen]);
 
-    // Dynamic line numbering with scroll sync
     useEffect(() => {
         const updateLineNumbers = () => {
             const lines = courseContent.split("\n").length || 1;
@@ -32,10 +38,17 @@ function MagicWritter() {
         };
 
         updateLineNumbers();
-        const textarea = textareaRef.current;
-        textarea.addEventListener("scroll", handleScroll);
 
-        return () => textarea.removeEventListener("scroll", handleScroll);
+        const textarea = textareaRef.current;
+        if (textarea) {
+            textarea.addEventListener("scroll", handleScroll);
+        }
+
+        return () => {
+            if (textarea) {
+                textarea.removeEventListener("scroll", handleScroll);
+            }
+        };
     }, [courseContent]);
 
     const handleChange = (e) => {
@@ -48,19 +61,49 @@ function MagicWritter() {
         }
     };
 
+    const handleTextSelection = () => {
+        const selected = window.getSelection().toString();
+        setSelectedText(selected); // Store the selected text in state
+        
+        if (selected.trim()) {
+            setIsModalOpen(true);  // Open the modal if text is selected
+        }
+    };
+    
+
     const handleModalSubmit = () => {
         // Call AI to generate response based on modal text
-        generateAIResponse(modalText);
+        generateAIResponse(modalText, selectedText);
         setIsModalOpen(false); // Close the modal after submitting
+        // Refocus the textarea after closing the modal
+        if (textareaRef.current) {
+            textareaRef.current.focus();
+        }
     };
+    const handleEditButtonClick = () => {
+        // Trigger modal with the selected text when "Edit" is clicked
+        if (selectedText.trim()) {
+            setModalText(''); // Clear any previous comment in the modal
+            setIsModalOpen(true); // Open the modal to enter user comment
+        } else {
+            Swal.fire({
+                title: "No text selected",
+                text: "Please select some text first.",
+                icon: "warning",
+                confirmButtonText: "OK",
+            });
+        }
+    };
+    
 
-    const generateAIResponse = async (text) => {
+
+    const generateAIResponse = async (text, selectedText) => {
         if (isProcessing) return;
         setIsProcessing(true);
         setIsLoading(true); // Show loading GIF
 
         try {
-            const generatedContent = await handleGemini(text);
+            const generatedContent = await handleGemini(text, selectedText);
             setAiResponse(generatedContent); // Set AI response in the state
             setIsProcessing(false);
             setIsLoading(false); // Hide loading GIF
@@ -85,21 +128,38 @@ function MagicWritter() {
         }
     };
 
-    const handleGemini = async (inputText) => {
+
+    const handleGemini = async (inputText, selectedText) => {
+        let prompt = '';
+
+        // Alert selected text to ensure it's being passed
+        alert(selectedText);
+
+        // Case where no text is selected
+        if (selectedText.trim() === '') {
+            prompt = `You are a highly trained AI model, designed specifically to assist users in building course content. Your task is to provide the user with the most relevant and concise information based on the provided input. Avoid any responses like "Here is your answer" or "Let me explain". Instead, directly provide the requested content. User Query: ${inputText}`;
+        } else {
+            prompt = `You are a professional AI model, specifically trained to help users build course content. Your task is to provide relevant information based on the user's input and replace the selected text accordingly. Do not include any introductory phrases like "Here is your answer". Just provide the modified content. Provided Text: ${selectedText} User's Request: ${inputText} Replace the selected text with content that aligns with the user's request while maintaining the same topic and tone.`;
+        }
+
         try {
             const API_KEY = process.env.REACT_APP_GEMINI;
             const genAI = new GoogleGenerativeAI(API_KEY);
 
             const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
-            const result = await model.generateContent(inputText);
+            const result = await model.generateContent(prompt);
             const response = await result.response;
             let generatedText = await response.text();
             return generatedText;
+            selectedText = ''
+            inputText = ''
+
         } catch (error) {
             console.error("Error generating text:", error);
-            return "Error occurred while generating text.";
+            return "An error occurred while generating the content.";
         }
     };
+
 
     const handleTextAreaHeight = () => {
         if (textareaRef.current) {
@@ -110,23 +170,20 @@ function MagicWritter() {
 
     // Insert the AI response into the course content
     const insertText = () => {
-        setCourseContent(prevContent => prevContent.replace("##", aiResponse));
+        setCourseContent(prevContent => prevContent.replace(selectedText, aiResponse));
         setAiResponse(""); // Clear the AI response after inserting
     };
 
     // Regenerate the AI response with the current modal text
-    // Regenerate AI content based on modal text
     const regenerateContent = () => {
         setAiResponse(""); // Clear the current AI response
         setIsModalOpen(false); // Close the modal
-        generateAIResponse(modalText); // Regenerate AI content based on the new modal text
+        generateAIResponse(modalText, selectedText); // Regenerate AI content based on the new modal text
     };
-
 
     return (
         <div className="magic-writter-container">
-            
-                <AdminSidebar />
+            <AdminSidebar />
             <div className="editor-container">
                 <div className="editor">
                     <div className="editor-header">
@@ -146,6 +203,7 @@ function MagicWritter() {
                             onChange={handleChange}
                             onInput={handleTextAreaHeight}
                             aria-label="Course content editor"
+                            onMouseUp={handleTextSelection}
                         />
                     </div>
                 </div>
@@ -157,6 +215,7 @@ function MagicWritter() {
                     <div className="modal">
                         <h3 className="modal-title">What's your thought for this course?🤔</h3>
                         <textarea
+                            ref={textareaRef}  // Attach the ref to the textarea
                             value={modalText}
                             onChange={(e) => setModalText(e.target.value)}
                             placeholder="Type your thoughts here..."
@@ -242,11 +301,11 @@ function MagicWritter() {
                 </div>
             )}
 
-
             <div className="toolbar-container">
-                <button className="toolbar-btn" >
+                <button className="toolbar-btn" onClick={handleEditButtonClick}>
                     <BiPencil />
                 </button>
+
                 <button className="toolbar-btn">
                     <BiRefresh />
                 </button>
@@ -258,8 +317,6 @@ function MagicWritter() {
                 </button>
             </div>
         </div>
-
-
     );
 }
 
