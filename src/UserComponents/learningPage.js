@@ -5,7 +5,9 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { getDatabase, ref, get, set, update } from "firebase/database";
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import Swal from "sweetalert2";
-import Loading from "../icons/Loading.gif"
+import Loading from "../icons/Loading.gif";
+import TextToSpeeh from "../icons/text_to_speech.svg";
+import { Volume2, Pause, Play } from "lucide-react";
 
 function LearningPage() {
   const location = useLocation();
@@ -25,27 +27,30 @@ function LearningPage() {
   const [isGenerating, setIsGenerating] = useState(false);
   const [isQuestionGenerated, setIsQuestionGenerated] = useState(false);
   const [isQuestionAnswered, setIsQuestionAnswerd] = useState(false);
-  const [popupWindow, setPopupWindow] = useState(null); 
+  const [popupWindow, setPopupWindow] = useState(null);
   const API_KEY = process.env.REACT_APP_GEMINI;
   const genAI = new GoogleGenerativeAI(API_KEY);
   const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
   const db = getDatabase();
-  let nextModule 
+  let nextModule;
   const courseRef = ref(db, `Courses/${courseId}`);
-
 
   useEffect(() => {
     const handleVisibilityChange = () => {
-      if (document.visibilityState === 'hidden' && !isQuestionAnswered && isQuestionGenerated) {
+      if (
+        document.visibilityState === "hidden" &&
+        !isQuestionAnswered &&
+        isQuestionGenerated
+      ) {
         Swal.fire({
           title: "Critical Warning",
           text: "Our System has detected Tab Switiching",
           icon: "error",
-          confirmButtonText: "Okay"
+          confirmButtonText: "Okay",
         });
-        
+
         setShowQuestions(false);
-        generateQuestions(nextModule)
+        generateQuestions(nextModule);
       }
     };
     const handleWindowFocus = () => {
@@ -55,24 +60,28 @@ function LearningPage() {
             title: "Critical Warning",
             text: "You cannot leave the page until you answer the questions.",
             icon: "error",
-            confirmButtonText: "Okay"
+            confirmButtonText: "Okay",
           });
         }
       }
     };
     const openPopup = () => {
-      const popup = window.open('/your-popup-url', '_blank', 'width=600,height=400');
+      const popup = window.open(
+        "/your-popup-url",
+        "_blank",
+        "width=600,height=400"
+      );
       setPopupWindow(popup);
     };
 
-    document.addEventListener('visibilitychange', handleVisibilityChange);
-    window.addEventListener('focus', handleWindowFocus);
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+    window.addEventListener("focus", handleWindowFocus);
 
     return () => {
-      document.removeEventListener('visibilitychange', handleVisibilityChange);
-      window.removeEventListener('focus', handleWindowFocus);
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+      window.removeEventListener("focus", handleWindowFocus);
     };
-  }, [isQuestionAnswered, isQuestionGenerated,popupWindow]);
+  }, [isQuestionAnswered, isQuestionGenerated, popupWindow]);
 
   useEffect(() => {
     // Fetch course details if courseId exists
@@ -119,7 +128,8 @@ function LearningPage() {
     // Prevent the user from leaving the page or closing the tab
     const handleBeforeUnload = (event) => {
       if (!isQuestionAnswered && isQuestionGenerated) {
-        const message = "You haven't answered the question. Are you sure you want to leave?";
+        const message =
+          "You haven't answered the question. Are you sure you want to leave?";
         event.returnValue = message; // Standard for most browsers
         return message; // For some browsers
       }
@@ -149,8 +159,6 @@ function LearningPage() {
       });
     };
   }, [courseId, isQuestionAnswered, isQuestionGenerated, navigate]);
-
-  
 
   const getUserIdFromCookie = () => {
     const cookieValue = document.cookie
@@ -349,7 +357,7 @@ function LearningPage() {
       setIsQuestionAnswerd(true);
       setIsModuleCompleted(true);
       setShowQuestions(false);
-      handleNext(); 
+      handleNext();
     }
   };
 
@@ -426,10 +434,71 @@ function LearningPage() {
       console.error("Error during next module handling:", error);
     }
   };
+  const [speech, setSpeech] = useState(null);
+  const [isPaused, setIsPaused] = useState(false);
+  const [speed, setSpeed] = useState(1); // Default speed
+
+  const handleTextToSpeech = () => {
+    if (!courseDetails) {
+      Swal.fire({
+        title: "Error",
+        text: "No course content available.",
+        icon: "error",
+      });
+      return;
+    }
+
+    if (speechSynthesis.speaking && !speechSynthesis.paused) {
+      speechSynthesis.pause();
+      setIsPaused(true);
+      return;
+    } else if (speechSynthesis.paused) {
+      speechSynthesis.resume();
+      setIsPaused(false);
+      return;
+    }
+
+    const moduleNumber = currentModule;
+    const content = `
+        Title: ${
+          JSON.parse(courseDetails.courseContent)[`moduletitle${moduleNumber}`]
+        }
+        Concept: ${
+          JSON.parse(courseDetails.courseContent)[
+            `module${moduleNumber}concept`
+          ]
+        }
+        Example and Analogy: ${
+          JSON.parse(courseDetails.courseContent)[
+            `module${moduleNumber}ExampleandAnalogy`
+          ]
+        }
+      `;
+
+    const newSpeech = new SpeechSynthesisUtterance(content);
+    newSpeech.lang = "en-US";
+    newSpeech.rate = speed;
+    newSpeech.pitch = 1;
+
+    newSpeech.onend = () => {
+      setIsPaused(false);
+      setSpeech(null);
+    };
+
+    setSpeech(newSpeech);
+    speechSynthesis.speak(newSpeech);
+  };
+
+  const handleSpeedChange = (e) => {
+    setSpeed(parseFloat(e.target.value));
+    if (speech) {
+      speech.rate = parseFloat(e.target.value);
+    }
+  };
 
   return (
     <div className="learning-page-container">
-    <Sidebar
+      <Sidebar
         isQuestionAnswered={isQuestionAnswered}
         isQuestionGenerated={isQuestionGenerated}
       />
@@ -446,7 +515,7 @@ function LearningPage() {
               </div>
             ) : (
               <>
-                { courseDetails ? (
+                {courseDetails ? (
                   <>
                     <h1 className="learning-title">
                       {courseDetails.courseName}
@@ -469,7 +538,9 @@ function LearningPage() {
                     </div>
                   </>
                 ) : (
-                  <div className="loading-container"><img src={Loading} className="loading-gif"></img></div>
+                  <div className="loading-container">
+                    <img src={Loading} className="loading-gif"></img>
+                  </div>
                 )}
               </>
             )}
@@ -479,6 +550,20 @@ function LearningPage() {
             <h1 className="learning-title">{courseDetails.courseName}</h1>
             <div className="course-info">
               <div className="course-section">
+                <div className="flex items-center gap-2">
+                  <button
+                    className="p-2 rounded-full hover:bg-gray-200 transition-all"
+                    onClick={handleTextToSpeech}
+                  >
+                    {isPaused || !speechSynthesis.speaking ? (
+                      <Volume2 className="w-6 h-6 text-gray-600" />
+                    ) : (
+                      <Pause className="w-6 h-6 text-gray-600" />
+                    )}
+                  </button>
+
+                  
+                </div>
                 <h2>Module {currentModule}</h2>
                 <h2>
                   {
