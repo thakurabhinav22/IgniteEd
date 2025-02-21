@@ -1,0 +1,112 @@
+from flask import Flask, request, jsonify
+from flask_cors import CORS
+import requests
+from bs4 import BeautifulSoup
+import pdfplumber
+from urllib.parse import urlparse
+from googlesearch import search
+import os
+from flask import Flask
+from flask_cors import CORS
+
+app = Flask(__name__)
+CORS(app, resources={r"/*": {"origins": "*"}})  # Allow all origins
+
+# 📌 Function to check if a URL is a PDF
+def is_pdf(url):
+    return urlparse(url).path.endswith('.pdf')
+
+# 📌 Function to extract text from PDFs
+def extract_pdf_text(url):
+    try:
+        response = requests.get(url, stream=True)
+        response.raise_for_status()
+        with open("temp.pdf", "wb") as temp_file:
+            temp_file.write(response.content)
+        with pdfplumber.open("temp.pdf") as pdf:
+            text = "\n".join([page.extract_text() for page in pdf.pages if page.extract_text()])
+        os.remove("temp.pdf")  # Cleanup temporary file
+        return text if text else "No readable text in this PDF."
+    except Exception as e:
+        return f"Error extracting text from PDF: {str(e)}"
+
+# 📌 Function to scrape webpage content
+def scrape_webpage(url):
+    try:
+        response = requests.get(url, headers={"User-Agent": "Mozilla/5.0"})
+        response.raise_for_status()
+        soup = BeautifulSoup(response.text, 'html.parser')
+        return soup.get_text(strip=True) or "No textual content found."
+    except Exception as e:
+        return f"Error scraping webpage: {str(e)}"
+
+# 📌 API to scrape URLs for text
+@app.route('/scrape', methods=['POST'])
+def scrape():
+    try:
+        data = request.get_json()
+        urls = data.get('urls', [])
+        if not urls:
+            return jsonify({"error": "No URLs provided"}), 400
+
+        scraped_data = []
+        for url in urls:
+            content = extract_pdf_text(url) if is_pdf(url) else scrape_webpage(url)
+            scraped_data.append({"url": url, "content": content})
+
+        return jsonify({"scraped_data": scraped_data}), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+# 📌 Function to perform Google search and filter PDFs
+def search_pdfs(topic, author=None, keywords=None):
+    query = f"{topic} filetype:pdf"
+    if author:
+        query += f" {author}"
+    if keywords:
+        query += f" {' '.join(keywords)}"
+
+    print(f"🔍 Searching for PDFs: {query}")
+    results = list(search(query))[:10]  # Fetch only top 10 results
+
+    return [result for result in results if result.endswith(".pdf")]
+
+# 📌 API to search for PDFs
+@app.route("/search", methods=["POST"])
+def search_api():
+    try:
+        data = request.json
+        topic = data.get("topic")
+        if not topic:
+            return jsonify({"error": "Topic is required"}), 400  # 🚨 More clear error message
+
+        author = data.get("author", "").strip()
+        keywords = data.get("keywords", "").strip()
+        pdf_links = search_pdfs(topic, author, keywords.split(",") if keywords else None)
+
+        return jsonify({"pdf_links": pdf_links}), 200
+    except Exception as e:
+        return jsonify({"error": f"Server error: {str(e)}"}), 500
+
+
+# 📌 Function to download PDFs
+def download_pdf(url, download_folder="static/pdf_downloads"):
+    try:
+        response = requests.get(url, stream=True, headers={"User-Agent": "Mozilla/5.0"})
+        if response.status_code == 200:
+            os.makedirs(download_folder, exist_ok=True)
+            filename = os.path.join(download_folder, url.split("/")[-1])
+            with open(filename, 'wb') as file:
+                file.write(response.content)
+            return filename
+        return None
+    except Exception:
+        return None
+
+# 📌 API Home Route
+@app.route("/", methods=["GET"])
+def home():
+    return jsonify({"message": "Welcome to the Web Scraper & PDF Search API"}), 200
+
+if __name__ == "__main__":
+    app.run(host="0.0.0.0", port=5000, debug=True)

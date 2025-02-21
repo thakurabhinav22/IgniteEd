@@ -2,18 +2,23 @@ import React, { useState, useEffect } from "react";
 import { FaAngleDown, FaAngleUp } from "react-icons/fa"; // Import icons
 import "./webcrawler.css";
 import AdminSidebar from "./adminSideBar";
+import JSZip from "jszip";
+import { saveAs } from "file-saver";
 
 export default function WebCrawler() {
   const [activeTab, setActiveTab] = useState("link-scraper");
   const [links, setLinks] = useState("");
   const [processedLinks, setProcessedLinks] = useState([]);
   const [scrapedContent, setScrapedContent] = useState([]);
+  const [keyScraped, setKeyScraped] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [serverStatus, setServerStatus] = useState("offline"); // Track server status
   const [keyword, setKeyword] = useState(""); // State for keyword search
-  const [searchQuery, setSearchQuery] = useState(""); 
-   const server_end_point = "https://b978747b-0cfa-4ac8-aa74-e01288e8d3c1-00-2tmnjhgcuv5r3.pike.replit.dev/scrape"
+  const [selectedLinks, setSelectedLinks] = useState([]);
+  const [searchQuery, setSearchQuery] = useState("");
+
+  const server_end_point = "https://b978747b-0cfa-4ac8-aa74-e01288e8d3c1-00-2tmnjhgcuv5r3.pike.replit.dev/scrape"
 
   // Function to check server status
   const checkServerStatus = async () => {
@@ -35,7 +40,7 @@ export default function WebCrawler() {
   };
 
   // Use effect to check server status when the component mounts
-  useEffect(() => { 
+  useEffect(() => {
     checkServerStatus();
     const interval = setInterval(checkServerStatus, 10000); // Check every 30 seconds
     return () => clearInterval(interval); // Cleanup on unmount
@@ -55,7 +60,7 @@ export default function WebCrawler() {
       document.body.appendChild(script);
     }
   }, [activeTab]);
-  
+
 
   // Handle change in input links
   const handleLinksChange = (e) => {
@@ -115,24 +120,78 @@ export default function WebCrawler() {
   };
 
   // Keyword search handler
-  const handleKeywordSearch = (e) => {
-    setKeyword(e.target.value);
+  const handleKeywordSearch = async () => {
+    if (!keyword.trim()) {
+      alert("Please enter a keyword before searching.");
+      return;
+    }
+
+    try {
+      setLoading(true);
+      setError(null);
+
+      const response = await fetch(
+        `https://b978747b-0cfa-4ac8-aa74-e01288e8d3c1-00-2tmnjhgcuv5r3.pike.replit.dev/search`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ topic: keyword, author: "", keywords: "" }),
+        }
+      );
+
+      if (!response.ok) throw new Error(`Failed to fetch search results`);
+
+      const data = await response.json();
+      setKeyScraped(data.pdf_links || []);
+    } catch (err) {
+      setError("Error fetching search results.");
+    } finally {
+      setLoading(false);
+    }
   };
 
-  // Search content based on the keyword
-  const filteredContentByKeyword = scrapedContent.filter((item) =>
-    item.content.toLowerCase().includes(keyword.toLowerCase())
-  );
+  const handleCheckboxChange = (link) => {
+    setSelectedLinks((prev) =>
+      prev.includes(link)
+        ? prev.filter((item) => item !== link)
+        : [...prev, link]
+    );
+  };
+
+  const handleDownloadSelected = async () => {
+    if (selectedLinks.length === 0) {
+      alert("No files selected for download.");
+      return;
+    }
+  
+    const zip = new JSZip();
+    const promises = selectedLinks.map(async (link, index) => {
+      try {
+        const response = await fetch(link);
+        const blob = await response.blob();
+        const fileName = link.split("/").pop() || `file${index}.pdf`;
+        zip.file(fileName, blob);
+      } catch (error) {
+        console.error("Error downloading file:", link, error);
+      }
+    });
+  
+    await Promise.all(promises);
+  
+    zip.generateAsync({ type: "blob" }).then((zipBlob) => {
+      saveAs(zipBlob, "downloaded_files.zip");
+    });
+  };
+
+
+
+
 
   // Search engine handler
   const handleSearchQuery = (e) => {
     setSearchQuery(e.target.value);
   };
 
-  // Search content based on the query in Search Engine
-  const filteredContentByQuery = scrapedContent.filter((item) =>
-    item.content.toLowerCase().includes(searchQuery.toLowerCase())
-  );
 
   return (
     <div className="crawler-main">
@@ -194,14 +253,14 @@ export default function WebCrawler() {
 
                       {/* Show/Hide toggle button next to the link */}
                       {scrapedContent.some((item) => item.url === link && item.visible) ? (
-                        <button 
-                          className="toggle-button" 
+                        <button
+                          className="toggle-button"
                           onClick={() => toggleContentVisibility(link)}>
-                          <FaAngleUp />  
+                          <FaAngleUp />
                         </button>
                       ) : (
-                        <button 
-                          className="toggle-button" 
+                        <button
+                          className="toggle-button"
                           onClick={() => toggleContentVisibility(link)}>
                           <FaAngleDown />
                         </button>
@@ -224,31 +283,66 @@ export default function WebCrawler() {
           </div>
         )}
 
-        {/* Keyword Searcher Tab */}
-        {activeTab === "keyword-searcher" && (
-          <div className="tab-panel">
-            <h2>🔑 Keyword Searcher</h2>
-            <input
-              type="text"
-              placeholder="Enter keyword to search"
-              value={keyword}
-              onChange={handleKeywordSearch}
-            />
-            <div>
-              <h3>Results:</h3>
-              {filteredContentByKeyword.length > 0 ? (
-                filteredContentByKeyword.map((item, index) => (
-                  <div key={index} className="scraped-item">
-                    <h4>{item.url}</h4>
-                    <p>{item.content}</p>
-                  </div>
-                ))
-              ) : (
-                <p>No results found for "{keyword}".</p>
-              )}
-            </div>
+{activeTab === "keyword-searcher" && (
+  <div className="tab-panel">
+    <h2>🔑 Keyword Searcher</h2>
+    <input
+      className="keyword-input"
+      type="text"
+      placeholder="Enter keyword to search"
+      value={keyword}
+      onChange={(e) => setKeyword(e.target.value)}
+    />
+    <button className="search-btn" onClick={handleKeywordSearch}>
+      Search
+    </button>
+
+    <div className="search-results">
+      <h3>Results:</h3>
+      {keyScraped.length > 0 ? (
+        Object.entries(
+          keyScraped.reduce((acc, link) => {
+            try {
+              const url = new URL(link);
+              const domain = url.hostname; // Extract domain
+              if (!acc[domain]) acc[domain] = [];
+              acc[domain].push(link);
+            } catch (error) {
+              console.error("Invalid URL:", link);
+            }
+            return acc;
+          }, {})
+        ).map(([domain, links]) => (
+          <div key={domain} className="domain-group">
+            <h4>{domain}</h4>
+            {links.map((link, index) => (
+              <div key={index} className="scraped-item">
+                <input
+                  type="checkbox"
+                  onChange={() => handleCheckboxChange(link)}
+                  checked={selectedLinks.includes(link)}
+                />
+                <a href={link} target="_blank" rel="noopener noreferrer">
+                  {link}
+                </a>
+              </div>
+            ))}
           </div>
-        )}
+        ))
+      ) : (
+        <p>No results found for "{keyword}".</p>
+      )}
+
+      {selectedLinks.length > 0 && (
+        <div className="download_button_container">
+        <button  className="download_select_pdf" onClick={handleDownloadSelected}>Download Selected</button></div>
+      )}
+    </div>
+  </div>
+)}
+
+
+
 
         {/* Search Engine Tab */}
         {activeTab === "search-engine" && (
