@@ -214,3 +214,37 @@
   background-color: #6d7dff;
   color: white;
 }
+
+/* The main container for the button */
+.speak_container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 50px; /* Fixed button size */
+  height: 50px;
+  border-radius: 50%; /* Circular button */
+  background-color: #000000; /* Dark background for the button */
+  cursor: pointer; /* Pointer cursor on hover */
+  transition: background-color 0.3s ease, transform 0.3s ease; /* Smooth transition for hover effect */
+}
+
+/* Hover effect */
+.speak_container:hover {
+}
+
+/* Styling for the speaker images */
+.speaker_icon {
+  width: 20px; /* Default icon size */
+  height: 20px;
+  filter: brightness(0) invert(1); /* Make the icon white */
+  transition: transform 0.3s ease, width 0.2s ease, height 0.2s ease; /* Smooth transition for scaling */
+}
+
+/* Hover effect for icon size */
+.speak_container:hover .speaker_icon {
+  width: 20px; /* Increase icon size on hover */
+  height: 20px;
+}
+
+
+

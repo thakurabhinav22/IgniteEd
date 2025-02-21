@@ -8,6 +8,8 @@ import Swal from "sweetalert2";
 import Loading from "../icons/Loading.gif";
 import TextToSpeeh from "../icons/text_to_speech.svg";
 import { Volume2, Pause, Play } from "lucide-react";
+import speaker from "../icons/speaker.png";
+import speaking from "../icons/speaking.gif";
 
 function LearningPage() {
   const location = useLocation();
@@ -273,21 +275,18 @@ function LearningPage() {
       ]
     }, etc ....        
         Content: 
-          Title: ${
-            JSON.parse(courseDetails.courseContent)[
-              `moduletitle${moduleNumber}`
-            ]
-          }
-          Concept: ${
-            JSON.parse(courseDetails.courseContent)[
-              `module${moduleNumber}concept`
-            ]
-          }
-          Example and Analogy: ${
-            JSON.parse(courseDetails.courseContent)[
-              `module${moduleNumber}ExampleandAnalogy`
-            ]
-          }
+          Title: ${JSON.parse(courseDetails.courseContent)[
+        `moduletitle${moduleNumber}`
+        ]
+        }
+          Concept: ${JSON.parse(courseDetails.courseContent)[
+        `module${moduleNumber}concept`
+        ]
+        }
+          Example and Analogy: ${JSON.parse(courseDetails.courseContent)[
+        `module${moduleNumber}ExampleandAnalogy`
+        ]
+        }
       `);
 
       const response = await result.response;
@@ -460,19 +459,16 @@ function LearningPage() {
 
     const moduleNumber = currentModule;
     const content = `
-        Title: ${
-          JSON.parse(courseDetails.courseContent)[`moduletitle${moduleNumber}`]
-        }
-        Concept: ${
-          JSON.parse(courseDetails.courseContent)[
-            `module${moduleNumber}concept`
-          ]
-        }
-        Example and Analogy: ${
-          JSON.parse(courseDetails.courseContent)[
-            `module${moduleNumber}ExampleandAnalogy`
-          ]
-        }
+        Title: ${JSON.parse(courseDetails.courseContent)[`moduletitle${moduleNumber}`]
+      }
+        Concept: ${JSON.parse(courseDetails.courseContent)[
+      `module${moduleNumber}concept`
+      ]
+      }
+        Example and Analogy: ${JSON.parse(courseDetails.courseContent)[
+      `module${moduleNumber}ExampleandAnalogy`
+      ]
+      }
       `;
 
     const newSpeech = new SpeechSynthesisUtterance(content);
@@ -550,25 +546,29 @@ function LearningPage() {
             <h1 className="learning-title">{courseDetails.courseName}</h1>
             <div className="course-info">
               <div className="course-section">
-                <div className="flex items-center gap-2">
-                  <button
-                    className="p-2 rounded-full hover:bg-gray-200 transition-all"
-                    onClick={handleTextToSpeech}
-                  >
-                    {isPaused || !speechSynthesis.speaking ? (
-                      <Volume2 className="w-6 h-6 text-gray-600" />
-                    ) : (
-                      <Pause className="w-6 h-6 text-gray-600" />
-                    )}
-                  </button>
+                <button className="speak_container" onClick={handleTextToSpeech}>
+                  {isPaused || !speechSynthesis.speaking ? (
+                    <img
+                      src={speaker}  // Replace with the path to your speaker icon
+                      alt="Speaker Icon"
+                      className="speaker_icon"
+                    />
+                  ) : (
+                    <img
+                      src={speaking}  // Replace with the path to your speaking icon
+                      alt="Speaking Icon"
+                      className="speaker_icon"
+                    />
+                  )}
+                </button>
 
-                  
-                </div>
+
+
                 <h2>Module {currentModule}</h2>
                 <h2>
                   {
                     JSON.parse(courseDetails.courseContent)[
-                      `moduletitle${currentModule}`
+                    `moduletitle${currentModule}`
                     ]
                   }
                 </h2>
@@ -576,7 +576,7 @@ function LearningPage() {
                 <p>
                   {
                     JSON.parse(courseDetails.courseContent)[
-                      `module${currentModule}concept`
+                    `module${currentModule}concept`
                     ]
                   }
                 </p>
@@ -584,7 +584,7 @@ function LearningPage() {
                 <p>
                   {
                     JSON.parse(courseDetails.courseContent)[
-                      `module${currentModule}ExampleandAnalogy`
+                    `module${currentModule}ExampleandAnalogy`
                     ]
                   }
                 </p>
