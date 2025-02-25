@@ -223,7 +223,7 @@
   width: 50px; /* Fixed button size */
   height: 50px;
   border-radius: 50%; /* Circular button */
-  background-color: #000000; /* Dark background for the button */
+  background-color: whitesmoke; /* Dark background for the button */
   cursor: pointer; /* Pointer cursor on hover */
   transition: background-color 0.3s ease, transform 0.3s ease; /* Smooth transition for hover effect */
 }

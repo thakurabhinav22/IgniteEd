@@ -160,28 +160,42 @@ export default function WebCrawler() {
 
   const handleDownloadSelected = async () => {
     if (selectedLinks.length === 0) {
-      alert("No files selected for download.");
-      return;
+        alert("No files selected for download.");
+        return;
     }
-  
-    const zip = new JSZip();
-    const promises = selectedLinks.map(async (link, index) => {
-      try {
-        const response = await fetch(link);
+
+    try {
+        const response = await fetch("https://b978747b-0cfa-4ac8-aa74-e01288e8d3c1-00-2tmnjhgcuv5r3.pike.replit.dev/download-pdfs", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ pdf_links: selectedLinks }),
+        });
+
+        if (!response.ok) {
+            throw new Error("Error generating ZIP file.");
+        }
+
+        // Convert response into a downloadable ZIP file
         const blob = await response.blob();
-        const fileName = link.split("/").pop() || `file${index}.pdf`;
-        zip.file(fileName, blob);
-      } catch (error) {
-        console.error("Error downloading file:", link, error);
-      }
-    });
+        const url = window.URL.createObjectURL(blob);
+
+        // Create a download link and trigger the download
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = "downloaded_pdfs.zip";
+        document.body.appendChild(a);
+        a.click();
+
+        // Cleanup
+        setTimeout(() => window.URL.revokeObjectURL(url), 1000);
+    } catch (error) {
+        console.error("Error downloading ZIP file:", error);
+        alert("Failed to download ZIP file.");
+    }
+};
+
   
-    await Promise.all(promises);
   
-    zip.generateAsync({ type: "blob" }).then((zipBlob) => {
-      saveAs(zipBlob, "downloaded_files.zip");
-    });
-  };
 
 
 
