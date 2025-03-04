@@ -30,12 +30,57 @@ function LearningPage() {
   const [isQuestionGenerated, setIsQuestionGenerated] = useState(false);
   const [isQuestionAnswered, setIsQuestionAnswerd] = useState(false);
   const [popupWindow, setPopupWindow] = useState(null);
+  const [startTime, setStartTime] = useState(null); // Timer start time
+  const [totalTime, setTotalTime] = useState(0); // Total time in seconds
+  const [timerInterval, setTimerInterval] = useState(null); // Interval ID for clearing
   const API_KEY = process.env.REACT_APP_GEMINI;
   const genAI = new GoogleGenerativeAI(API_KEY);
   const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
   const db = getDatabase();
   let nextModule;
   const courseRef = ref(db, `Courses/${courseId}`);
+
+  // Start the timer when questions are generated
+  useEffect(() => {
+    if (isQuestionGenerated && !startTime) {
+      setStartTime(Date.now());
+      const interval = setInterval(() => {
+        setTotalTime(Math.floor((Date.now() - startTime) / 1000));
+      }, 1000);
+      setTimerInterval(interval);
+    }
+  }, [isQuestionGenerated, startTime]);
+
+  // Stop the timer and save to Firebase when the course is completed
+  useEffect(() => {
+    if (isCourseCompleted && timerInterval) {
+      clearInterval(timerInterval);
+      const userId = getUserIdFromCookie();
+      const userCourseRef = ref(db, `user/${userId}/InProgressCourses/${courseId}`);
+      update(userCourseRef, { totalTimeTaken: totalTime })
+        .then(() => {
+          console.log(`Total time of ${totalTime} seconds stored in Firebase`);
+          Swal.fire({
+            title: "Course Completed!",
+            text: `You took ${formatTime(totalTime)} to complete the course.`,
+            icon: "success",
+          });
+        })
+        .catch((error) => {
+          console.error("Error storing time in Firebase:", error);
+        });
+    }
+  }, [isCourseCompleted, timerInterval, totalTime]);
+
+  // Helper function to format time in HH:MM:SS
+  const formatTime = (seconds) => {
+    const hours = Math.floor(seconds / 3600);
+    const minutes = Math.floor((seconds % 3600) / 60);
+    const secs = seconds % 60;
+    return `${hours.toString().padStart(2, "0")}:${minutes
+      .toString()
+      .padStart(2, "0")}:${secs.toString().padStart(2, "0")}`;
+  };
 
   useEffect(() => {
     const handleVisibilityChange = () => {
@@ -46,7 +91,7 @@ function LearningPage() {
       ) {
         Swal.fire({
           title: "Critical Warning",
-          text: "Our System has detected Tab Switiching",
+          text: "Our System has detected Tab Switching",
           icon: "error",
           confirmButtonText: "Okay",
         });
@@ -86,7 +131,6 @@ function LearningPage() {
   }, [isQuestionAnswered, isQuestionGenerated, popupWindow]);
 
   useEffect(() => {
-    // Fetch course details if courseId exists
     if (!courseId) {
       navigate(`/courses`);
     } else {
@@ -104,7 +148,6 @@ function LearningPage() {
         });
     }
 
-    // Define the handleMouseLeave function to warn the user if they try to leave the page
     const handleMouseLeave = (event) => {
       if (event.clientY < 10 && !isQuestionAnswered && isQuestionGenerated) {
         Swal.fire({
@@ -115,7 +158,6 @@ function LearningPage() {
       }
     };
 
-    // Block sidebar navigation if the question is not answered
     const blockSidebarNavigation = (event) => {
       if (!isQuestionAnswered && isQuestionGenerated) {
         event.preventDefault();
@@ -127,34 +169,27 @@ function LearningPage() {
       }
     };
 
-    // Prevent the user from leaving the page or closing the tab
     const handleBeforeUnload = (event) => {
       if (!isQuestionAnswered && isQuestionGenerated) {
         const message =
           "You haven't answered the question. Are you sure you want to leave?";
-        event.returnValue = message; // Standard for most browsers
-        return message; // For some browsers
+        event.returnValue = message;
+        return message;
       }
     };
 
-    // Add event listeners for mouse leave, before unload, and sidebar navigation block
     if (!isQuestionAnswered && isQuestionGenerated) {
       window.addEventListener("mouseout", handleMouseLeave);
       window.addEventListener("beforeunload", handleBeforeUnload);
-
-      // Assuming the sidebar navigation elements have a class of 'sidebar-nav'
       const sidebarLinks = document.querySelectorAll(".sidebar-nav");
       sidebarLinks.forEach((link) => {
         link.addEventListener("click", blockSidebarNavigation);
       });
     }
 
-    // Cleanup event listeners on component unmount or conditions change
     return () => {
       window.removeEventListener("mouseout", handleMouseLeave);
       window.removeEventListener("beforeunload", handleBeforeUnload);
-
-      // Cleanup sidebar navigation block
       const sidebarLinks = document.querySelectorAll(".sidebar-nav");
       sidebarLinks.forEach((link) => {
         link.removeEventListener("click", blockSidebarNavigation);
@@ -202,26 +237,21 @@ function LearningPage() {
 
   const handleApplyClick = () => {
     const userId = getUserIdFromCookie();
-
-    // Check if the user is logged in
     if (!userId) {
       alert("Please log in to apply for the course!");
       return;
     }
 
-    // Check if the user has already applied for the course
     if (isAlreadyApplied) {
       alert("You have already applied for this course!");
       return;
     }
 
-    // Reference to the user's progress in the course
     const userCourseRef = ref(
       db,
       `user/${userId}/InProgressCourses/${courseId}`
     );
 
-    // Prepare the data to be saved to Firebase
     const courseData = {
       CorrectAnswer: 0,
       noOfQuestion: 3,
@@ -233,12 +263,11 @@ function LearningPage() {
       CriticalWarning: 0,
     };
 
-    // Set the course data in Firebase
     set(userCourseRef, courseData)
       .then(() => {
         alert("You have successfully applied for this course!");
-        setIsAlreadyApplied(true); // Update the state to reflect the application status
-        setContentVisible(false); // Hide the apply button once applied
+        setIsAlreadyApplied(true);
+        setContentVisible(false);
       })
       .catch((error) => {
         console.error("Error applying for the course: ", error);
@@ -275,18 +304,9 @@ function LearningPage() {
       ]
     }, etc ....        
         Content: 
-          Title: ${JSON.parse(courseDetails.courseContent)[
-        `moduletitle${moduleNumber}`
-        ]
-        }
-          Concept: ${JSON.parse(courseDetails.courseContent)[
-        `module${moduleNumber}concept`
-        ]
-        }
-          Example and Analogy: ${JSON.parse(courseDetails.courseContent)[
-        `module${moduleNumber}ExampleandAnalogy`
-        ]
-        }
+          Title: ${JSON.parse(courseDetails.courseContent)[`moduletitle${moduleNumber}`]}
+          Concept: ${JSON.parse(courseDetails.courseContent)[`module${moduleNumber}concept`]}
+          Example and Analogy: ${JSON.parse(courseDetails.courseContent)[`module${moduleNumber}ExampleandAnalogy`]}
       `);
 
       const response = await result.response;
@@ -297,7 +317,7 @@ function LearningPage() {
 
       setAiQuestions(generatedQuestions.questions);
       setIsGenerating(false);
-      setIsQuestionGenerated(true);
+      setIsQuestionGenerated(true); // Trigger timer start
       Swal.fire({
         title: "Questions Generated!",
         icon: "success",
@@ -307,7 +327,7 @@ function LearningPage() {
         timer: 3000,
       });
       setIsModuleCompleted(true);
-      setShowQuestions(true); // Set this to true when questions are ready
+      setShowQuestions(true);
     } catch (error) {
       Swal.fire({
         title: "Error",
@@ -321,15 +341,12 @@ function LearningPage() {
   const handleQuestionValidate = () => {
     let correctAnswersCount = 0;
 
-    // Loop through each AI-generated question
     aiQuestions.forEach((question, index) => {
-      // Get the user's selected answer
       const selectedOption = document.querySelector(
         `input[name="question-${index}"]:checked`
       );
 
       if (selectedOption) {
-        // Check if the selected option is the correct one
         const userAnswer = selectedOption.value;
         const correctOption = question.options.find(
           (option) => option.isCorrect
@@ -341,7 +358,6 @@ function LearningPage() {
       }
     });
 
-    // Show alert with the result
     const totalQuestions = aiQuestions.length;
     const score = (correctAnswersCount / totalQuestions) * 100;
     Swal.fire({
@@ -351,7 +367,6 @@ function LearningPage() {
       confirmButtonText: "OK",
     });
 
-    // If the score is 100%, mark the module as completed and move to the next module
     if (score === 100) {
       setIsQuestionAnswerd(true);
       setIsModuleCompleted(true);
@@ -361,7 +376,6 @@ function LearningPage() {
   };
 
   const handleNext = async () => {
-    // Check if AI is generating questions
     if (isGenerating) {
       Swal.fire({
         title: "Warning",
@@ -371,8 +385,8 @@ function LearningPage() {
       return;
     }
 
-    // Prevent proceeding if the current module is the last one
     if (currentModule === moduleLength) {
+      setIsCourseCompleted(true); // Trigger course completion and time save
       return;
     }
 
@@ -383,7 +397,6 @@ function LearningPage() {
         `user/${userCookie}/InProgressCourses/${courseId}`
       );
 
-      // If the current module is completed, update Firebase progress
       if (currentModule === moduleLength) {
         await update(moduleRef, {
           completed: true,
@@ -393,12 +406,10 @@ function LearningPage() {
       setContentVisible(false);
       nextModule = currentModule + 1;
 
-      // Generate questions for the next module if not already completed
       if (!isModuleCompleted) {
         generateQuestions(nextModule);
       }
 
-      // Ensure questions are generated before proceeding to the next module
       if (!isModuleCompleted) {
         Swal.fire({
           title: "Warning",
@@ -410,7 +421,6 @@ function LearningPage() {
 
       setCurrentModule(nextModule);
 
-      // Update Firebase with the progress to the next module
       try {
         if (isModuleCompleted) {
           await update(moduleRef, {
@@ -419,11 +429,11 @@ function LearningPage() {
           });
         }
 
-        // If the next module is the last one, mark the course as completed
         if (nextModule === moduleLength) {
           await update(moduleRef, {
             completed: true,
           });
+          setIsCourseCompleted(true); // Trigger course completion
         }
         console.log("User progress updated successfully!");
       } catch (error) {
@@ -433,9 +443,10 @@ function LearningPage() {
       console.error("Error during next module handling:", error);
     }
   };
+
   const [speech, setSpeech] = useState(null);
   const [isPaused, setIsPaused] = useState(false);
-  const [speed, setSpeed] = useState(1); // Default speed
+  const [speed, setSpeed] = useState(1);
 
   const handleTextToSpeech = () => {
     if (!courseDetails) {
@@ -459,16 +470,9 @@ function LearningPage() {
 
     const moduleNumber = currentModule;
     const content = `
-        Title: ${JSON.parse(courseDetails.courseContent)[`moduletitle${moduleNumber}`]
-      }
-        Concept: ${JSON.parse(courseDetails.courseContent)[
-      `module${moduleNumber}concept`
-      ]
-      }
-        Example and Analogy: ${JSON.parse(courseDetails.courseContent)[
-      `module${moduleNumber}ExampleandAnalogy`
-      ]
-      }
+        Title: ${JSON.parse(courseDetails.courseContent)[`moduletitle${moduleNumber}`]}
+        Concept: ${JSON.parse(courseDetails.courseContent)[`module${moduleNumber}concept`]}
+        Example and Analogy: ${JSON.parse(courseDetails.courseContent)[`module${moduleNumber}ExampleandAnalogy`]}
       `;
 
     const newSpeech = new SpeechSynthesisUtterance(content);
@@ -549,20 +553,18 @@ function LearningPage() {
                 <button className="speak_container" onClick={handleTextToSpeech}>
                   {isPaused || !speechSynthesis.speaking ? (
                     <img
-                      src={speaker}  // Replace with the path to your speaker icon
+                      src={speaker}
                       alt="Speaker Icon"
                       className="speaker_icon"
                     />
                   ) : (
                     <img
-                      src={speaking}  // Replace with the path to your speaking icon
+                      src={speaking}
                       alt="Speaking Icon"
                       className="speaker_icon"
                     />
                   )}
                 </button>
-
-
 
                 <h2>Module {currentModule}</h2>
                 <h2>
@@ -649,6 +651,12 @@ function LearningPage() {
                     {currentModule === moduleLength && (
                       <button className="next-button">Complete</button>
                     )}
+                  </div>
+                )}
+                {/* Display the running time when questions are generated */}
+                {isQuestionGenerated && (
+                  <div className="timer-display">
+                    <p>Total Time: {formatTime(totalTime)}</p>
                   </div>
                 )}
               </div>
