@@ -102,11 +102,11 @@ function Sidebar({ isQuestionAnswered, isQuestionGenerated }) {
           <span>Paths</span>
         </Link>
       </nav>
-      <div className="dark-mode" onClick={handleLogout}>
+      <div className="logout-btn" onClick={handleLogout}>
         <p>Logout</p>
       </div>
     </div>
-  );
+  );   
 }
 
 export default Sidebar;
