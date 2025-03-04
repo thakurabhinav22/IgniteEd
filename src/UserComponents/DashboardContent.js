@@ -14,8 +14,8 @@ function DashboardContent() {
   const userId = Cookies.get("userSessionCred");
 
   const stats = [
-    { value: 50, color: "#e43a3c", label: "Completion Rate" },
-    { value: 1, color: "#9fef00", label: "Streaks" },
+    { value: 0, color: "#e43a3c", label: "Completion Rate" },
+    { value: 0, color: "#9fef00", label: "Streaks" },
     // { value: 10, color: "#0086ff", label: "Active Days" },
   ];
 

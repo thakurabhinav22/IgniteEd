@@ -1,7 +1,7 @@
 .dashboard-content {
   margin-left: 280px;
   padding: 20px;
-  background-color: #121c2b;
+  background-color: #f5f6fa;
   min-height: 100vh;
   color: #ffffff;
 }
@@ -19,8 +19,9 @@ h1 {
   margin-top: 20px;
   width: 100%;
   height: 250px;
-  background-color: #1a2332;
+  background-color: #fcfcfc;
   border-radius: 17px;
+  box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
 }
 
 .course-container {
@@ -28,9 +29,12 @@ h1 {
   flex-direction: column;
   margin-top: 20px;
   width: 100%;
-  background-color: #1a2332;
+  background-color: #ffffff;
   border-radius: 17px;
   padding: 20px;
+  /* border: 1px solid #1a2332; */
+  color: #000;
+  box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
 }
 
 .course-container-title {
@@ -46,20 +50,20 @@ h1 {
 }
 
 .sort-btn {
-  background-color: #9fef00;
+  background-color: #44c4ff;
   color: black;
   padding: 10px 20px;
   border-radius: 5px;
   border: none;
   cursor: pointer;
   margin-bottom: 10px;
+  box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.2);
 }
 
 .sort-btn:hover {
-  background-color: #8cd200a1;
+  background-color: #22b9ff;
 }
 
-/* Table styling */
 .courses-table {
   width: 100%;
   border-collapse: collapse;
@@ -73,18 +77,18 @@ h1 {
 }
 
 .courses-table th {
-  background-color: #1a2332;
+  background-color: #f5f6fa;
   font-size: 1.2rem;
   font-weight: bold;
   color: rgb(164, 177, 205);
 }
 
 .courses-table tr:nth-child(even) {
-  background-color: #1a2332;
+  background-color: #f5f6fa;
 }
 
 .courses-table tr:nth-child(odd) {
-  background-color: #161f2e;
+  background-color: #f5f6fa;
 }
 
 .courses-table td {
@@ -97,33 +101,34 @@ h1 {
 }
 
 .progress-bar {
-  background-color: #1c283c;
+  background-color: #f5f6fa;
   width: 80%;
   height: 8px;
   border-radius: 5px;
 }
 
 .progress-bar-fill {
-  background-color: #9fef00;
+  background-color: #44c4ff;
   height: 100%;
   border-radius: 5px;
 }
 
 .continue-btn {
-  background-color: #9fef00;
+  background-color: #44c4ff;
   color: rgb(0, 0, 0);
   border: none;
   padding: 10px 20px;
   border-radius: 5px;
   cursor: pointer;
+  box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.2);
 }
 
 .continue-btn:hover {
-  background-color: #8cd200a1;
+  background-color: #44c4ff;
 }
 
 .continue-btn.completed {
-  background-color: #28a745; /* Green color for completed */
+  background-color: #44c4ff;
 }
 
 .no-courses {
@@ -139,48 +144,53 @@ h1 {
   border-radius: 5px;
   cursor: pointer;
   margin-top: 10px;
+  box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.2);
 }
 
 .no-courses button:hover {
   background-color: #0056b3;
 }
+
 .course-list {
-  max-height: 400px; /* Restrict the height to 400px */
-  overflow-y: auto;  /* Enable vertical scrolling */
-  scrollbar-width: thin; /* For modern browsers, make the scrollbar thin */
-  scrollbar-color: #9fef00 #1a2332; /* Custom scrollbar colors */
+  max-height: 400px;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: black;
 }
 
 .course-list::-webkit-scrollbar {
-  width: 8px; /* Scrollbar width for Webkit browsers */
+  width: 8px;
 }
 
 .course-list::-webkit-scrollbar-track {
-  background: #1a2332; /* Scrollbar track color */
+  background: #f5f6fa;
   border-radius: 5px;
 }
 
 .course-list::-webkit-scrollbar-thumb {
-  background-color: #9fef00; /* Scrollbar thumb color */
+  background-color: #44c4ff;
   border-radius: 5px;
-  border: 2px solid #1a2332; /* Match the track background */
+  border: 2px solid #f5f6fa;
 }
+
 .stats-container {
   display: flex;
   justify-content: space-evenly;
   align-items: center;
   margin-top: 20px;
-  background-color: #1a2332;
+  background-color: #fcfcfc;
   border-radius: 17px;
   padding: 20px;
   height: 250px;
+  box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
 }
 
 .progress-circle {
-  text-align: center;
+  color: black;
+    text-align: center;
   width: 100px;
-  /* background-color: #161f2e; */
 }
+
 .progress-circle p {
   margin-top: 10px;
   font-size: 1rem;
