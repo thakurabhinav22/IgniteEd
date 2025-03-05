@@ -77,10 +77,10 @@ h1 {
 }
 
 .courses-table th {
-  background-color: #f5f6fa;
+  background-color: #44c4ff;
   font-size: 1.2rem;
   font-weight: bold;
-  color: rgb(164, 177, 205);
+  color: rgb(0, 0, 0);
 }
 
 .courses-table tr:nth-child(even) {

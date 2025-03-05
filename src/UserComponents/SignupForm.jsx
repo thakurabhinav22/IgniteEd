@@ -105,7 +105,7 @@ function SignUpForm() {
               showConfirmButton: false,
               timer: 3000,
             });
-            navigate("/");
+            navigate("/login");
           })
           .catch((error) => {
             console.error("Error saving user data:", error);
