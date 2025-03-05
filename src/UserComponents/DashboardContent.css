@@ -6,7 +6,8 @@
   color: #ffffff;
 }
 
-h1 {
+.Title-dashboard {
+  color:  #44c4ff;
   font-size: 1.8rem;
   color: white;
   margin-bottom: 20px;
@@ -80,19 +81,21 @@ h1 {
   background-color: #44c4ff;
   font-size: 1.2rem;
   font-weight: bold;
-  color: rgb(0, 0, 0);
+  color: white;
 }
 
-.courses-table tr:nth-child(even) {
+.Course-table-rows :nth-child(even) {
+  background-color: #44c4ff;
   background-color: #f5f6fa;
 }
 
-.courses-table tr:nth-child(odd) {
+.Course-table-rows:nth-child(odd) {
+  background-color: #44c4ff;
   background-color: #f5f6fa;
 }
 
 .courses-table td {
-  color: #ffffff;
+  color:rgb(0, 0, 0);
 }
 
 .courses-table th:nth-child(3),
@@ -101,7 +104,7 @@ h1 {
 }
 
 .progress-bar {
-  background-color: #f5f6fa;
+  background-color:rgb(154, 154, 154);
   width: 80%;
   height: 8px;
   border-radius: 5px;

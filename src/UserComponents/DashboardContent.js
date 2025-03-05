@@ -72,7 +72,7 @@ function DashboardContent() {
 
   return (
     <div className="dashboard-content">
-      <h1>Dashboard</h1>
+      <h1 className="Title-dashboard">Dashboard</h1>
 
       <div className="stats-container">
   {stats.map((stat, index) => (
@@ -103,7 +103,7 @@ function DashboardContent() {
           {inProgressCourses.length > 0 ? (
             <table className="courses-table">
               <thead>
-                <tr>
+                <tr >
                   <th>Name</th>
                   <th>Progress</th>
                   <th>Action</th>
@@ -115,9 +115,9 @@ function DashboardContent() {
                     (course.ModuleCovered / course.TotalModules) * 100;
                   
                   return (
-                    <tr key={course.id}>
-                      <td>{course.courseName}</td>
-                      <td>
+                    <tr className="Course-table-rows " key={course.id}>
+                      <td className="Course-table-rows ">{course.courseName}</td>
+                      <td className="Course-table-rows ">
                         <div className="progress-bar">
                           <div
                             className="progress-bar-fill"
@@ -125,7 +125,7 @@ function DashboardContent() {
                           ></div>
                         </div>
                       </td>
-                      <td>
+                      <td className="Course-table-rows ">
                         <button
                           className="continue-btn"
                           onClick={() => handleContinue(course.id)}
