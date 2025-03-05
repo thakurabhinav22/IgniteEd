@@ -1,23 +1,23 @@
 :root {
   /* Dark Theme */
-  --bg-color: rgb(18, 28, 43);
-  --container-bg-color: rgb(24, 34, 50);
-  --text-color: #ffffff;
-  --input-bg-color: rgb(35, 45, 60);
-  --button-bg-color: rgb(159, 239, 0);
-  --button-text-color: #1a1a1a;
-  --button-hover-color: rgb(144, 215, 0);
+  --bg-color: #f5f6fa;
+  --container-bg-color: #ffffff;
+  --text-color: #000000;
+  --input-bg-color: rgb(204, 204, 204);
+  --button-bg-color: #f5f6fa;
+  --button-text-color: #ffffff;
+  --button-hover-color: #f5f6fa;
 }
 
 /* Light Theme */
 [data-theme="light"] {
-  --bg-color: #f0f0f5;
-  --container-bg-color: #ffffff;
-  --text-color: #000000;
-  --input-bg-color: #e0e0e0;
-  --button-bg-color: rgb(159, 239, 0);
-  --button-text-color: black;
-  --button-hover-color: rgb(144, 215, 0);
+  --bg-color: #f0f0f5; /* Background color */
+  --container-bg-color: #ffffff; /* Container background */
+  --text-color: #000000; /* Text color */
+  --input-bg-color: #e0e0e0; /* Input field background */
+  --button-bg-color: #007bff; /* Button background (blue) */
+  --button-text-color: white; /* Button text color */
+  --button-hover-color: #0056b3; /* Button hover color (darker blue) */
 }
 
 * {
@@ -99,8 +99,8 @@ h2 {
 }
 
 .checkbox-container input[type="checkbox"]:checked {
-  background-color: rgb(159, 239, 0);
-  border-color: rgb(159, 239, 0);
+  background-color: var(--button-bg-color);
+  border-color: var(--button-bg-color);
 }
 
 .checkbox-container input[type="checkbox"]::before {
@@ -115,7 +115,7 @@ h2 {
 
 .checkbox-container input[type="checkbox"]:checked::before {
   content: '✔';
-  color: rgb(0, 0, 0);
+  color: #000000;
 }
 
 .RememberMeLabel {
@@ -130,7 +130,7 @@ h2 {
 }
 
 .forgot-password:hover {
-  color: rgb(159, 239, 0);
+  color: var(--button-bg-color);
   text-decoration: underline;
 }
 
@@ -152,25 +152,28 @@ h2 {
   background-color: var(--button-hover-color);
 }
 
-.Signup p{
-  color:#8799b5 ;
+.Signup p {
+  color: #8799b5;
 }
-.Signup{
-margin: 3% 0 0 0 ;
+
+.Signup {
+  margin: 3% 0 0 0;
   width: 100%;
   align-items: center;
   justify-content: start;
   display: flex;
   gap: 5px;
 }
-.create-account-link{
-  color: rgb(159, 239, 0);
+
+.create-account-link {
+  color: var(--button-bg-color);
   text-decoration: none;
   font-weight: 400;
   transition: .2s ease;
 }
-.create-account-link:hover{
-  color: rgb(144, 215, 0);
+
+.create-account-link:hover {
+  color: #0056b3; /* Darker blue for hover */
   text-decoration: underline;
   font-weight: 500;
 }
