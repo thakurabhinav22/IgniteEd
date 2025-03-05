@@ -1,13 +1,4 @@
-:root {
-  /* Dark Theme */
-  --bg-color: #f5f6fa;
-  --container-bg-color: #ffffff;
-  --text-color: #000000;
-  --input-bg-color: rgb(204, 204, 204);
-  --button-bg-color: #f5f6fa;
-  --button-text-color: #ffffff;
-  --button-hover-color: #f5f6fa;
-}
+
 
 * {
   margin: 0;
@@ -25,7 +16,7 @@
   font-family: Arial, sans-serif;
 }
 
-.login-container {
+.login-container-cover {
   width: 400px;
   padding: 2rem;
   background-color: white;
@@ -43,26 +34,26 @@
   margin-bottom: 0.5rem;
 }
 
-h2 {
+.login-title {
   font-size: 1.5rem;
   font-weight: 600;
-  color: var(--text-color);
+  color: #000000;
 }
 
-.input-field {
+.input-field-login {
   width: 100%;
   padding: 0.75rem;
   margin: 0.5rem 0;
   border: none;
   border-radius: 4px;
-  background-color: var(--input-bg-color);
-  color: #f5f6fa;
+  background-color: rgb(247 247 247);
+  color: #000000;
   font-size: 1rem;
 }
 
-.input-field:focus {
+.input-field-login:focus {
   outline: none;
-  border: 1px solid var(--button-bg-color);
+  border: 1px solid #44c4ff;
 }
 
 .options-container {
@@ -82,14 +73,14 @@ h2 {
   position: relative;
   width: 20px;
   height: 20px;
-  background-color: #1e2939;
+  background-color: #c1c1c1;
   border-radius: 4px;
   appearance: none;
 }
 
 .checkbox-container input[type="checkbox"]:checked {
-  background-color: var(--button-bg-color);
-  border-color: var(--button-bg-color);
+  background-color: white;
+  border-color: white;
 }
 
 .checkbox-container input[type="checkbox"]::before {
@@ -119,15 +110,15 @@ h2 {
 }
 
 .forgot-password:hover {
-  color: var(--button-bg-color);
+  color: #44c4ff;
   text-decoration: underline;
 }
 
-.login-button {
+.tlm-login-button {
   width: 100%;
   padding: 0.75rem;
   margin-top: 1rem;
-  background-color: #f5f6fa;
+  background-color: #44c4ff;
   border: none;
   border-radius: 4px;
   font-size: 1rem;
@@ -137,8 +128,8 @@ h2 {
   transition: 0.2s ease;
 }
 
-.login-button:hover {
-  background-color: var(--button-hover-color);
+.tlm-login-button:hover {
+  background-color: #44c4ff;
 }
 
 .Signup p {
@@ -155,14 +146,14 @@ h2 {
 }
 
 .create-account-link {
-  color: var(--button-bg-color);
+  color: #44c4ff;
   text-decoration: none;
   font-weight: 400;
   transition: .2s ease;
 }
 
 .create-account-link:hover {
-  color: #0056b3; /* Darker blue for hover */
+  color: #0056b3; 
   text-decoration: underline;
   font-weight: 500;
 }

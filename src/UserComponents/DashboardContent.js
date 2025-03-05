@@ -82,7 +82,7 @@ function DashboardContent() {
         maxValue={stat.label === "Streaks" ? 365 : 100} // Adjust maxValue if needed
         text={stat.label === "Streaks" ? `${stat.value} Days` : `${stat.value.toFixed(2)}%`}
         styles={buildStyles({
-          textColor: "#fff",
+          textColor: "black",
           pathColor: stat.color,
           trailColor: "#1c283c",
         })}

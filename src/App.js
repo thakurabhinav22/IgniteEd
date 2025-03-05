@@ -118,7 +118,7 @@ function App() {
 
   return (
     <div className="login_page_cover">
-      <div className="login-container">
+      <div className="login-container-cover">
         <div className="logo-container">
           <img
             src={logo}
@@ -127,21 +127,21 @@ function App() {
             style={{ width: "150px" }}
           />
 
-          <h2>Login to your Account</h2>
+          <h2 class="login-title">Login to your Account</h2>
         </div>
         <input
           type="email"
           placeholder="Email"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
-          className="input-field"
+          className="input-field-login"
         />
         <input
           type="password"
           placeholder="Password"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
-          className="input-field"
+          className="input-field-login"
         />
         <div className="options-container">
           <div className="checkbox-container">
@@ -164,7 +164,7 @@ function App() {
             Forgot Password?
           </a>
         </div>
-        <button onClick={handleLogin} className="login-button">
+        <button onClick={handleLogin} className="tlm-login-button">
           Login
         </button>
         <div className="Signup">
