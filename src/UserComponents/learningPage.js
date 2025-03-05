@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import Sidebar from "./Sidebar";
 import "./learningPage.css";
 import { useLocation, useNavigate } from "react-router-dom";
@@ -30,49 +30,34 @@ function LearningPage() {
   const [isQuestionGenerated, setIsQuestionGenerated] = useState(false);
   const [isQuestionAnswered, setIsQuestionAnswerd] = useState(false);
   const [popupWindow, setPopupWindow] = useState(null);
-  const [startTime, setStartTime] = useState(null); // Timer start time
-  const [totalTime, setTotalTime] = useState(0); // Total time in seconds
-  const [timerInterval, setTimerInterval] = useState(null); // Interval ID for clearing
   const API_KEY = process.env.REACT_APP_GEMINI;
   const genAI = new GoogleGenerativeAI(API_KEY);
-  const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
+  const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+  const [popupLock, setPopupLock] = useState(false);
+  const [timer, setTimer] = useState(0);
+  const [timerInterval, setTimerInterval] = useState(null);
+
   const db = getDatabase();
   let nextModule;
   const courseRef = ref(db, `Courses/${courseId}`);
 
-  // Start the timer when questions are generated
-  useEffect(() => {
-    if (isQuestionGenerated && !startTime) {
-      setStartTime(Date.now());
+  // Timer functions
+  const startTimer = () => {
+    if (!timerInterval) {
       const interval = setInterval(() => {
-        setTotalTime(Math.floor((Date.now() - startTime) / 1000));
+        setTimer((prev) => prev + 1);
       }, 1000);
       setTimerInterval(interval);
     }
-  }, [isQuestionGenerated, startTime]);
+  };
 
-  // Stop the timer and save to Firebase when the course is completed
-  useEffect(() => {
-    if (isCourseCompleted && timerInterval) {
+  const stopTimer = () => {
+    if (timerInterval) {
       clearInterval(timerInterval);
-      const userId = getUserIdFromCookie();
-      const userCourseRef = ref(db, `user/${userId}/InProgressCourses/${courseId}`);
-      update(userCourseRef, { totalTimeTaken: totalTime })
-        .then(() => {
-          console.log(`Total time of ${totalTime} seconds stored in Firebase`);
-          Swal.fire({
-            title: "Course Completed!",
-            text: `You took ${formatTime(totalTime)} to complete the course.`,
-            icon: "success",
-          });
-        })
-        .catch((error) => {
-          console.error("Error storing time in Firebase:", error);
-        });
+      setTimerInterval(null);
     }
-  }, [isCourseCompleted, timerInterval, totalTime]);
+  };
 
-  // Helper function to format time in HH:MM:SS
   const formatTime = (seconds) => {
     const hours = Math.floor(seconds / 3600);
     const minutes = Math.floor((seconds % 3600) / 60);
@@ -81,6 +66,28 @@ function LearningPage() {
       .toString()
       .padStart(2, "0")}:${secs.toString().padStart(2, "0")}`;
   };
+
+  // Clean up timer on component unmount
+  useEffect(() => {
+    return () => {
+      if (timerInterval) {
+        clearInterval(timerInterval);
+      }
+    };
+  }, [timerInterval]);
+
+  // Memoized popup function
+  const showPopup = useCallback((title, text, icon) => {
+    if (!popupLock) {
+      setPopupLock(true);
+      Swal.fire({
+        title,
+        text,
+        icon,
+        confirmButtonText: "Okay",
+      }).then(() => setPopupLock(false));
+    }
+  }, [popupLock]);
 
   useEffect(() => {
     const handleVisibilityChange = () => {
@@ -95,7 +102,7 @@ function LearningPage() {
           icon: "error",
           confirmButtonText: "Okay",
         });
-
+        stopTimer();
         setShowQuestions(false);
         generateQuestions(nextModule);
       }
@@ -111,14 +118,6 @@ function LearningPage() {
           });
         }
       }
-    };
-    const openPopup = () => {
-      const popup = window.open(
-        "/your-popup-url",
-        "_blank",
-        "width=600,height=400"
-      );
-      setPopupWindow(popup);
     };
 
     document.addEventListener("visibilitychange", handleVisibilityChange);
@@ -181,6 +180,7 @@ function LearningPage() {
     if (!isQuestionAnswered && isQuestionGenerated) {
       window.addEventListener("mouseout", handleMouseLeave);
       window.addEventListener("beforeunload", handleBeforeUnload);
+
       const sidebarLinks = document.querySelectorAll(".sidebar-nav");
       sidebarLinks.forEach((link) => {
         link.addEventListener("click", blockSidebarNavigation);
@@ -190,6 +190,7 @@ function LearningPage() {
     return () => {
       window.removeEventListener("mouseout", handleMouseLeave);
       window.removeEventListener("beforeunload", handleBeforeUnload);
+
       const sidebarLinks = document.querySelectorAll(".sidebar-nav");
       sidebarLinks.forEach((link) => {
         link.removeEventListener("click", blockSidebarNavigation);
@@ -237,6 +238,7 @@ function LearningPage() {
 
   const handleApplyClick = () => {
     const userId = getUserIdFromCookie();
+
     if (!userId) {
       alert("Please log in to apply for the course!");
       return;
@@ -304,9 +306,18 @@ function LearningPage() {
       ]
     }, etc ....        
         Content: 
-          Title: ${JSON.parse(courseDetails.courseContent)[`moduletitle${moduleNumber}`]}
-          Concept: ${JSON.parse(courseDetails.courseContent)[`module${moduleNumber}concept`]}
-          Example and Analogy: ${JSON.parse(courseDetails.courseContent)[`module${moduleNumber}ExampleandAnalogy`]}
+          Title: ${JSON.parse(courseDetails.courseContent)[
+        `moduletitle${moduleNumber}`
+        ]
+        }
+          Concept: ${JSON.parse(courseDetails.courseContent)[
+        `module${moduleNumber}concept`
+        ]
+        }
+          Example and Analogy: ${JSON.parse(courseDetails.courseContent)[
+        `module${moduleNumber}ExampleandAnalogy`
+        ]
+        }
       `);
 
       const response = await result.response;
@@ -317,7 +328,9 @@ function LearningPage() {
 
       setAiQuestions(generatedQuestions.questions);
       setIsGenerating(false);
-      setIsQuestionGenerated(true); // Trigger timer start
+      setIsQuestionGenerated(true);
+      setTimer(0); // Reset timer
+      startTimer(); // Start the timer when questions are generated
       Swal.fire({
         title: "Questions Generated!",
         icon: "success",
@@ -360,18 +373,31 @@ function LearningPage() {
 
     const totalQuestions = aiQuestions.length;
     const score = (correctAnswersCount / totalQuestions) * 100;
-    Swal.fire({
-      title: `Your score: ${score}%`,
-      text: `You got ${correctAnswersCount} out of ${totalQuestions} correct.`,
-      icon: score === 100 ? "success" : "error",
-      confirmButtonText: "OK",
-    });
-
+    
     if (score === 100) {
+      stopTimer(); // Stop timer only when all answers are correct
+      Swal.fire({
+        title: "Perfect Score!",
+        text: `You got all ${totalQuestions} questions correct in ${formatTime(timer)}!`,
+        icon: "success",
+        confirmButtonText: "OK",
+      });
       setIsQuestionAnswerd(true);
       setIsModuleCompleted(true);
       setShowQuestions(false);
       handleNext();
+    } else {
+      // Timer continues running if not all answers are correct
+      Swal.fire({
+        title: `Score: ${score}%`,
+        text: `You got ${correctAnswersCount} out of ${totalQuestions} correct. Please try again to get all answers correct.`,
+        icon: "error",
+        confirmButtonText: "OK",
+      });
+      // Clear radio button selections
+      document.querySelectorAll('input[type="radio"]').forEach((input) => {
+        input.checked = false;
+      });
     }
   };
 
@@ -386,7 +412,6 @@ function LearningPage() {
     }
 
     if (currentModule === moduleLength) {
-      setIsCourseCompleted(true); // Trigger course completion and time save
       return;
     }
 
@@ -433,7 +458,6 @@ function LearningPage() {
           await update(moduleRef, {
             completed: true,
           });
-          setIsCourseCompleted(true); // Trigger course completion
         }
         console.log("User progress updated successfully!");
       } catch (error) {
@@ -470,9 +494,16 @@ function LearningPage() {
 
     const moduleNumber = currentModule;
     const content = `
-        Title: ${JSON.parse(courseDetails.courseContent)[`moduletitle${moduleNumber}`]}
-        Concept: ${JSON.parse(courseDetails.courseContent)[`module${moduleNumber}concept`]}
-        Example and Analogy: ${JSON.parse(courseDetails.courseContent)[`module${moduleNumber}ExampleandAnalogy`]}
+        Title: ${JSON.parse(courseDetails.courseContent)[`moduletitle${moduleNumber}`]
+      }
+        Concept: ${JSON.parse(courseDetails.courseContent)[
+      `module${moduleNumber}concept`
+      ]
+      }
+        Example and Analogy: ${JSON.parse(courseDetails.courseContent)[
+      `module${moduleNumber}ExampleandAnalogy`
+      ]
+      }
       `;
 
     const newSpeech = new SpeechSynthesisUtterance(content);
@@ -594,6 +625,7 @@ function LearningPage() {
                   <>
                     {showQuestions && (
                       <div className="question-course-info">
+                        <p>Time: {formatTime(timer)}</p>
                         <h2>Answer the Questions</h2>
                         {aiQuestions.map((question, index) => (
                           <div key={index} className="question-course-section">
@@ -620,7 +652,7 @@ function LearningPage() {
                           className="NextQuestion"
                           onClick={handleQuestionValidate}
                         >
-                          Next
+                          Submit
                         </button>
                       </div>
                     )}
@@ -651,12 +683,6 @@ function LearningPage() {
                     {currentModule === moduleLength && (
                       <button className="next-button">Complete</button>
                     )}
-                  </div>
-                )}
-                {/* Display the running time when questions are generated */}
-                {isQuestionGenerated && (
-                  <div className="timer-display">
-                    <p>Total Time: {formatTime(totalTime)}</p>
                   </div>
                 )}
               </div>
