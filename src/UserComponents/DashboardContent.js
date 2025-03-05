@@ -95,7 +95,7 @@ function DashboardContent() {
 
       <div className="course-container">
         <div className="course-container-title">
-          <img src={List} alt="List icon" />
+          <img src={List} alt="List icon"l />
           In Progress Courses
         </div>
 
