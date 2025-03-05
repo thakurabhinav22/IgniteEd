@@ -1,44 +1,45 @@
 /* Main content container */
-.Progress-content-cover{
-    width: calc(100vw - 280px);
-    height: 100vh;
-    padding: 20px;
-    margin-left: 280px;
-    background-color: #121c2b;
-    color: #ffffff;
-    border-radius: 10px; 
-    box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.5); 
-    overflow-y: auto;
+.Progress-content-cover {
+  width: calc(100vw - 280px);
+  height: 100vh;
+  padding: 20px;
+  margin-left: 280px;
+  background-color: #f5f6fa; /* White background */
+  color: #333333; /* Dark text for contrast */
+  border-radius: 10px;
+  box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1); /* Lighter shadow */
+  overflow-y: auto;
 }
 
 .Progress-content-cover h1 {
-    font-size: 2em;
-    margin-bottom: 20px;
-    color: #ffffff; 
-    font-weight: bold;
+  font-size: 2em;
+  margin-bottom: 20px;
+  color: #333333; /* Darker text */
+  font-weight: bold;
 }
 
 .Progress-content-cover p {
-    line-height: 1.6;
-    font-size: 1.1em;
-    margin-bottom: 20px;
+  line-height: 1.6;
+  font-size: 1.1em;
+  margin-bottom: 20px;
+  color: #ffffff; /* Slightly lighter text */
 }
 
 .Progress-content {
-    margin: 20px;
-    width: 96%;
-    background-color: #1a2332;
-    height: 91%;
-    border-radius: 17px;
-    padding: 20px;
-    box-shadow: 0px 4px 15px rgba(0, 0, 0, 0.4);
+  margin: 20px;
+  width: 96%;
+  background-color: #ffffff; /* Very light gray background */
+  height: 91%;
+  border-radius: 17px;
+  padding: 20px;
+  box-shadow: 0px 4px 15px rgba(0, 0, 0, 0.05); /* Subtle shadow */
 }
 
 /* Table styling */
 .courses-table {
   width: 100%;
   border-collapse: collapse;
-  background-color: #1a2332;
+  background-color: #ffffff; /* White table background */
   border-radius: 8px;
   overflow: hidden;
 }
@@ -48,37 +49,33 @@
   padding: 16px 24px;
   text-align: left;
   font-size: 1em;
-  color: #e1e1e1;
+  color: #333333; /* Dark text for readability */
 }
 
 .courses-table th {
-  background-color: #161f2e;
+  background-color: #e9ecef; /* Light gray header */
   font-weight: bold;
 }
 
 .courses-table td {
-  background-color: #1a2332;
-  border-top: 1px solid #333;
+  background-color: #ffffff; /* White cell background */
+  border-top: 1px solid #dee2e6; /* Light gray border */
 }
 
-.odd-row {
-  background-color: #161f2e;
+.admin-courses-row {
+  background-color: #ffffff; /* White row background */
 }
 
-.even-row {
-  background-color: #1a2332;
-}
-
-.courses-table tr:hover {
-  background-color: #1b2735;
+.admin-courses-row:hover {
+  background-color: #f1f3f5; /* Light gray hover effect */
 }
 
 .no-courses {
   text-align: center;
-  color: #ccc;
+  color: #6c757d; /* Gray text for no courses */
   font-style: italic;
   padding: 20px;
-  background-color: #2a3545;
+  background-color: #f8f9fa; /* Very light gray */
 }
 
 /* Button styling */
@@ -93,41 +90,106 @@
 }
 
 .stats-btn {
-  background-color: #9fef00;
-  color: #1a2332;
+  background-color: #9fef00; /* Bright green */
+  color: #333333; /* Dark text */
   font-weight: bold;
 }
 
 .modify-btn {
-  background-color: #007bff;
-  color: white;
+  background-color: #007bff; /* Blue */
+  color: #ffffff; /* White text */
   font-weight: bold;
 }
 
 .delete-btn {
-  background-color: #ff4c4c;
-  color: white;
+  background-color: #ff4c4c; /* Red */
+  color: #ffffff; /* White text */
   font-weight: bold;
 }
 
 .action-btn:active {
   transform: scale(0.98);
 }
+.icon-group {
+  display: flex;
+  gap: 10px;
+}
+
+.icon {
+  cursor: pointer;
+  transition: transform 0.2s;
+}
+
+.icon:hover {
+  transform: scale(1.1);
+}
+
+.stats-icon {
+  color: orange;
+}
+.modify-icon {
+  color: purple;
+}
+.delete-icon {
+  color: red;
+}
 
 /* Responsive design */
 @media (max-width: 768px) {
   .Progress-content-cover {
-    width: 100%;
-    margin-left: 0;
-    height: auto;
+      width: 100%;
+      margin-left: 0;
+      height: auto;
   }
 
-  .courses-table th, .courses-table td {
-    font-size: 14px;
+  .courses-table th,
+  .courses-table td {
+      font-size: 14px;
   }
 
   .action-btn {
-    font-size: 12px;
-    padding: 8px 15px;
+      font-size: 12px;
+      padding: 8px 15px;
   }
+}
+
+/* Icon styling for consistency */
+.icon {
+  cursor: pointer;
+  margin-right: 10px;
+  color: #555555; /* Dark gray icons */
+}
+
+.icon:hover {
+  color: #007bff; /* Blue on hover */
+}
+
+
+/* Tooltip styling */
+.tooltip {
+  position: relative;
+  display: inline-block;
+}
+
+.tooltip .tooltip-text {
+  visibility: hidden;
+  width: 120px;
+  background-color: #333333; /* Dark gray background */
+  color: #ffffff; /* White text */
+  text-align: center;
+  border-radius: 4px;
+  padding: 5px 0;
+  position: absolute;
+  z-index: 1;
+  bottom: 125%; /* Position above the icon */
+  left: 50%;
+  margin-left: -60px; /* Center the tooltip */
+  opacity: 0;
+  transition: opacity 0.3s;
+  font-size: 12px;
+}
+
+.tooltip:hover .tooltip-text {
+  visibility: visible;
+  opacity: 1;
 }
