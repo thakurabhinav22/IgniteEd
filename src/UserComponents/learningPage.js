@@ -26,20 +26,22 @@ function LearningPage() {
   const [isGenerating, setIsGenerating] = useState(false);
   const [isQuestionGenerated, setIsQuestionGenerated] = useState(false);
   const [isQuestionAnswered, setIsQuestionAnswered] = useState(false);
-  const [popupWindow, setPopupWindow] = useState(null);
-  const API_KEY = process.env.REACT_APP_GEMINI;
-  const genAI = new GoogleGenerativeAI(API_KEY);
-  const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
-  const [popupLock, setPopupLock] = useState(false);
   const [timer, setTimer] = useState(0);
   const [timerInterval, setTimerInterval] = useState(null);
-  const [attempts, setAttempts] = useState(0); // Track attempts per module
-  const [userName, setUserName] = useState(""); // Store user's full name (Name + Surname)
-  const [userBranch, setUserBranch] = useState(""); // Store user's branch
+  const [attempts, setAttempts] = useState(0);
+  const [userName, setUserName] = useState("");
+  const [userBranch, setUserBranch] = useState("");
+  const [warningCount, setWarningCount] = useState(0);
+  const [criticalWarningCount, setCriticalWarningCount] = useState(0);
+  const [moduleNumber, setModuleNumber] = useState(1);
+
 
   const db = getDatabase();
   const courseRef = ref(db, `Courses/${courseId}`);
   const ADMIN_ID = "nGqjgrZkivSrNsTfW5l2X1YLJlw1";
+  const API_KEY = process.env.REACT_APP_GEMINI;
+  const genAI = new GoogleGenerativeAI(API_KEY);
+  const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
   // Timer functions
   const startTimer = () => {
@@ -62,9 +64,12 @@ function LearningPage() {
     const hours = Math.floor(seconds / 3600);
     const minutes = Math.floor((seconds % 3600) / 60);
     const secs = seconds % 60;
-    return `${hours.toString().padStart(2, "0")}:${minutes
-      .toString()
-      .padStart(2, "0")}:${secs.toString().padStart(2, "0")}`;
+    return `${hours.toString().padStart(2, "0")}:${minutes.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`;
+  };
+
+  const getUserIdFromCookie = () => {
+    const cookieValue = document.cookie.split("; ").find((row) => row.startsWith("userSessionCred="));
+    return cookieValue ? cookieValue.split("=")[1] : null;
   };
 
   const storeLearningMetrics = async (userId, courseId, metrics) => {
@@ -72,7 +77,6 @@ function LearningPage() {
     try {
       await update(courseProgressRef, metrics);
       console.log("Learning metrics stored successfully");
-      // Reflect changes in admin database
       await storeAdminStats(userId, courseId, currentModule);
     } catch (error) {
       console.error("Error storing learning metrics:", error);
@@ -89,8 +93,16 @@ function LearningPage() {
       stats: {
         currentModule: 1,
         totalWarning: 0,
-        CriticalWarning: 0,
+        criticalWarning: 0,
         moduleDetails: {},
+        performanceAnalysis: {
+          understandingScore: 0,
+          memoryScore: 0,
+          analysisScore: 0,
+          totalQuestionsAnswered: 0,
+          correctAnswers: 0,
+          accuracy: 0,
+        },
       },
     };
     try {
@@ -103,9 +115,7 @@ function LearningPage() {
 
   const updateAdminAppliedStudent = async (userId, courseId, currentModule) => {
     const adminRef = ref(db, `admin/${ADMIN_ID}/courses/${courseId}/appliedStuds/${userId}`);
-    const updateData = {
-      atModule: currentModule,
-    };
+    const updateData = { atModule: currentModule };
     try {
       await update(adminRef, updateData);
       console.log("Admin applied student data updated successfully");
@@ -124,7 +134,7 @@ function LearningPage() {
         const statsData = {
           currentModule: userData.CurrentModule || 1,
           totalWarning: userData.Warning || 0,
-          CriticalWarning: userData.CriticalWarning || 0,
+          criticalWarning: userData.CriticalWarning || 0,
           moduleDetails: {
             [`module${moduleNumber}`]: userData.moduleDetail[`module${moduleNumber}`] || {
               timeTaken: 0,
@@ -134,12 +144,43 @@ function LearningPage() {
           },
         };
         await update(adminStatsRef, statsData);
-        console.log("Admin stats updated successfully");
-        // Update appliedStuds with current module
         await updateAdminAppliedStudent(userId, courseId, userData.CurrentModule || 1);
       }
     } catch (error) {
       console.error("Error storing admin stats:", error);
+    }
+  };
+
+  const storeQuestionPerformance = async (userId, courseId, moduleNumber, performance) => {
+    const adminStatsRef = ref(db, `admin/${ADMIN_ID}/courses/${courseId}/appliedStuds/${userId}/stats/performanceAnalysis`);
+    try {
+      const snapshot = await get(adminStatsRef);
+      const currentData = snapshot.exists() ? snapshot.val() : {
+        understandingScore: 0,
+        memoryScore: 0,
+        analysisScore: 0,
+        totalQuestionsAnswered: 0,
+        correctAnswers: 0,
+        accuracy: 0,
+      };
+
+      const newTotalQuestions = currentData.totalQuestionsAnswered + performance.totalQuestions;
+      const newCorrectAnswers = currentData.correctAnswers + performance.correctAnswers;
+      const accuracy = newTotalQuestions > 0 ? (newCorrectAnswers / newTotalQuestions) * 100 : 0;
+
+      const updatedData = {
+        understandingScore: currentData.understandingScore + (performance.understandingScore || 0),
+        memoryScore: currentData.memoryScore + (performance.memoryScore || 0),
+        analysisScore: currentData.analysisScore + (performance.analysisScore || 0),
+        totalQuestionsAnswered: newTotalQuestions,
+        correctAnswers: newCorrectAnswers,
+        accuracy: accuracy,
+      };
+
+      await update(adminStatsRef, updatedData);
+      console.log("Question performance stored successfully");
+    } catch (error) {
+      console.error("Error storing question performance:", error);
     }
   };
 
@@ -151,26 +192,10 @@ function LearningPage() {
     };
   }, [timerInterval]);
 
-  const showPopup = useCallback((title, text, icon) => {
-    if (!popupLock) {
-      setPopupLock(true);
-      Swal.fire({
-        title,
-        text,
-        icon,
-        confirmButtonText: "Okay",
-      }).then(() => setPopupLock(false));
-    }
-  }, [popupLock]);
-
   useEffect(() => {
     const handleVisibilityChange = async () => {
       const userId = getUserIdFromCookie();
-      if (
-        document.visibilityState === "hidden" &&
-        !isQuestionAnswered &&
-        isQuestionGenerated
-      ) {
+      if (document.visibilityState === "hidden" && !isQuestionAnswered && isQuestionGenerated) {
         Swal.fire({
           title: "Critical Warning",
           text: "Our System has detected Tab Switching",
@@ -179,6 +204,8 @@ function LearningPage() {
         });
 
         if (userId) {
+          setWarningCount((prev) => prev + 1);
+          setCriticalWarningCount((prev) => prev + 1);
           const metricsData = {
             Warning: increment(1),
             CriticalWarning: increment(1),
@@ -194,31 +221,14 @@ function LearningPage() {
 
         stopTimer();
         setShowQuestions(false);
-        generateQuestions(currentModule);
-      }
-    };
-
-    const handleWindowFocus = () => {
-      if (popupWindow && popupWindow.closed) {
-        if (!isQuestionAnswered && isQuestionGenerated) {
-          Swal.fire({
-            title: "Critical Warning",
-            text: "You cannot leave the page until you answer the questions.",
-            icon: "error",
-            confirmButtonText: "Okay",
-          });
-        }
+        setIsQuestionGenerated(false);
+        setIsQuestionAnswered(false);
       }
     };
 
     document.addEventListener("visibilitychange", handleVisibilityChange);
-    window.addEventListener("focus", handleWindowFocus);
-
-    return () => {
-      document.removeEventListener("visibilitychange", handleVisibilityChange);
-      window.removeEventListener("focus", handleWindowFocus);
-    };
-  }, [isQuestionAnswered, isQuestionGenerated, popupWindow]);
+    return () => document.removeEventListener("visibilitychange", handleVisibilityChange);
+  }, [isQuestionAnswered, isQuestionGenerated]);
 
   useEffect(() => {
     if (!courseId) {
@@ -249,6 +259,7 @@ function LearningPage() {
         });
 
         if (userId) {
+          setWarningCount((prev) => prev + 1);
           const metricsData = {
             Warning: increment(1),
             moduleDetail: {
@@ -263,53 +274,22 @@ function LearningPage() {
       }
     };
 
-    const blockSidebarNavigation = (event) => {
-      if (!isQuestionAnswered && isQuestionGenerated) {
-        event.preventDefault();
-        Swal.fire({
-          title: "Warning",
-          text: "You cannot navigate away from this page until you answer the questions.",
-          icon: "warning",
-        });
-      }
-    };
-
     const handleBeforeUnload = (event) => {
       if (!isQuestionAnswered && isQuestionGenerated) {
-        const message =
-          "You haven't answered the question. Are you sure you want to leave?";
+        const message = "You haven't answered the question. Are you sure you want to leave?";
         event.returnValue = message;
         return message;
       }
     };
 
-    if (!isQuestionAnswered && isQuestionGenerated) {
-      window.addEventListener("mouseout", handleMouseLeave);
-      window.addEventListener("beforeunload", handleBeforeUnload);
-
-      const sidebarLinks = document.querySelectorAll(".sidebar-nav");
-      sidebarLinks.forEach((link) => {
-        link.addEventListener("click", blockSidebarNavigation);
-      });
-    }
+    window.addEventListener("mouseout", handleMouseLeave);
+    window.addEventListener("beforeunload", handleBeforeUnload);
 
     return () => {
       window.removeEventListener("mouseout", handleMouseLeave);
       window.removeEventListener("beforeunload", handleBeforeUnload);
-
-      const sidebarLinks = document.querySelectorAll(".sidebar-nav");
-      sidebarLinks.forEach((link) => {
-        link.removeEventListener("click", blockSidebarNavigation);
-      });
     };
   }, [courseId, isQuestionAnswered, isQuestionGenerated, navigate]);
-
-  const getUserIdFromCookie = () => {
-    const cookieValue = document.cookie
-      .split("; ")
-      .find((row) => row.startsWith("userSessionCred="));
-    return cookieValue ? cookieValue.split("=")[1] : null;
-  };
 
   useEffect(() => {
     const userId = getUserIdFromCookie();
@@ -325,6 +305,8 @@ function LearningPage() {
           setCurrentModule(userData.CurrentModule || 1);
           setModuleLength(userData.TotalModules || 3);
           setIsCourseCompleted(userData.completed || false);
+          setWarningCount(userData.Warning || 0);
+          setCriticalWarningCount(userData.CriticalWarning || 0);
           if (userData.moduleDetail && userData.moduleDetail[`module${userData.CurrentModule}`]) {
             setAttempts(userData.moduleDetail[`module${userData.CurrentModule}`].totalAttempts || 0);
           }
@@ -396,7 +378,7 @@ function LearningPage() {
     if (userId) {
       const userCourseRef = ref(db, `user/${userId}/InProgressCourses/${courseId}`);
       await update(userCourseRef, { CurrentModule: prevModule });
-      await storeAdminStats(userId, courseId, currentModule); // Reflect change in admin stats
+      await storeAdminStats(userId, courseId, currentModule);
       get(ref(db, `user/${userId}/InProgressCourses/${courseId}/moduleDetail/module${prevModule}`)).then((snapshot) => {
         if (snapshot.exists()) {
           setAttempts(snapshot.val().totalAttempts || 0);
@@ -409,19 +391,23 @@ function LearningPage() {
     setIsGenerating(true);
     try {
       const result = await model.generateContent(`
-        Generate ${questionCount} questions based on the below concept with 4 options in this format.
-        Note Question should be only based Content :
+        Generate ${questionCount} questions based on the below content, categorized by Bloom's Taxonomy levels:
+        - 1 question at "Remember" level (recall facts),
+        - 1 question at "Understand" level (explain concepts),
+        - 1 question at "Analyze" level (compare, contrast, or infer).
+        Provide 4 options per question in this JSON format:
         {
           "questions": [
             {
-              "question": "Question Should be Based on Content only",
+              "question": "Question text",
+              "type": "Remember|Understand|Analyze",
               "options": [
                 { "option": "Option A", "isCorrect": true },
                 { "option": "Option B", "isCorrect": false },
                 { "option": "Option C", "isCorrect": false },
                 { "option": "Option D", "isCorrect": false }
               ]
-            }, etc ....
+            }
           ]
         }
         Content:
@@ -430,25 +416,24 @@ function LearningPage() {
           Example and Analogy: ${JSON.parse(courseDetails.courseContent)[`module${moduleNumber}ExampleandAnalogy`]}
       `);
       const response = await result.response;
-      const generatedQuestions = JSON.parse(response.text().replace("```json", "").replace("```", ""));
+      const text = response.text().replace("```json", "").replace("```", "").trim();
+      const generatedQuestions = JSON.parse(text);
+      
+      // Validate generated questions
+      if (!generatedQuestions.questions || !Array.isArray(generatedQuestions.questions)) {
+        throw new Error("Invalid question format received from AI");
+      }
+      
       setAiQuestions(generatedQuestions.questions);
       setIsGenerating(false);
       setIsQuestionGenerated(true);
       setTimer(0);
       startTimer();
-      Swal.fire({
-        title: "Questions Generated!",
-        icon: "success",
-        position: "top",
-        toast: true,
-        showConfirmButton: false,
-        timer: 3000,
-      });
       setShowQuestions(true);
     } catch (error) {
       Swal.fire({
         title: "Error",
-        text: "An error occurred while generating the questions.",
+        text: "An error occurred while generating the questions: " + error.message,
         icon: "error",
       });
       setIsGenerating(false);
@@ -456,82 +441,141 @@ function LearningPage() {
   };
 
   const handleQuestionValidate = async () => {
+    // Guard against invalid or empty aiQuestions
+    if (!aiQuestions || !Array.isArray(aiQuestions) || aiQuestions.length === 0) {
+      Swal.fire({
+        title: "Error",
+        text: "No questions available to validate. Please generate questions first.",
+        icon: "error",
+      });
+      return;
+    }
+
     let correctAnswersCount = 0;
     const userId = getUserIdFromCookie();
     setAttempts((prev) => prev + 1);
 
+    const performance = {
+      understandingScore: 0,
+      memoryScore: 0,
+      analysisScore: 0,
+      totalQuestions: aiQuestions.length,
+      correctAnswers: 0,
+    };
+
     aiQuestions.forEach((question, index) => {
       const selectedOption = document.querySelector(`input[name="question-${index}"]:checked`);
+      // Ensure question has valid options
+      if (!question.options || !Array.isArray(question.options)) {
+        console.error(`Question ${index} has invalid options:`, question);
+        return;
+      }
+
       if (selectedOption) {
         const userAnswer = selectedOption.value;
-        const correctOption = question.options.find((option) => option.isCorrect).option;
-        if (userAnswer === correctOption) {
+        const correctOptionObj = question.options.find((option) => option.isCorrect);
+        const correctOption = correctOptionObj ? correctOptionObj.option : null;
+
+        if (correctOption && userAnswer === correctOption) {
           correctAnswersCount++;
+          performance.correctAnswers++;
+          switch (question.type) {
+            case "Remember":
+              performance.memoryScore += 1;
+              break;
+            case "Understand":
+              performance.understandingScore += 1;
+              break;
+            case "Analyze":
+              performance.analysisScore += 1;
+              break;
+            default:
+              break;
+          }
         }
       }
     });
 
     const totalQuestions = aiQuestions.length;
-    const score = (correctAnswersCount / totalQuestions) * 100;
+    const score = totalQuestions > 0 ? (correctAnswersCount / totalQuestions) * 100 : 0;
 
     if (userId) {
       const metricsData = {
         moduleDetail: {
           [`module${currentModule}`]: {
             totalAttempts: attempts + 1,
-            ...(score === 100 && { timeTaken: timer }),
+            timeTaken: timer,
+            totalWarning: warningCount,
+            score: score,
           },
         },
+        Warning: warningCount,
+        CriticalWarning: criticalWarningCount,
       };
       await storeLearningMetrics(userId, courseId, metricsData);
+      await storeQuestionPerformance(userId, courseId, currentModule, performance);
     }
 
+    stopTimer();
+
     if (score === 100) {
-      stopTimer();
       Swal.fire({
         title: "Perfect Score!",
-        text: `You got all ${totalQuestions} questions correct in ${formatTime(timer)}!`,
+        text: `You got all ${totalQuestions} questions correct in ${formatTime(timer)}! Moving to the next module.`,
         icon: "success",
         confirmButtonText: "OK",
+      }).then(() => {
+        handleNextModule();
       });
-      setIsQuestionAnswered(true);
-      setIsModuleCompleted(true);
-      setShowQuestions(false);
-      setIsQuestionGenerated(false);
-      setAttempts(0);
-    } else {
+    } else if (score >= 60) {
+      Swal.fire({
+        title: `Good Job! Score: ${score}%`,
+        text: `You got ${correctAnswersCount} out of ${totalQuestions} correct. Moving to the next module.`,
+        icon: "success",
+        confirmButtonText: "OK",
+      }).then(() => {
+        handleNextModule();
+      });
+    } else if (score > 0) {
       Swal.fire({
         title: `Score: ${score}%`,
-        text: `You got ${correctAnswersCount} out of ${totalQuestions} correct. Please try again to get all answers correct.`,
+        text: `You got ${correctAnswersCount} out of ${totalQuestions} correct. Please try again to achieve at least 60%.`,
         icon: "error",
         confirmButtonText: "OK",
       });
       document.querySelectorAll('input[type="radio"]').forEach((input) => {
         input.checked = false;
       });
+      setShowQuestions(false);
+      setIsQuestionGenerated(false);
+      setIsQuestionAnswered(false);
+    } else {
+      Swal.fire({
+        title: "Score: 0%",
+        text: "You got all answers incorrect or did not select any answers. Please review the material and click 'Next' to retry.",
+        icon: "error",
+        confirmButtonText: "OK",
+      });
+      setAiQuestions([]); // Clear questions
+      setShowQuestions(false);
+      setIsQuestionGenerated(false);
+      setIsQuestionAnswered(false);
     }
   };
 
-  const handleNext = async () => {
-    if (isGenerating) {
-      Swal.fire({
-        title: "Warning",
-        text: "Questions are still being generated. Please wait before proceeding.",
-        icon: "warning",
-      });
-      return;
-    }
+  const handleNextModule = async () => {
+    const userId = getUserIdFromCookie();
+    const moduleRef = ref(db, `user/${userId}/InProgressCourses/${courseId}`);
 
-    if (currentModule === moduleLength && isCourseCompleted) {
+    if (currentModule === moduleLength) {
+      await update(moduleRef, { completed: true });
       setIsCourseCompleted(true);
-      return;
-    }
-
-    const userCookie = getUserIdFromCookie();
-    const moduleRef = ref(db, `user/${userCookie}/InProgressCourses/${courseId}`);
-
-    if (!isModuleCompleted) {
-      generateQuestions(currentModule);
+      Swal.fire({
+        title: "Course Completed!",
+        text: "Congratulations on completing the course!",
+        icon: "success",
+        confirmButtonText: "OK",
+      });
       return;
     }
 
@@ -548,13 +592,48 @@ function LearningPage() {
         ModuleCovered: nextModule,
         CurrentModule: nextModule,
       });
-      if (nextModule === moduleLength) {
-        await update(moduleRef, { completed: true });
-        setIsCourseCompleted(true);
-      }
-      await storeAdminStats(userCookie, courseId, currentModule - 1); // Store stats for the just-completed module
+      await storeAdminStats(userId, courseId, currentModule);
     } catch (error) {
       console.error("Error updating user progress:", error);
+    }
+  };
+
+  const showTestRulesAndGenerateQuestions = async () => {
+    Swal.fire({
+      title: "Test Rules",
+      html: `
+        <ul style="text-align: left;">
+          <li>Answer all questions to the best of your ability.</li>
+          <li>You need at least 60% to proceed to the next module.</li>
+          <li>Tab switching or leaving the page will result in a warning.</li>
+          <li>Review the material if you score below 60%.</li>
+        </ul>
+      `,
+      icon: "info",
+      confirmButtonText: "Start Test",
+      showLoaderOnConfirm: true,
+      preConfirm: async () => {
+        await generateQuestions(currentModule);
+      },
+    });
+  };
+
+  const handleNext = async () => {
+    if (isGenerating) {
+      Swal.fire({
+        title: "Warning",
+        text: "Questions are still being generated. Please wait before proceeding.",
+        icon: "warning",
+      });
+      return;
+    }
+
+    if (currentModule === moduleLength && isCourseCompleted) {
+      return;
+    }
+
+    if (!isModuleCompleted) {
+      await showTestRulesAndGenerateQuestions();
     }
   };
 
@@ -584,10 +663,10 @@ function LearningPage() {
 
     const moduleNumber = currentModule;
     const content = `
-        Title: ${JSON.parse(courseDetails.courseContent)[`moduletitle${moduleNumber}`]}
-        Concept: ${JSON.parse(courseDetails.courseContent)[`module${moduleNumber}concept`]}
-        Example and Analogy: ${JSON.parse(courseDetails.courseContent)[`module${moduleNumber}ExampleandAnalogy`]}
-      `;
+      Title: ${JSON.parse(courseDetails.courseContent)[`moduletitle${moduleNumber}`]}
+      Concept: ${JSON.parse(courseDetails.courseContent)[`module${moduleNumber}concept`]}
+      Example and Analogy: ${JSON.parse(courseDetails.courseContent)[`module${moduleNumber}ExampleandAnalogy`]}
+    `;
 
     const newSpeech = new SpeechSynthesisUtterance(content);
     newSpeech.lang = "en-US";
@@ -612,10 +691,7 @@ function LearningPage() {
 
   return (
     <div className="learning-page-container">
-      <Sidebar
-        isQuestionAnswered={isQuestionAnswered}
-        isQuestionGenerated={isQuestionGenerated}
-      />
+      <Sidebar isQuestionAnswered={isQuestionAnswered} isQuestionGenerated={isQuestionGenerated} />
       <div className="learning-content">
         {contentVisible ? (
           <>
@@ -623,8 +699,7 @@ function LearningPage() {
               <div className="empty-content">
                 <h2>Thank you for applying!</h2>
                 <p>
-                  You have already enrolled in this course. You will receive
-                  further instructions in your registered email.
+                  You have already enrolled in this course. You will receive further instructions in your registered email.
                 </p>
               </div>
             ) : (
@@ -636,8 +711,7 @@ function LearningPage() {
                       <div className="course-section">
                         <h2>Introduction</h2>
                         <p>
-                          {courseDetails.courseContent &&
-                            JSON.parse(courseDetails.courseContent).Introduction}
+                          {courseDetails.courseContent && JSON.parse(courseDetails.courseContent).Introduction}
                         </p>
                         <button className="apply-button" onClick={handleApplyClick}>
                           Apply for Course
@@ -671,22 +745,18 @@ function LearningPage() {
                 <h2>Concept</h2>
                 <p>{JSON.parse(courseDetails.courseContent)[`module${currentModule}concept`]}</p>
                 <h2>Example and Analogy</h2>
-                <p>{JSON.parse(courseDetails.courseContent)[`module${currentModule}ExampleandAnalogy`]}</p>
+                <p>{JSON.parse(courseDetails.courseContent)[`module${moduleNumber}ExampleandAnalogy`]}</p>
                 {showQuestions && (
                   <div className="question-course-info">
                     <p>Time: {formatTime(timer)}</p>
                     <h2>Answer the Questions</h2>
                     {aiQuestions.map((question, index) => (
                       <div key={index} className="question-course-section">
-                        <h3>{index + 1}. {question.question}</h3>
+                        <h3>{index + 1}. {question.question} ({question.type})</h3>
                         <div className="options-container">
-                          {question.options.map((option, optionIndex) => (
+                          {question.options && question.options.map((option, optionIndex) => (
                             <label key={optionIndex}>
-                              <input
-                                type="radio"
-                                value={option.option}
-                                name={`question-${index}`}
-                              />
+                              <input type="radio" value={option.option} name={`question-${index}`} />
                               <span className="option-label">{option.option}</span>
                             </label>
                           ))}
