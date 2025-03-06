@@ -1,7 +1,10 @@
 import React, { useState, useEffect } from "react";
-import { FaAngleDown, FaAngleUp, FaEye } from "react-icons/fa";
+import { FaAngleDown, FaAngleUp, FaEye, FaSave } from "react-icons/fa";
 import "./webcrawler.css";
 import AdminSidebar from "./adminSideBar";
+import { getDatabase, ref, push, set } from "firebase/database";
+import Cookies from "js-cookie";
+import Swal from "sweetalert2";
 
 export default function WebCrawler() {
   const [activeTab, setActiveTab] = useState("link-scraper");
@@ -13,7 +16,8 @@ export default function WebCrawler() {
   const [error, setError] = useState(null);
   const [serverStatus, setServerStatus] = useState("offline");
   const [keyword, setKeyword] = useState("");
-  const [selectedLinks, setSelectedLinks] = useState([]);
+  const [selectedLinks, setSelectedLinks] = useState([]); // For Keyword Searcher
+  const [selectedScrapedLinks, setSelectedScrapedLinks] = useState([]); // For Link Scraper
   const [searchQuery, setSearchQuery] = useState("");
   const [isSaveModalOpen, setIsSaveModalOpen] = useState(false);
   const [repoName, setRepoName] = useState("");
@@ -73,12 +77,18 @@ export default function WebCrawler() {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ urls: linkArray }),
         });
+
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.error || "Failed to scrape content");
+        }
+
         const data = await response.json();
-        setScrapedContent(data.scraped_data || []);
+        setScrapedContent(data.scraped_data.map(item => ({ ...item, visible: false })) || []);
         setLoading(false);
       } catch (err) {
         setLoading(false);
-        setError("Error fetching content");
+        setError(err.message || "Error fetching content");
         console.error("Error scraping content:", err);
       }
     }
@@ -123,13 +133,18 @@ export default function WebCrawler() {
         }
       );
 
-      if (!response.ok) throw new Error("Failed to fetch search results");
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Failed to fetch search results");
+      }
+
       const data = await response.json();
       setKeyScraped(data.pdf_links || []);
-    } catch (err) {
-      setError("Error fetching search results.");
-    } finally {
       setLoading(false);
+    } catch (err) {
+      setError(err.message || "Error fetching search results");
+      setLoading(false);
+      console.error("Error fetching search results:", err);
     }
   };
 
@@ -141,6 +156,14 @@ export default function WebCrawler() {
     );
   };
 
+  const handleScrapedCheckboxChange = (url) => {
+    setSelectedScrapedLinks((prev) =>
+      prev.includes(url)
+        ? prev.filter((item) => item !== url)
+        : [...prev, url]
+    );
+  };
+
   const handleProcessSelected = async () => {
     if (selectedLinks.length === 0) {
       alert("No files selected for processing.");
@@ -149,6 +172,7 @@ export default function WebCrawler() {
 
     try {
       setLoading(true);
+      setError(null);
       const response = await fetch(download_endpoint, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -156,7 +180,8 @@ export default function WebCrawler() {
       });
 
       if (!response.ok) {
-        throw new Error("Error fetching text content.");
+        const errorData = await response.json();
+        throw new Error(errorData.error || `Failed to fetch text content (Status: ${response.status})`);
       }
 
       const data = await response.json();
@@ -165,39 +190,91 @@ export default function WebCrawler() {
       setLoading(false);
     } catch (error) {
       console.error("Error fetching text content:", error);
-      alert("Failed to fetch text content.");
+      setError(error.message || "Failed to fetch text content.");
       setLoading(false);
     }
   };
 
+  const handleSaveLinkScraperContent = () => {
+    if (selectedScrapedLinks.length === 0) {
+      alert("No links selected to save. Please select at least one scraped link.");
+      return;
+    }
+
+    // Combine only selected scraped content into a single string
+    const combinedContent = scrapedContent
+      .filter(item => selectedScrapedLinks.includes(item.url))
+      .map(item => `--- Content from ${item.url} ---\n\n${item.content}`)
+      .join("\n\n");
+
+    setScrapedText(combinedContent);
+    setIsSaveModalOpen(true); // Open save modal
+  };
+
   const handleViewScrapedContent = () => {
     if (!scrapedText) {
-      alert("No content available to view. Please process some PDFs first.");
+      alert("No content available to view. Please process or scrape some content first.");
       return;
     }
     setIsViewModalOpen(true);
   };
 
-  const handleSaveToRepo = () => {
+  const handleSaveToRepo = async () => {
     if (!repoName.trim()) {
       alert("Please enter a name for the repository entry.");
       return;
     }
 
-    // Here you would typically send the data to your backend to save to a repository
-    // For this example, we'll simulate it with a console log
-    console.log("Saving to repo:", {
-      name: repoName,
-      content: scrapedText,
-    });
+    const uid = Cookies.get("userSessionCredAd");
+    if (!uid) {
+      Swal.fire({
+        title: "Error",
+        text: "User not logged in!",
+        icon: "error",
+        toast: true,
+        position: "top-end",
+        showConfirmButton: false,
+        timer: 3000,
+      });
+      return;
+    }
 
-    // Simulate saving (replace with actual API call if needed)
-    setTimeout(() => {
-      alert(`Content saved to repository as "${repoName}"`);
+    try {
+      const db = getDatabase();
+      const repoRef = ref(db, `admin/${uid}/Database/`);
+      const newRepoRef = push(repoRef);
+
+      await set(newRepoRef, {
+        title: repoName,
+        content: scrapedText,
+      });
+
+      Swal.fire({
+        title: "Saved Successfully!",
+        text: `Content saved to repository as "${repoName}"`,
+        icon: "success",
+        toast: true,
+        position: "top-end",
+        showConfirmButton: false,
+        timer: 3000,
+      });
+
       setIsSaveModalOpen(false);
       setRepoName("");
       setScrapedText(""); // Clear after saving
-    }, 500);
+      setSelectedScrapedLinks([]); // Clear selected links after saving
+    } catch (error) {
+      console.error("Error saving to repository:", error);
+      Swal.fire({
+        title: "Error",
+        text: "Failed to save content to repository.",
+        icon: "error",
+        toast: true,
+        position: "top-end",
+        showConfirmButton: false,
+        timer: 3000,
+      });
+    }
   };
 
   const handleSearchQuery = (e) => {
@@ -236,10 +313,10 @@ export default function WebCrawler() {
         {activeTab === "link-scraper" && (
           <div className="tab-panel">
             <h2>🔗 Link Scraper</h2>
-            <p>Enter the text with URLs to extract and display them.</p>
+            <p>Enter the text with URLs to extract and scrape their content.</p>
             <textarea
               className="link-input"
-              placeholder="Enter text with links..."
+              placeholder="Enter text with links (e.g., https://example.com, https://example.com/file.pdf)..."
               value={links}
               onChange={handleLinksChange}
             ></textarea>
@@ -256,6 +333,11 @@ export default function WebCrawler() {
                 <ul>
                   {processedLinks.map((link, index) => (
                     <li key={index}>
+                      <input
+                        type="checkbox"
+                        onChange={() => handleScrapedCheckboxChange(link)}
+                        checked={selectedScrapedLinks.includes(link)}
+                      />
                       <a href={link} target="_blank" rel="noopener noreferrer">
                         {link}
                       </a>
@@ -285,6 +367,11 @@ export default function WebCrawler() {
                     </li>
                   ))}
                 </ul>
+                {scrapedContent.length > 0 && (
+                  <button className="save-btn" onClick={handleSaveLinkScraperContent}>
+                    <FaSave /> Save to Repository
+                  </button>
+                )}
               </div>
             )}
           </div>
@@ -304,6 +391,9 @@ export default function WebCrawler() {
             <button className="search-btn" onClick={handleKeywordSearch}>
               Search
             </button>
+
+            {loading && <p>Loading...</p>}
+            {error && <p style={{ color: "red" }}>{error}</p>}
 
             <div className="search-results">
               <h3>Results:</h3>

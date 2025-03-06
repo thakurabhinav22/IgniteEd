@@ -430,4 +430,37 @@ a, .checkbox-label a, .link-wrapper a {
 
 
 
-  
+  /* Add this to your existing webcrawler.css */
+/* Adjust existing styles if needed */
+.extracted-links ul {
+  list-style: none;
+  padding: 0;
+}
+
+.extracted-links li {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 10px 0;
+}
+
+/* Save button at the end */
+.extracted-links .save-btn {
+  background: #27ae60;
+  color: #ffffff;
+  padding: 0.75rem 1.5rem;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  margin-top: 10px;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  transition: all 0.3s ease;
+}
+
+.extracted-links .save-btn:hover {
+  background: #219653;
+  transform: translateY(-2px);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
