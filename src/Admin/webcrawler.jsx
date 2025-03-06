@@ -1,9 +1,7 @@
 import React, { useState, useEffect } from "react";
-import { FaAngleDown, FaAngleUp } from "react-icons/fa"; // Import icons
+import { FaAngleDown, FaAngleUp, FaEye } from "react-icons/fa";
 import "./webcrawler.css";
 import AdminSidebar from "./adminSideBar";
-import JSZip from "jszip";
-import { saveAs } from "file-saver";
 
 export default function WebCrawler() {
   const [activeTab, setActiveTab] = useState("link-scraper");
@@ -13,22 +11,23 @@ export default function WebCrawler() {
   const [keyScraped, setKeyScraped] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-  const [serverStatus, setServerStatus] = useState("offline"); // Track server status
-  const [keyword, setKeyword] = useState(""); // State for keyword search
+  const [serverStatus, setServerStatus] = useState("offline");
+  const [keyword, setKeyword] = useState("");
   const [selectedLinks, setSelectedLinks] = useState([]);
   const [searchQuery, setSearchQuery] = useState("");
+  const [isSaveModalOpen, setIsSaveModalOpen] = useState(false);
+  const [repoName, setRepoName] = useState("");
+  const [scrapedText, setScrapedText] = useState("");
+  const [isViewModalOpen, setIsViewModalOpen] = useState(false);
 
-  const server_end_point = "https://b978747b-0cfa-4ac8-aa74-e01288e8d3c1-00-2tmnjhgcuv5r3.pike.replit.dev/scrape"
+  const server_end_point = "https://b978747b-0cfa-4ac8-aa74-e01288e8d3c1-00-2tmnjhgcuv5r3.pike.replit.dev/scrape";
+  const download_endpoint = "https://b978747b-0cfa-4ac8-aa74-e01288e8d3c1-00-2tmnjhgcuv5r3.pike.replit.dev/download-pdfs-as-text";
 
-  // Function to check server status
+  // Check server status
   const checkServerStatus = async () => {
     try {
       const response = await fetch(server_end_point);
-
-      // If response status is 405, treat it as "online" because the server is responding
-      if (response.status === 405) {
-        setServerStatus("online");
-      } else if (response.ok) {
+      if (response.status === 405 || response.ok) {
         setServerStatus("online");
       } else {
         setServerStatus("offline");
@@ -39,11 +38,10 @@ export default function WebCrawler() {
     }
   };
 
-  // Use effect to check server status when the component mounts
   useEffect(() => {
     checkServerStatus();
-    const interval = setInterval(checkServerStatus, 10000); // Check every 30 seconds
-    return () => clearInterval(interval); // Cleanup on unmount
+    const interval = setInterval(checkServerStatus, 3600000);
+    return () => clearInterval(interval);
   }, []);
 
   useEffect(() => {
@@ -51,26 +49,19 @@ export default function WebCrawler() {
       const script = document.createElement("script");
       script.async = true;
       script.src = "https://cse.google.com/cse.js?cx=13cbaf0acfe7f4937";
-      script.onload = () => {
-        console.log("CSE script loaded successfully.");
-      };
-      script.onerror = () => {
-        console.error("Error loading CSE script. Please check the URL.");
-      };
+      script.onload = () => console.log("CSE script loaded successfully.");
+      script.onerror = () => console.error("Error loading CSE script.");
       document.body.appendChild(script);
     }
   }, [activeTab]);
 
-
-  // Handle change in input links
   const handleLinksChange = (e) => {
     setLinks(e.target.value);
   };
 
-  // Function to extract links from the input text
   const extractLinks = async () => {
     const regex = /https?:\/\/[^\s]+/g;
-    const linkArray = links.match(regex); // Find all URLs
+    const linkArray = links.match(regex);
     setProcessedLinks(linkArray || []);
 
     if (linkArray) {
@@ -79,13 +70,11 @@ export default function WebCrawler() {
         setError(null);
         const response = await fetch(server_end_point, {
           method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
+          headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ urls: linkArray }),
         });
         const data = await response.json();
-        setScrapedContent(data.scraped_data || []); // Ensure default to empty array if undefined
+        setScrapedContent(data.scraped_data || []);
         setLoading(false);
       } catch (err) {
         setLoading(false);
@@ -95,22 +84,19 @@ export default function WebCrawler() {
     }
   };
 
-  // Server status styles
   const serverStatusStyle = {
     padding: "10px",
     color: "#fff",
     textAlign: "center",
     fontWeight: "bold",
     borderRadius: "5px",
-    position: "fixed", // Fix the position
-    top: "20px", // Adjust for spacing from the top
-    right: "20px", // Position at the top-right corner
-    zIndex: "1000", // Ensure it's above other elements
+    position: "fixed",
+    top: "20px",
+    right: "20px",
+    zIndex: "1000",
+    backgroundColor: serverStatus === "online" ? "green" : "red",
   };
 
-  const serverStatusColor = serverStatus === "online" ? "green" : "red";
-
-  // Function to toggle content visibility for each link
   const toggleContentVisibility = (url) => {
     setScrapedContent((prevContent) =>
       prevContent.map((item) =>
@@ -119,7 +105,6 @@ export default function WebCrawler() {
     );
   };
 
-  // Keyword search handler
   const handleKeywordSearch = async () => {
     if (!keyword.trim()) {
       alert("Please enter a keyword before searching.");
@@ -129,9 +114,8 @@ export default function WebCrawler() {
     try {
       setLoading(true);
       setError(null);
-
       const response = await fetch(
-        `https://b978747b-0cfa-4ac8-aa74-e01288e8d3c1-00-2tmnjhgcuv5r3.pike.replit.dev/search`,
+        "https://b978747b-0cfa-4ac8-aa74-e01288e8d3c1-00-2tmnjhgcuv5r3.pike.replit.dev/search",
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -139,8 +123,7 @@ export default function WebCrawler() {
         }
       );
 
-      if (!response.ok) throw new Error(`Failed to fetch search results`);
-
+      if (!response.ok) throw new Error("Failed to fetch search results");
       const data = await response.json();
       setKeyScraped(data.pdf_links || []);
     } catch (err) {
@@ -158,54 +141,68 @@ export default function WebCrawler() {
     );
   };
 
-  const handleDownloadSelected = async () => {
+  const handleProcessSelected = async () => {
     if (selectedLinks.length === 0) {
-        alert("No files selected for download.");
-        return;
+      alert("No files selected for processing.");
+      return;
     }
 
     try {
-        const response = await fetch("https://b978747b-0cfa-4ac8-aa74-e01288e8d3c1-00-2tmnjhgcuv5r3.pike.replit.dev/download-pdfs", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ pdf_links: selectedLinks }),
-        });
+      setLoading(true);
+      const response = await fetch(download_endpoint, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ pdf_links: selectedLinks }),
+      });
 
-        if (!response.ok) {
-            throw new Error("Error generating ZIP file.");
-        }
+      if (!response.ok) {
+        throw new Error("Error fetching text content.");
+      }
 
-        // Convert response into a downloadable ZIP file
-        const blob = await response.blob();
-        const url = window.URL.createObjectURL(blob);
-
-        // Create a download link and trigger the download
-        const a = document.createElement("a");
-        a.href = url;
-        a.download = "downloaded_pdfs.zip";
-        document.body.appendChild(a);
-        a.click();
-
-        // Cleanup
-        setTimeout(() => window.URL.revokeObjectURL(url), 1000);
+      const data = await response.json();
+      setScrapedText(data.text_content || "No content extracted.");
+      setIsSaveModalOpen(true); // Open save modal
+      setLoading(false);
     } catch (error) {
-        console.error("Error downloading ZIP file:", error);
-        alert("Failed to download ZIP file.");
+      console.error("Error fetching text content:", error);
+      alert("Failed to fetch text content.");
+      setLoading(false);
     }
-};
+  };
 
-  
-  
+  const handleViewScrapedContent = () => {
+    if (!scrapedText) {
+      alert("No content available to view. Please process some PDFs first.");
+      return;
+    }
+    setIsViewModalOpen(true);
+  };
 
+  const handleSaveToRepo = () => {
+    if (!repoName.trim()) {
+      alert("Please enter a name for the repository entry.");
+      return;
+    }
 
+    // Here you would typically send the data to your backend to save to a repository
+    // For this example, we'll simulate it with a console log
+    console.log("Saving to repo:", {
+      name: repoName,
+      content: scrapedText,
+    });
 
+    // Simulate saving (replace with actual API call if needed)
+    setTimeout(() => {
+      alert(`Content saved to repository as "${repoName}"`);
+      setIsSaveModalOpen(false);
+      setRepoName("");
+      setScrapedText(""); // Clear after saving
+    }, 500);
+  };
 
-
-  // Search engine handler
   const handleSearchQuery = (e) => {
     setSearchQuery(e.target.value);
   };
-
 
   return (
     <div className="crawler-main">
@@ -240,14 +237,12 @@ export default function WebCrawler() {
           <div className="tab-panel">
             <h2>🔗 Link Scraper</h2>
             <p>Enter the text with URLs to extract and display them.</p>
-
             <textarea
               className="link-input"
               placeholder="Enter text with links..."
               value={links}
               onChange={handleLinksChange}
             ></textarea>
-
             <button className="extract-btn" onClick={extractLinks}>
               Start Crawling
             </button>
@@ -264,23 +259,21 @@ export default function WebCrawler() {
                       <a href={link} target="_blank" rel="noopener noreferrer">
                         {link}
                       </a>
-
-                      {/* Show/Hide toggle button next to the link */}
                       {scrapedContent.some((item) => item.url === link && item.visible) ? (
                         <button
                           className="toggle-button"
-                          onClick={() => toggleContentVisibility(link)}>
+                          onClick={() => toggleContentVisibility(link)}
+                        >
                           <FaAngleUp />
                         </button>
                       ) : (
                         <button
                           className="toggle-button"
-                          onClick={() => toggleContentVisibility(link)}>
+                          onClick={() => toggleContentVisibility(link)}
+                        >
                           <FaAngleDown />
                         </button>
                       )}
-
-                      {/* Show content if visible */}
                       {scrapedContent
                         .filter((item) => item.url === link && item.visible)
                         .map((item, index) => (
@@ -297,74 +290,73 @@ export default function WebCrawler() {
           </div>
         )}
 
-{activeTab === "keyword-searcher" && (
-  <div className="tab-panel">
-    <h2>🔑 Keyword Searcher</h2>
-    <input
-      className="keyword-input"
-      type="text"
-      placeholder="Enter keyword to search"
-      value={keyword}
-      onChange={(e) => setKeyword(e.target.value)}
-    />
-    <button className="search-btn" onClick={handleKeywordSearch}>
-      Search
-    </button>
+        {/* Keyword Searcher Tab */}
+        {activeTab === "keyword-searcher" && (
+          <div className="tab-panel">
+            <h2>🔑 Keyword Searcher</h2>
+            <input
+              className="keyword-input"
+              type="text"
+              placeholder="Enter keyword to search"
+              value={keyword}
+              onChange={(e) => setKeyword(e.target.value)}
+            />
+            <button className="search-btn" onClick={handleKeywordSearch}>
+              Search
+            </button>
 
-    <div className="search-results">
-      <h3>Results:</h3>
-      {keyScraped.length > 0 ? (
-        Object.entries(
-          keyScraped.reduce((acc, link) => {
-            try {
-              const url = new URL(link);
-              const domain = url.hostname; // Extract domain
-              if (!acc[domain]) acc[domain] = [];
-              acc[domain].push(link);
-            } catch (error) {
-              console.error("Invalid URL:", link);
-            }
-            return acc;
-          }, {})
-        ).map(([domain, links]) => (
-          <div key={domain} className="domain-group">
-            <h4>{domain}</h4>
-            {links.map((link, index) => (
-              <div key={index} className="scraped-item">
-                <input
-                  type="checkbox"
-                  onChange={() => handleCheckboxChange(link)}
-                  checked={selectedLinks.includes(link)}
-                />
-                <a href={link} target="_blank" rel="noopener noreferrer">
-                  {link}
-                </a>
-              </div>
-            ))}
+            <div className="search-results">
+              <h3>Results:</h3>
+              {keyScraped.length > 0 ? (
+                Object.entries(
+                  keyScraped.reduce((acc, link) => {
+                    try {
+                      const url = new URL(link);
+                      const domain = url.hostname;
+                      if (!acc[domain]) acc[domain] = [];
+                      acc[domain].push(link);
+                    } catch (error) {
+                      console.error("Invalid URL:", link);
+                    }
+                    return acc;
+                  }, {})
+                ).map(([domain, links]) => (
+                  <div key={domain} className="domain-group">
+                    <h4>{domain}</h4>
+                    {links.map((link, index) => (
+                      <div key={index} className="scraped-item">
+                        <input
+                          type="checkbox"
+                          onChange={() => handleCheckboxChange(link)}
+                          checked={selectedLinks.includes(link)}
+                        />
+                        <a href={link} target="_blank" rel="noopener noreferrer">
+                          {link}
+                        </a>
+                      </div>
+                    ))}
+                  </div>
+                ))
+              ) : (
+                <p>No results found for "{keyword}".</p>
+              )}
+
+              {selectedLinks.length > 0 && (
+                <div className="download_button_container">
+                  <button className="process-btn" onClick={handleProcessSelected}>
+                    Process Selected
+                  </button>
+                </div>
+              )}
+            </div>
           </div>
-        ))
-      ) : (
-        <p>No results found for "{keyword}".</p>
-      )}
-
-      {selectedLinks.length > 0 && (
-        <div className="download_button_container">
-        <button  className="download_select_pdf" onClick={handleDownloadSelected}>Download Selected</button></div>
-      )}
-    </div>
-  </div>
-)}
-
-
-
+        )}
 
         {/* Search Engine Tab */}
         {activeTab === "search-engine" && (
           <div className="tab-panel">
             <h2>🌍 Search Engine</h2>
             <p>Perform intelligent searches across the web.</p>
-
-            {/* Google Custom Search Engine (CSE) */}
             <div className="google-search">
               <div className="gcse-search"></div>
             </div>
@@ -373,11 +365,49 @@ export default function WebCrawler() {
       </div>
 
       {/* Server Status */}
-      <div
-        style={{ ...serverStatusStyle, backgroundColor: serverStatusColor }}
-      >
-        Server is {serverStatus.toUpperCase()}
-      </div>
+      <div style={serverStatusStyle}>Server is {serverStatus.toUpperCase()}</div>
+
+      {/* Save to Repo Modal */}
+      {isSaveModalOpen && (
+        <div className="modal-overlay">
+          <div className="modal">
+            <h3>Save to Repository</h3>
+            <input
+              type="text"
+              value={repoName}
+              onChange={(e) => setRepoName(e.target.value)}
+              placeholder="Enter name for repository entry"
+              className="modal-input"
+            />
+            <div className="modal-actions">
+              <button className="modal-btn view-btn" onClick={handleViewScrapedContent}>
+                <FaEye /> View Content
+              </button>
+              <button className="modal-btn save-btn" onClick={handleSaveToRepo}>
+                Save
+              </button>
+              <button className="modal-btn cancel-btn" onClick={() => setIsSaveModalOpen(false)}>
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* View Scraped Content Modal */}
+      {isViewModalOpen && (
+        <div className="modal-overlay">
+          <div className="modal view-modal">
+            <h3>Scraped Content</h3>
+            <pre className="scraped-text">{scrapedText}</pre>
+            <div className="modal-actions">
+              <button className="modal-btn close-btn" onClick={() => setIsViewModalOpen(false)}>
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

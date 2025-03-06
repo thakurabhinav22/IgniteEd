@@ -246,3 +246,42 @@
   width: 25px;
   margin-left: 5px;
 }
+.course-actions {
+  margin-top: 20px;
+  display: flex;
+  justify-content: center;
+  gap: 20px;
+}
+
+.course-action-button {
+  padding: 12px 24px;
+  border: none;
+  border-radius: 6px;
+  font-size: 16px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.view-button {
+  background-color: #4CAF50;
+  color: white;
+}
+
+.view-button:hover {
+  background-color: #45a049;
+  transform: translateY(-2px);
+}
+
+.edit-button {
+  background-color: #2196F3;
+  color: white;
+}
+
+.edit-button:hover {
+  background-color: #1e87db;
+  transform: translateY(-2px);
+}

@@ -31,19 +31,65 @@ function MagicWritter() {
     const navigate = useNavigate();
 
 
-    const handlePublish = () => {
-        // Check if both projectTitle and courseContent are not empty
-        if (!projectTitle || !courseContent) {
-            alert("Please make sure both title and content are filled in before publishing.");
-            return; // Prevent navigation if either title or content is missing
-        }
 
-        // Navigate to the publish course page with state
-        navigate("/Admin/CreateCourse/publishcourse", {
-            state: { projectTitle, courseContent },
-        });
+useEffect(() => {
+    const handleBeforeUnload = (event) => {
+        if (courseContent.trim() !== "") { // Only warn if there's content
+            event.preventDefault();
+            event.returnValue = ""; // Required for Chrome
+
+            Swal.fire({
+                title: "Unsaved Changes",
+                text: "You have unsaved changes. Do you want to save before leaving?",
+                icon: "warning",
+                showCancelButton: true,
+                confirmButtonText: "Save",
+                cancelButtonText: "Leave Without Saving",
+                showDenyButton: true,
+                denyButtonText: "Cancel"
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    handleSaveProject(); // Call your save function
+                    window.removeEventListener("beforeunload", handleBeforeUnload);
+                    window.location.reload(); // Allow leaving after saving
+                } else if (result.isDismissed || result.isDenied) {
+                    window.removeEventListener("beforeunload", handleBeforeUnload);
+                    window.location.href = "about:blank"; // Force unload
+                }
+            });
+        }
     };
 
+    window.addEventListener("beforeunload", handleBeforeUnload);
+
+    return () => {
+        window.removeEventListener("beforeunload", handleBeforeUnload);
+    };
+}, [courseContent]);
+
+// Runs when `courseContent` changes
+    const handleSidebarNavigation = (route) => {
+        if (courseContent.trim() !== "") {
+            Swal.fire({
+                title: "Unsaved Changes",
+                text: "You have unsaved changes. Do you want to save before leaving?",
+                icon: "warning",
+                showCancelButton: true,
+                confirmButtonText: "Save & Exit",
+                cancelButtonText: "Leave Without Saving"
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    handleSaveProject();  // Save draft
+                    navigate(route);      // Navigate after saving
+                } else {
+                    navigate(route);      // Just navigate
+                }
+            });
+        } else {
+            navigate(route);
+        }
+    };
+        
     // Fetcg Draft
     const handleCloseDraftModal = () => {
         setIsDraftModalOpen(false);
@@ -437,21 +483,16 @@ function MagicWritter() {
                 <button className="toolbar-btn" title="Expand the select content">
                     <FaExpandArrowsAlt />
                 </button>
+                <button onClick={handleOpenDraftModal} className="toolbar-btn" title="Edit Draft">
+                    < FaPencilAlt /> 
+                </button>
+                <button className="toolbar-btn" title="Save Draft" onAbort={handleSaveClick}>
+                <FaSave /> 
+                </button>
+                
             </div>
 
-            {/* Draft and Publish Action Buttons */}
-
-            <div className="action-buttons-container">
-                <button onClick={handleOpenDraftModal} className="edit-draft">
-                    < FaPencilAlt /> Edit Draft
-                </button>
-                <button onClick={handleSaveClick} className="save-draft">
-                    <FaSave /> Save To Repo
-                </button>
-                <button onClick={handlePublish} className="publish">
-                    <FaUpload /> Publish
-                </button>
-            </div>
+           
 
             {isTitleModalOpen && (
                 <div className="modal-overlay">

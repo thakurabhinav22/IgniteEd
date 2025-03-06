@@ -1,8 +1,7 @@
 import React, { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import Cookies from "js-cookie";
 import Swal from "sweetalert2";
-// require('dotenv').config()
 import {
   FaFolderOpen,
   FaFilePdf,
@@ -14,6 +13,8 @@ import {
 import AdminSidebar from "./adminSideBar";
 import { pdfjs } from "react-pdf";
 import { GoogleGenerativeAI } from "@google/generative-ai";
+import { ref, onValue } from "firebase/database";
+import { database } from "./firebase";
 import "./CreateCourse.css";
 import loader from "../icons/loader.svg";
 import MagicEditor from "../icons/MagicEditor.png";
@@ -22,13 +23,11 @@ import MagicEditor from "../icons/MagicEditor.png";
 pdfjs.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.min.js`;
 
 // Initialize Google AI Model
-let API_KEY =  process.env.REACT_APP_GEMINI
-
+let API_KEY = process.env.REACT_APP_GEMINI;
 const genAI = new GoogleGenerativeAI(API_KEY);
 const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
 
 export default function CreateCourse({ AdminName, Role }) {
-
   document.title = "TheLearnMax - Admin Course Create ";
   const navigate = useNavigate();
   const [adminName, setAdminName] = useState(AdminName);
@@ -38,13 +37,9 @@ export default function CreateCourse({ AdminName, Role }) {
   const [viewPdfContent, setViewPdfContent] = useState(null);
   const [repoPopup, setRepoPopup] = useState(false);
   const [repoSelected, setRepoSelected] = useState([]);
-  const [repoDummyData, setRepoDummyData] = useState([
-    { name: "Course 1", content: "Dummy content for course 1" },
-    { name: "Course 2", content: "Dummy content for course 2" },
-    { name: "Course 3", content: "Dummy content for course 3" },
-  ]);
-  const [isProcessing, setIsProcessing] = useState(false); // Track if AI is processing
-  const [courseCreated, setCourseCreated] = useState(false); // Track if course is created
+  const [repoCourses, setRepoCourses] = useState([]);
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [courseCreated, setCourseCreated] = useState(false);
 
   useEffect(() => {
     document.title = "TheLearnMax - Course Create";
@@ -134,62 +129,93 @@ export default function CreateCourse({ AdminName, Role }) {
     setViewPdfContent(null);
   };
 
-  const toggleRepoPopup = () => {
-    setRepoPopup(!repoPopup);
+  const fetchCoursesFromRepo = () => {
+    const adminUid = Cookies.get("userSessionCredAd");
+    const coursesRef = ref(database, `admin/${adminUid}/Database`);
+    
+    onValue(coursesRef, (snapshot) => {
+      const data = snapshot.val();
+      if (data) {
+        const coursesArray = Object.entries(data).map(([key, value]) => ({
+          title: value.title || key,
+          content: value.content
+        }));
+        setRepoCourses(coursesArray);
+        setRepoPopup(true);
+      } else {
+        setRepoCourses([]);
+        setRepoPopup(true);
+        Swal.fire({
+          title: "No Courses",
+          text: "No courses found in the repository",
+          icon: "info",
+          timer: 2000,
+          showConfirmButton: false
+        });
+      }
+    }, (error) => {
+      console.error("Error fetching courses:", error);
+      Swal.fire({
+        title: "Error",
+        text: "Failed to fetch courses from repository",
+        icon: "error",
+      });
+    });
   };
 
-  const handleRepoSelection = (fileName) => {
+  const handleRepoSelection = (courseTitle) => {
     setRepoSelected((prev) =>
-      prev.includes(fileName)
-        ? prev.filter((name) => name !== fileName)
-        : [...prev, fileName]
+      prev.includes(courseTitle)
+        ? prev.filter((title) => title !== courseTitle)
+        : [...prev, courseTitle]
     );
   };
 
   const addSelectedToPdfList = () => {
-    const selectedCourses = repoDummyData.filter((course) =>
-      repoSelected.includes(course.name)
+    const selectedCourses = repoCourses.filter((course) =>
+      repoSelected.includes(course.title)
     );
+    
     selectedCourses.forEach((course) => {
-      if (!pdfFiles.some((file) => file.name === course.name)) {
-        setPdfFiles((prev) => [...prev, { name: course.name }]);
+      if (!pdfFiles.some((file) => file.name === course.title)) {
+        setPdfFiles((prev) => [...prev, { name: course.title }]);
         setPdfStatuses((prev) => ({
           ...prev,
-          [course.name]: { status: "Processed", content: course.content },
+          [course.title]: { 
+            status: "Processed", 
+            content: course.content 
+          },
         }));
       }
     });
-    toggleRepoPopup(); // Close the popup after adding the courses
+    
+    setRepoSelected([]);
+    setRepoPopup(false);
   };
 
   const handleCreateCourse = async () => {
-    if (isProcessing) return; // Prevent multiple submissions
+    if (isProcessing) return;
     setIsProcessing(true);
 
     try {
-      let combinedContent = ""; // Initialize a variable to store all PDF content
-
-      // Concatenate all PDF content
+      let combinedContent = "";
       for (const file of pdfFiles) {
         const pdfContent = pdfStatuses[file.name]?.content;
         if (pdfContent) {
-          combinedContent += pdfContent + "\n"; // Add content and a newline for separation
+          combinedContent += pdfContent + "\n";
         }
       }
 
       if (combinedContent.trim()) {
-        // Generate course content using AI for the combined content
         const result = await model.generateContent(`
          Read the provided PDF content and create a module-wise course in clear and concise language. The course should have a meaningful title ,Introduction to Course (Brief the Course what we will learn from the course it should be about 2 paragraph) and be divided into logical modules, each focusing on specific key concepts, methodologies, findings, and practical applications. For each module, provide a title, a paragrap that covers the entire module concept , a detailed paragraph explanation of the core ideas, and examples or analogies to enhance understanding. 
-        
+         
          Content: ${combinedContent}
         `);
 
         const response = await result.response;
         const generatedCourse = await response.text();
-        
 
-        // Save the generated course text
         setPdfStatuses((prev) => ({
           ...prev,
           ["Generated Course"]: {
@@ -198,9 +224,9 @@ export default function CreateCourse({ AdminName, Role }) {
           },
         }));
 
-        // Show SweetAlert message for course creation
         Swal.fire({
-          title: "Course Created!",
+          title: "Course Created Successfully!",
+          text: "Your course has been generated and is ready for review or editing.",
           icon: "success",
           position: "top",
           toast: true,
@@ -208,7 +234,6 @@ export default function CreateCourse({ AdminName, Role }) {
           timer: 3000,
         }).then(() => {
           setCourseCreated(true);
-          // console.log("Generated Course:", generatedCourse);
         });
       } else {
         Swal.fire({
@@ -218,7 +243,7 @@ export default function CreateCourse({ AdminName, Role }) {
         });
       }
     } catch (error) {
-      console.log(error)
+      console.log(error);
       Swal.fire({
         title: "Error",
         text: "An error occurred while generating the course.",
@@ -228,6 +253,7 @@ export default function CreateCourse({ AdminName, Role }) {
       setIsProcessing(false);
     }
   };
+
   const handleEditCourse = (fileName, content) => {
     navigate("/admin/magiceditor", {
       state: { fileName, content },
@@ -237,9 +263,9 @@ export default function CreateCourse({ AdminName, Role }) {
   const isAllProcessed = Object.values(pdfStatuses).every(
     (status) => status.status === "Processed"
   );
+
   return (
     <div className="CreateCourse-page-cover">
-    
       <AdminSidebar AdminName={adminName} Role={adminRole} />
       <div className="content">
         <h1 className="create-course-header">Create a New Course</h1>
@@ -254,9 +280,19 @@ export default function CreateCourse({ AdminName, Role }) {
               hidden
             />
           </label>
-          <button className="create-course-button" onClick={toggleRepoPopup}>
+          <button className="create-course-button" onClick={fetchCoursesFromRepo}>
             <FaFolderOpen /> Select from Repository
           </button>
+          <Link to="/Admin/magicWritter">
+            <button className="create-course-button">
+              <FaEdit /> Magic Writer
+            </button>
+          </Link>
+          <Link to="/Admin/webcrawler">
+            <button className="create-course-button">
+              <FaEye /> Web Search
+            </button>
+          </Link>
         </div>
 
         <div className="pdf-list">
@@ -275,7 +311,8 @@ export default function CreateCourse({ AdminName, Role }) {
                     {status}
                   </span>
                   {status === "Course Created" && (
-                    <img src= {MagicEditor}
+                    <img
+                      src={MagicEditor}
                       className="edit-icon"
                       onClick={() => handleEditCourse(fileName, content)}
                       title="Edit Course in Magic Editor"
@@ -318,25 +355,44 @@ export default function CreateCourse({ AdminName, Role }) {
             )}
           </button>
         )}
+
+        {courseCreated && (
+          <div className="course-actions">
+            <button
+              className="course-action-button view-button"
+              onClick={() => handleViewPdf("Generated Course")}
+            >
+              <FaEye style={{ marginRight: "8px" }} />
+              View Generated Course
+            </button>
+            <button
+              className="course-action-button edit-button"
+              onClick={() => handleEditCourse("Generated Course", pdfStatuses["Generated Course"].content)}
+            >
+              <FaEdit style={{ marginRight: "8px" }} />
+              Edit Generated Course
+            </button>
+          </div>
+        )}
       </div>
 
       {/* Repository Popup */}
       {repoPopup && (
         <div className="repo-popup">
           <div className="repo-popup-content">
-            <button onClick={toggleRepoPopup} className="close-button">
+            <button onClick={() => setRepoPopup(false)} className="close-button">
               <FaTimes />
             </button>
             <h2>Select Courses from Repository</h2>
             <ul>
-              {repoDummyData.map((repo) => (
-                <li key={repo.name}>
+              {repoCourses.map((course) => (
+                <li key={course.title}>
                   <input
                     type="checkbox"
-                    checked={repoSelected.includes(repo.name)}
-                    onChange={() => handleRepoSelection(repo.name)}
+                    checked={repoSelected.includes(course.title)}
+                    onChange={() => handleRepoSelection(course.title)}
                   />
-                  {repo.name}
+                  {course.title}
                 </li>
               ))}
             </ul>
@@ -344,10 +400,10 @@ export default function CreateCourse({ AdminName, Role }) {
               <button
                 className="create-course-button"
                 onClick={addSelectedToPdfList}
+                disabled={repoSelected.length === 0}
               >
-                Add Selected Courses
+                Process Selected Courses
               </button>
-              {/* <button onClick={toggleRepoPopup}>Close</button> */}
             </div>
           </div>
         </div>
