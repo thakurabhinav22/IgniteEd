@@ -486,7 +486,7 @@ useEffect(() => {
                 <button onClick={handleOpenDraftModal} className="toolbar-btn" title="Edit Draft">
                     < FaPencilAlt /> 
                 </button>
-                <button className="toolbar-btn" title="Save Draft" onAbort={handleSaveClick}>
+                <button className="toolbar-btn" title="Save Draft" onClick={handleSaveClick}>
                 <FaSave /> 
                 </button>
                 
