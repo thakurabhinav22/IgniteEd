@@ -1,81 +1,164 @@
 import React from 'react';
 import './HomePage.css';
-import { Link } from 'react-router-dom';
-
+import { FaBrain, FaTools, FaBook, FaRocket, FaChartLine, FaUsers } from 'react-icons/fa';
+import { Link } from 'react-scroll';
 
 export default function HomePage() {
   return (
     <div className="homepage">
-<header className="header">
-  <div className="container">
-    <div className="logo">
-      LearnMax
-    </div>
-    <nav>
-      <a href="#">Courses</a>
-      <a href="#">Labs</a>
-      <a href="#">Pricing</a>
-      <a href="#">Blog</a>
-      <Link to="/login">Login</Link> {/* Use Link for React Router */}
-      <Link className="cta-button"to="/signin">Signup</Link> {/* Use Link for React Router */}
-      
-    </nav>
-  </div>
-</header>
+      {/* Navigation Bar */}
+      <nav className="home-nav">
+        <h2 className="nav-logo">LearnMax</h2>
+        <ul className="nav-links">
+          <li>
+            <Link to="hero-section" smooth={true} duration={500} className="nav-link-item">
+              Home
+            </Link>
+          </li>
+          <li>
+            <Link to="about-section" smooth={true} duration={500} className="nav-link-item">
+              About
+            </Link>
+          </li>
+          <li>
+            <Link to="resource-management" smooth={true} duration={500} className="nav-link-item">
+              Admin
+            </Link>
+          </li>
+          <li>
+            <Link to="skill-learning" smooth={true} duration={500} className="nav-link-item">
+              Student
+            </Link>
+          </li>
+          <li>
+            <Link to="contact-section" smooth={true} duration={500} className="nav-link-item">
+              Contact Us
+            </Link>
+          </li>
+        </ul>
+      </nav>
 
-
-      <main className="main">
-        <section className="hero text-center">
-          <h1>Your learning journey starts here.</h1>
+      {/* Hero Section */}
+      <section className="section hero-section" id="hero-section">
+        <div className="hero-content">
+          <h1>
+            LearnMax: <span className="highlight">AI-Powered Education</span>
+          </h1>
           <p>
-            Access expert-designed courses, hands-on labs, and personalized feedback to master new skills and advance your career.
+            Elevate learning and management with AI-driven precision. Master skills and optimize resources seamlessly.
           </p>
-          <div className="buttons">
-            <a className="primary-button" href="#">Start for Free</a>
-            <a className="secondary-button" href="#">Explore Courses</a>
-          </div>
-        </section>
+          <img
+            src="https://images.unsplash.com/photo-1516321318423-f06f85e504b3?ixlib=rb-4.0.3&auto=format&fit=crop&w=1350&q=80"
+            alt="AI Education"
+            className="hero-image"
+          />
+        </div>
+      </section>
 
-        <section className="features">
-          <h2>Why Choose LearnMax?</h2>
-          <p>LearnMax offers a unique blend of expert-led courses, interactive labs, and real-world projects to help you achieve your learning goals.</p>
-          <div className="feature-cards">
-            <div className="card">
-              <img alt="Course icon" height="100" src="https://storage.googleapis.com/a1aa/image/mc8YpfV0rib-g1-Ei7JC_tDBr0dOk0HFyfq4yIPNHEo.jpg" width="100" />
-              <h2>Expert-Designed Courses</h2>
-              <p>Learn from industry experts with courses tailored to your skill level.</p>
-              <a href="#">View Courses</a>
-            </div>
-            <div className="card">
-              <img alt="Lab icon" height="100" src="https://storage.googleapis.com/a1aa/image/yj0XtByWwBSxjlts-pwu_BlTv1PmGIdKsl_SApDP7yM.jpg" width="100" />
-              <h2>Hands-On Labs</h2>
-              <p>Practice your skills in real-world scenarios with interactive labs.</p>
-              <a href="#">Explore Labs</a>
-            </div>
-            <div className="card">
-              <img alt="Certification icon" height="100" src="https://storage.googleapis.com/a1aa/image/HvBsRfIJxZLc4SXfyRps9Qz6r8NaV69hNHdfuUaiyOE.jpg" width="100" />
-              <h2>Certifications</h2>
-              <p>Earn certifications to showcase your expertise to employers.</p>
-              <a href="#">Learn More</a>
-            </div>
-          </div>
-        </section>
+      {/* About Section */}
+      <section className="section about-section" id="about-section">
+        <h1>About LearnMax</h1>
+        <p>
+          LearnMax is an innovative platform leveraging artificial intelligence to transform education. We empower students with personalized skill-based learning and provide administrators with tools to manage resources efficiently.
+        </p>
+      </section>
 
-        <section className="stats">
-          <h2>Join Over 1.7 Million Learners</h2>
-          <p>Be part of a global community advancing their skills with LearnMax.</p>
-          <div className="logos">
-            <img alt="Logo 1" height="50" src="https://storage.googleapis.com/a1aa/image/e678dYaeDTlbpyOGVg7YgG0fXU7RAUyfBTtGiagEFng.jpg" width="100" />
-            <img alt="Logo 2" height="50" src="https://storage.googleapis.com/a1aa/image/e9eCHtYigJiEJPe6-0wKWcK5cv_h3BZHZ4mskdmh3_8.jpg" width="100" />
-            <img alt="Logo 3" height="50" src="https://storage.googleapis.com/a1aa/image/HvBsRfIJxZLc4SXfyRps9Qz6r8NaV69hNHdfuUaiyOE.jpg" width="100" />
+      {/* Features Section */}
+      <section className="section features-section">
+        <h1>Why LearnMax?</h1>
+        <div className="features">
+          <div className="feature-card" id="resource-management">
+            <FaTools className="feature-icon" />
+            <h3>Resource Management</h3>
+            <p>
+              Streamline schedules, allocations, and insights with AI for unmatched efficiency.
+            </p>
           </div>
-        </section>
+          <div className="feature-card" id="skill-learning">
+            <FaBook className="feature-icon" />
+            <h3>Skill-Based Learning</h3>
+            <p>
+              Gain practical skills with AI-tailored modules designed for real-world success.
+            </p>
+          </div>
+          <div className="feature-card">
+            <FaBrain className="feature-icon" />
+            <h3>AI Insights</h3>
+            <p>
+              Personalized learning and management powered by intelligent AI analytics.
+            </p>
+          </div>
+        </div>
+      </section>
 
-        <section className="cta text-center">
-          <a className="primary-button" href="#">Start Learning Today</a>
-          <a className="secondary-button" href="#">View All Courses</a>
-        </section>
-      </main>
+      {/* How It Works Section */}
+      <section className="section how-it-works">
+        <h1>How It Works</h1>
+        <div className="steps">
+          <div className="step-card">
+            <FaRocket className="step-icon" />
+            <h3>Sign Up</h3>
+            <p>Start as an Admin or Student with a simple click.</p>
+          </div>
+          <div className="step-card">
+            <FaChartLine className="step-icon" />
+            <h3>Personalize</h3>
+            <p>AI customizes your learning or management experience.</p>
+          </div>
+          <div className="step-card">
+            <FaUsers className="step-icon" />
+            <h3>Thrive</h3>
+            <p>Excel with smart tools and resources.</p>
+          </div>
+        </div>
+        <img
+          src="https://images.unsplash.com/photo-1524178232363-1fb2b075b655?ixlib=rb-4.0.3&auto=format&fit=crop&w=1350&q=80"
+          alt="Education Process"
+          className="section-image"
+        />
+      </section>
+
+      {/* Education Section */}
+      <section className="section education">
+        <h1>Explore LearnMax</h1>
+        <p>
+          An AI-driven ecosystem built to empower students and administrators with cutting-edge tools.
+        </p>
+        <ul className="education-list">
+          <li><FaBrain /> Personalized Learning Paths</li>
+          <li><FaTools /> Resource Optimization</li>
+          <li><FaBook /> Skill Development</li>
+          <li><FaChartLine /> Real-Time Analytics</li>
+          <li><FaUsers /> Collaboration Tools</li>
+          <li><FaRocket /> Scalable Solutions</li>
+        </ul>
+        <img
+          src="https://images.unsplash.com/photo-1501504905252-473c47e087f8?ixlib=rb-4.0.3&auto=format&fit=crop&w=1350&q=80"
+          alt="Learning Ecosystem"
+          className="section-image"
+        />
+      </section>
+
+      {/* Contact Us Section */}
+      <section className="section contact-section" id="contact-section">
+        <h1>Contact Us</h1>
+        <p>
+          Have questions? Reach out to us at <a href="mailto:support@learnmax.com">support@learnmax.com</a> or call us at (123) 456-7890. We’re here to help!
+        </p>
+      </section>
+
+      {/* Call to Action Section */}
+      <section className="section cta-section">
+        <h1>Join LearnMax Today</h1>
+        <p>
+          Transform education with AI—sign up as an Admin or Student and start your journey now!
+        </p>
+        <img
+          src="https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?ixlib=rb-4.0.3&auto=format&fit=crop&w=1350&q=80"
+          alt="Community"
+          className="cta-image"
+        />
+      </section>
     </div>
   );
 }

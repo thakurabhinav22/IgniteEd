@@ -34,7 +34,7 @@ function LearningPage() {
   const [warningCount, setWarningCount] = useState(0);
   const [criticalWarningCount, setCriticalWarningCount] = useState(0);
   const [moduleNumber, setModuleNumber] = useState(1);
-
+  const [averageTimeTaken, setAverageTimeTaken] = useState(0); // New state for average time
 
   const db = getDatabase();
   const courseRef = ref(db, `Courses/${courseId}`);
@@ -72,17 +72,38 @@ function LearningPage() {
     return cookieValue ? cookieValue.split("=")[1] : null;
   };
 
+  // Stores metrics for the user, including stats, under InProgressCourses
   const storeLearningMetrics = async (userId, courseId, metrics) => {
     const courseProgressRef = ref(db, `user/${userId}/InProgressCourses/${courseId}`);
     try {
-      await update(courseProgressRef, metrics);
-      console.log("Learning metrics stored successfully");
-      await storeAdminStats(userId, courseId, currentModule);
+      // Fetch current data to calculate the average
+      const snapshot = await get(courseProgressRef);
+      const currentData = snapshot.exists() ? snapshot.val() : { stats: { moduleDetails: {}, totalTimeTaken: 0 } };
+
+      // Calculate total time taken and number of modules with time recorded
+      const moduleDetails = currentData.stats?.moduleDetails || {};
+      const newModuleDetails = { ...moduleDetails, ...metrics.stats.moduleDetails };
+      const totalTimeTaken = Object.values(newModuleDetails).reduce((sum, module) => sum + (module.timeTaken || 0), 0);
+      const completedModulesCount = Object.keys(newModuleDetails).length;
+      const averageTimeTaken = completedModulesCount > 0 ? totalTimeTaken / completedModulesCount : 0;
+
+      // Update Firebase with the new metrics, total time, and average time
+      await update(courseProgressRef, {
+        ...metrics,
+        stats: {
+          ...metrics.stats,
+          totalTimeTaken: totalTimeTaken,
+          averageTimeTaken: averageTimeTaken,
+        },
+      });
+      console.log("Learning metrics stored successfully with average time");
+      setAverageTimeTaken(averageTimeTaken); // Update state for UI display
     } catch (error) {
       console.error("Error storing learning metrics:", error);
     }
   };
 
+  // Initial admin storage for applied student (no stats here anymore)
   const storeAdminAppliedStudent = async (userId, courseId, name, branch) => {
     const adminRef = ref(db, `admin/${ADMIN_ID}/courses/${courseId}/appliedStuds/${userId}`);
     const studentData = {
@@ -90,20 +111,6 @@ function LearningPage() {
       Branch: branch,
       atModule: 1,
       status: "applied",
-      stats: {
-        currentModule: 1,
-        totalWarning: 0,
-        criticalWarning: 0,
-        moduleDetails: {},
-        performanceAnalysis: {
-          understandingScore: 0,
-          memoryScore: 0,
-          analysisScore: 0,
-          totalQuestionsAnswered: 0,
-          correctAnswers: 0,
-          accuracy: 0,
-        },
-      },
     };
     try {
       await set(adminRef, studentData);
@@ -113,6 +120,7 @@ function LearningPage() {
     }
   };
 
+  // Updates admin's view of the current module
   const updateAdminAppliedStudent = async (userId, courseId, currentModule) => {
     const adminRef = ref(db, `admin/${ADMIN_ID}/courses/${courseId}/appliedStuds/${userId}`);
     const updateData = { atModule: currentModule };
@@ -124,37 +132,11 @@ function LearningPage() {
     }
   };
 
-  const storeAdminStats = async (userId, courseId, moduleNumber) => {
-    const userCourseRef = ref(db, `user/${userId}/InProgressCourses/${courseId}`);
-    const adminStatsRef = ref(db, `admin/${ADMIN_ID}/courses/${courseId}/appliedStuds/${userId}/stats`);
-    try {
-      const userSnapshot = await get(userCourseRef);
-      if (userSnapshot.exists()) {
-        const userData = userSnapshot.val();
-        const statsData = {
-          currentModule: userData.CurrentModule || 1,
-          totalWarning: userData.Warning || 0,
-          criticalWarning: userData.CriticalWarning || 0,
-          moduleDetails: {
-            [`module${moduleNumber}`]: userData.moduleDetail[`module${moduleNumber}`] || {
-              timeTaken: 0,
-              totalAttempts: 0,
-              totalWarning: 0,
-            },
-          },
-        };
-        await update(adminStatsRef, statsData);
-        await updateAdminAppliedStudent(userId, courseId, userData.CurrentModule || 1);
-      }
-    } catch (error) {
-      console.error("Error storing admin stats:", error);
-    }
-  };
-
+  // Stores question performance under user's stats
   const storeQuestionPerformance = async (userId, courseId, moduleNumber, performance) => {
-    const adminStatsRef = ref(db, `admin/${ADMIN_ID}/courses/${courseId}/appliedStuds/${userId}/stats/performanceAnalysis`);
+    const userStatsRef = ref(db, `user/${userId}/InProgressCourses/${courseId}/stats/performanceAnalysis`);
     try {
-      const snapshot = await get(adminStatsRef);
+      const snapshot = await get(userStatsRef);
       const currentData = snapshot.exists() ? snapshot.val() : {
         understandingScore: 0,
         memoryScore: 0,
@@ -177,8 +159,9 @@ function LearningPage() {
         accuracy: accuracy,
       };
 
-      await update(adminStatsRef, updatedData);
-      console.log("Question performance stored successfully");
+      await update(userStatsRef, updatedData);
+      console.log("Question performance stored successfully under user stats");
+      await updateAdminAppliedStudent(userId, courseId, currentModule); // Sync atModule
     } catch (error) {
       console.error("Error storing question performance:", error);
     }
@@ -192,6 +175,7 @@ function LearningPage() {
     };
   }, [timerInterval]);
 
+  // Tracks tab switching and updates warnings
   useEffect(() => {
     const handleVisibilityChange = async () => {
       const userId = getUserIdFromCookie();
@@ -209,10 +193,14 @@ function LearningPage() {
           const metricsData = {
             Warning: increment(1),
             CriticalWarning: increment(1),
-            moduleDetail: {
-              [`module${currentModule}`]: {
-                totalWarning: increment(1),
-                timestamp: new Date().toISOString(),
+            stats: {
+              totalWarning: increment(1),
+              criticalWarning: increment(1),
+              moduleDetails: {
+                [`module${currentModule}`]: {
+                  totalWarning: increment(1),
+                  timestamp: new Date().toISOString(),
+                },
               },
             },
           };
@@ -230,6 +218,7 @@ function LearningPage() {
     return () => document.removeEventListener("visibilitychange", handleVisibilityChange);
   }, [isQuestionAnswered, isQuestionGenerated]);
 
+  // Fetches course data and tracks mouse leave warnings
   useEffect(() => {
     if (!courseId) {
       navigate(`/courses`);
@@ -262,10 +251,13 @@ function LearningPage() {
           setWarningCount((prev) => prev + 1);
           const metricsData = {
             Warning: increment(1),
-            moduleDetail: {
-              [`module${currentModule}`]: {
-                totalWarning: increment(1),
-                timestamp: new Date().toISOString(),
+            stats: {
+              totalWarning: increment(1),
+              moduleDetails: {
+                [`module${currentModule}`]: {
+                  totalWarning: increment(1),
+                  timestamp: new Date().toISOString(),
+                },
               },
             },
           };
@@ -291,6 +283,7 @@ function LearningPage() {
     };
   }, [courseId, isQuestionAnswered, isQuestionGenerated, navigate]);
 
+  // Loads initial user data
   useEffect(() => {
     const userId = getUserIdFromCookie();
     if (userId) {
@@ -307,8 +300,9 @@ function LearningPage() {
           setIsCourseCompleted(userData.completed || false);
           setWarningCount(userData.Warning || 0);
           setCriticalWarningCount(userData.CriticalWarning || 0);
-          if (userData.moduleDetail && userData.moduleDetail[`module${userData.CurrentModule}`]) {
-            setAttempts(userData.moduleDetail[`module${userData.CurrentModule}`].totalAttempts || 0);
+          setAverageTimeTaken(userData.stats?.averageTimeTaken || 0); // Load initial average time
+          if (userData.stats && userData.stats.moduleDetails && userData.stats.moduleDetails[`module${userData.CurrentModule}`]) {
+            setAttempts(userData.stats.moduleDetails[`module${userData.CurrentModule}`].totalAttempts || 0);
           }
         }
       });
@@ -328,6 +322,7 @@ function LearningPage() {
     }
   }, [courseId]);
 
+  // Handles course application
   const handleApplyClick = async () => {
     const userId = getUserIdFromCookie();
     if (!userId) {
@@ -347,7 +342,23 @@ function LearningPage() {
       CriticalWarning: 0,
       CurrentModule: 1,
       completed: false,
-      moduleDetail: {},
+      moduleDetail: {}, // Kept for backward compatibility, but stats will hold detailed data
+      stats: {
+        currentModule: 1,
+        totalWarning: 0,
+        criticalWarning: 0,
+        totalTimeTaken: 0, // Initialize total time
+        averageTimeTaken: 0, // Initialize average time
+        moduleDetails: {},
+        performanceAnalysis: {
+          understandingScore: 0,
+          memoryScore: 0,
+          analysisScore: 0,
+          totalQuestionsAnswered: 0,
+          correctAnswers: 0,
+          accuracy: 0,
+        },
+      },
     };
 
     try {
@@ -377,9 +388,12 @@ function LearningPage() {
     const userId = getUserIdFromCookie();
     if (userId) {
       const userCourseRef = ref(db, `user/${userId}/InProgressCourses/${courseId}`);
-      await update(userCourseRef, { CurrentModule: prevModule });
-      await storeAdminStats(userId, courseId, currentModule);
-      get(ref(db, `user/${userId}/InProgressCourses/${courseId}/moduleDetail/module${prevModule}`)).then((snapshot) => {
+      await update(userCourseRef, {
+        CurrentModule: prevModule,
+        stats: { currentModule: prevModule },
+      });
+      await updateAdminAppliedStudent(userId, courseId, prevModule);
+      get(ref(db, `user/${userId}/InProgressCourses/${courseId}/stats/moduleDetails/module${prevModule}`)).then((snapshot) => {
         if (snapshot.exists()) {
           setAttempts(snapshot.val().totalAttempts || 0);
         }
@@ -418,12 +432,11 @@ function LearningPage() {
       const response = await result.response;
       const text = response.text().replace("```json", "").replace("```", "").trim();
       const generatedQuestions = JSON.parse(text);
-      
-      // Validate generated questions
+
       if (!generatedQuestions.questions || !Array.isArray(generatedQuestions.questions)) {
         throw new Error("Invalid question format received from AI");
       }
-      
+
       setAiQuestions(generatedQuestions.questions);
       setIsGenerating(false);
       setIsQuestionGenerated(true);
@@ -440,8 +453,8 @@ function LearningPage() {
     }
   };
 
+  // Validates answers and stores metrics
   const handleQuestionValidate = async () => {
-    // Guard against invalid or empty aiQuestions
     if (!aiQuestions || !Array.isArray(aiQuestions) || aiQuestions.length === 0) {
       Swal.fire({
         title: "Error",
@@ -465,7 +478,6 @@ function LearningPage() {
 
     aiQuestions.forEach((question, index) => {
       const selectedOption = document.querySelector(`input[name="question-${index}"]:checked`);
-      // Ensure question has valid options
       if (!question.options || !Array.isArray(question.options)) {
         console.error(`Question ${index} has invalid options:`, question);
         return;
@@ -511,6 +523,18 @@ function LearningPage() {
         },
         Warning: warningCount,
         CriticalWarning: criticalWarningCount,
+        stats: {
+          currentModule: currentModule,
+          totalWarning: warningCount,
+          criticalWarning: criticalWarningCount,
+          moduleDetails: {
+            [`module${currentModule}`]: {
+              totalAttempts: attempts + 1,
+              timeTaken: timer,
+              totalWarning: warningCount,
+            },
+          },
+        },
       };
       await storeLearningMetrics(userId, courseId, metricsData);
       await storeQuestionPerformance(userId, courseId, currentModule, performance);
@@ -556,13 +580,14 @@ function LearningPage() {
         icon: "error",
         confirmButtonText: "OK",
       });
-      setAiQuestions([]); // Clear questions
+      setAiQuestions([]);
       setShowQuestions(false);
       setIsQuestionGenerated(false);
       setIsQuestionAnswered(false);
     }
   };
 
+  // Advances to next module and updates completion status
   const handleNextModule = async () => {
     const userId = getUserIdFromCookie();
     const moduleRef = ref(db, `user/${userId}/InProgressCourses/${courseId}`);
@@ -591,8 +616,9 @@ function LearningPage() {
       await update(moduleRef, {
         ModuleCovered: nextModule,
         CurrentModule: nextModule,
+        stats: { currentModule: nextModule },
       });
-      await storeAdminStats(userId, courseId, currentModule);
+      await updateAdminAppliedStudent(userId, courseId, nextModule);
     } catch (error) {
       console.error("Error updating user progress:", error);
     }
@@ -746,6 +772,7 @@ function LearningPage() {
                 <p>{JSON.parse(courseDetails.courseContent)[`module${currentModule}concept`]}</p>
                 <h2>Example and Analogy</h2>
                 <p>{JSON.parse(courseDetails.courseContent)[`module${moduleNumber}ExampleandAnalogy`]}</p>
+                <p>Average Time Taken Per Module: {formatTime(Math.round(averageTimeTaken))}</p>
                 {showQuestions && (
                   <div className="question-course-info">
                     <p>Time: {formatTime(timer)}</p>
