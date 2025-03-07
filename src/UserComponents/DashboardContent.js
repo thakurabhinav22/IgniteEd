@@ -1,12 +1,12 @@
 import React, { useEffect, useState } from "react";
-import { ref, get, onValue, off } from "firebase/database"; 
+import { ref, get, onValue, off } from "firebase/database";
 import { database } from "../Admin/firebase";
 import { useNavigate } from "react-router-dom";
 import List from "../icons/List.svg";
 import "./DashboardContent.css";
 import Cookies from "js-cookie";
 import { CircularProgressbar, buildStyles } from "react-circular-progressbar";
-import 'react-circular-progressbar/dist/styles.css';
+import "react-circular-progressbar/dist/styles.css";
 
 function DashboardContent() {
   const [inProgressCourses, setInProgressCourses] = useState([]);
@@ -16,9 +16,7 @@ function DashboardContent() {
   const stats = [
     { value: 0, color: "#e43a3c", label: "Completion Rate" },
     { value: 0, color: "#9fef00", label: "Streaks" },
-    // { value: 10, color: "#0086ff", label: "Active Days" },
   ];
-
 
   useEffect(() => {
     if (!userId) {
@@ -35,7 +33,6 @@ function DashboardContent() {
           id,
           ...data,
         }));
-
 
         const coursePromises = coursesArray.map(async (course) => {
           const courseRef = ref(database, `Courses/${course.id}/courseName`);
@@ -58,7 +55,7 @@ function DashboardContent() {
     });
 
     return () => {
-      unsubscribe(); 
+      off(userRef);
     };
   }, [navigate, userId]);
 
@@ -66,8 +63,13 @@ function DashboardContent() {
     navigate("/courses");
   };
 
-  const handleContinue = (courseId) => {
-    navigate(`/courses/learn`, { state: { courseId } });
+  const handleContinue = (courseId, progress) => {
+    console.log("Navigating with courseId:", courseId, "Progress:", progress); // Debug log
+    if (progress === 100) {
+      navigate("/stats", { state: { courseId, progress } });
+    } else {
+      navigate("/courses/learn", { state: { courseId } });
+    }
   };
 
   return (
@@ -75,27 +77,26 @@ function DashboardContent() {
       <h1 className="Title-dashboard">Dashboard</h1>
 
       <div className="stats-container">
-  {stats.map((stat, index) => (
-    <div key={index} className="progress-circle">
-      <CircularProgressbar
-        value={stat.value}
-        maxValue={stat.label === "Streaks" ? 365 : 100} // Adjust maxValue if needed
-        text={stat.label === "Streaks" ? `${stat.value} Days` : `${stat.value.toFixed(2)}%`}
-        styles={buildStyles({
-          textColor: "black",
-          pathColor: stat.color,
-          trailColor: "#1c283c",
-        })}
-      />
-      <p style={{ color: stat.color }}>{stat.label}</p>
-    </div>
-  ))}
-</div>
-
+        {stats.map((stat, index) => (
+          <div key={index} className="progress-circle">
+            <CircularProgressbar
+              value={stat.value}
+              maxValue={stat.label === "Streaks" ? 365 : 100}
+              text={stat.label === "Streaks" ? `${stat.value} Days` : `${stat.value.toFixed(2)}%`}
+              styles={buildStyles({
+                textColor: "black",
+                pathColor: stat.color,
+                trailColor: "#1c283c",
+              })}
+            />
+            <p style={{ color: stat.color }}>{stat.label}</p>
+          </div>
+        ))}
+      </div>
 
       <div className="course-container">
         <div className="course-container-title">
-          <img src={List} alt="List icon"l />
+          <img src={List} alt="List icon" />
           In Progress Courses
         </div>
 
@@ -103,7 +104,7 @@ function DashboardContent() {
           {inProgressCourses.length > 0 ? (
             <table className="courses-table">
               <thead>
-                <tr >
+                <tr>
                   <th>Name</th>
                   <th>Progress</th>
                   <th>Action</th>
@@ -111,13 +112,14 @@ function DashboardContent() {
               </thead>
               <tbody>
                 {inProgressCourses.map((course) => {
-                  const progress =
-                    (course.ModuleCovered / course.TotalModules) * 100;
-                  
+                  const progress = course.TotalModules > 0
+                    ? (course.ModuleCovered / course.TotalModules) * 100
+                    : 0;
+
                   return (
-                    <tr className="Course-table-rows " key={course.id}>
-                      <td className="Course-table-rows ">{course.courseName}</td>
-                      <td className="Course-table-rows ">
+                    <tr className="Course-table-rows" key={course.id}>
+                      <td className="Course-table-rows">{course.courseName}</td>
+                      <td className="Course-table-rows">
                         <div className="progress-bar">
                           <div
                             className="progress-bar-fill"
@@ -125,10 +127,11 @@ function DashboardContent() {
                           ></div>
                         </div>
                       </td>
-                      <td className="Course-table-rows ">
+                      <td className="Course-table-rows">
                         <button
                           className="continue-btn"
-                          onClick={() => handleContinue(course.id)}
+                          onClick={() => handleContinue(course.id, progress)}
+                          style={{ cursor: "pointer" }}
                         >
                           {progress === 100 ? "View Stats" : "Continue"}
                         </button>
@@ -141,7 +144,12 @@ function DashboardContent() {
           ) : (
             <div className="no-courses">
               <p>No courses in progress.</p>
-              <button onClick={handleGoToCourses}>Explore Courses</button>
+              <button
+                onClick={handleGoToCourses}
+                style={{ cursor: "pointer" }}
+              >
+                Explore Courses
+              </button>
             </div>
           )}
         </div>

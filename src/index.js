@@ -18,6 +18,7 @@ import ManagementDb from './Admin/ManagementDb';
 import Homepage from './UserComponents/Homepage';
 import Webcrawler from './Admin/webcrawler';
 import MagicWritter from './Admin/MagicWritter';
+import Stats from './UserComponents/Stats';
 
 
 
@@ -42,6 +43,10 @@ const router = createBrowserRouter([
   {
     path: "/Admin/CreateCourse",
     element: <CreateCourse />,
+  },
+  {
+    path: "/stats",
+    element: <Stats />,
   },
   {
     path: "/Admin/ManageRepo",
