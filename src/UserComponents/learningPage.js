@@ -128,10 +128,41 @@ function LearningPage() {
 
       // Sync with admin
       await syncAdminStats(userId, courseId, statsData);
+
+      // Update user-level analysis scores
+      await updateUserAnalysisScores(userId, {
+        understandingScore: performance.understandingScore || 0,
+        memoryScore: performance.memoryScore || 0,
+        analysisScore: performance.analysisScore || 0,
+      });
+
       return true;
     } catch (error) {
       console.error("Error storing user course stats:", error);
       throw error;
+    }
+  };
+
+  const updateUserAnalysisScores = async (userId, scores) => {
+    const userRef = ref(db, `user/${userId}`);
+    try {
+      const userSnapshot = await get(userRef);
+      let currentUserData = userSnapshot.exists() ? userSnapshot.val() : {
+        understandingScore: 0,
+        memoryScore: 0,
+        analysisScore: 0,
+      };
+
+      const updatedScores = {
+        understandingScore: (currentUserData.understandingScore || 0) + scores.understandingScore,
+        memoryScore: (currentUserData.memoryScore || 0) + scores.memoryScore,
+        analysisScore: (currentUserData.analysisScore || 0) + scores.analysisScore,
+      };
+
+      await update(userRef, updatedScores);
+      console.log("Updated user analysis scores:", updatedScores);
+    } catch (error) {
+      console.error("Error updating user analysis scores:", error);
     }
   };
 
@@ -330,8 +361,12 @@ function LearningPage() {
           setIsCourseCompleted(userData.completed || false);
           setWarningCount(userData.Warning || 0);
           setCriticalWarningCount(userData.CriticalWarning || 0);
+          // Check if the current module is completed
           if (userData.moduleDetail && userData.moduleDetail[`module${userData.CurrentModule}`]) {
             setAttempts(userData.moduleDetail[`module${userData.CurrentModule}`].totalAttempts || 0);
+            setIsModuleCompleted(userData.moduleDetail[`module${userData.CurrentModule}`].score >= 60);
+          } else {
+            setIsModuleCompleted(false); // Ensure it’s false if no data exists
           }
         }
       });
@@ -419,6 +454,9 @@ function LearningPage() {
       get(ref(db, `user/${userId}/InProgressCourses/${courseId}/moduleDetail/module${prevModule}`)).then((snapshot) => {
         if (snapshot.exists()) {
           setAttempts(snapshot.val().totalAttempts || 0);
+          setIsModuleCompleted(snapshot.val().score >= 60);
+        } else {
+          setIsModuleCompleted(false);
         }
       });
     }
@@ -544,26 +582,18 @@ function LearningPage() {
         analysisScore: performance.analysisScore,
         totalQuestions: totalQuestions,
         correctAnswers: performance.correctAnswers,
-        ModuleCovered: currentModule >= moduleLength ? moduleLength : currentModule, // Update ModuleCovered
+        ModuleCovered: currentModule >= moduleLength ? moduleLength : currentModule,
       };
       await storeUserCourseStats(userId, courseId, currentModule, performanceData);
     }
 
     stopTimer();
 
-    if (score === 100) {
+    if (score >= 60) {
+      setIsModuleCompleted(true);
       Swal.fire({
-        title: "Perfect Score!",
-        text: `You got all ${totalQuestions} questions correct in ${formatTime(timer)}! Moving to the next module.`,
-        icon: "success",
-        confirmButtonText: "OK",
-      }).then(() => {
-        handleNextModule();
-      });
-    } else if (score >= 60) {
-      Swal.fire({
-        title: `Good Job! Score: ${score}%`,
-        text: `You got ${correctAnswersCount} out of ${totalQuestions} correct. Moving to the next module.`,
+        title: score === 100 ? "Perfect Score!" : `Good Job! Score: ${score}%`,
+        text: `You got ${correctAnswersCount} out of ${totalQuestions} correct in ${formatTime(timer)}! Moving to the next module.`,
         icon: "success",
         confirmButtonText: "OK",
       }).then(() => {
@@ -601,7 +631,6 @@ function LearningPage() {
     if (!userId) return;
 
     if (currentModule === moduleLength) {
-      // When course is completed, update all modules
       const userCourseRef = ref(db, `user/${userId}/InProgressCourses/${courseId}`);
       const userSnapshot = await get(userCourseRef);
       let currentData = userSnapshot.exists() ? userSnapshot.val() : {
@@ -623,7 +652,6 @@ function LearningPage() {
         },
       };
 
-      // Ensure all modules are represented in moduleDetail
       const updatedModuleDetail = { ...currentData.moduleDetail };
       for (let i = 1; i <= moduleLength; i++) {
         if (!updatedModuleDetail[`module${i}`]) {
@@ -631,7 +659,7 @@ function LearningPage() {
             timeTaken: 0,
             totalAttempts: 0,
             totalWarning: 0,
-            score: 0, // Default score if not completed
+            score: 0,
           };
         }
       }
@@ -643,9 +671,9 @@ function LearningPage() {
         analysisScore: 0,
         totalQuestions: 0,
         correctAnswers: 0,
-        ModuleCovered: moduleLength, // All modules covered
+        ModuleCovered: moduleLength,
         completed: true,
-        moduleDetail: updatedModuleDetail, // Include all modules
+        moduleDetail: updatedModuleDetail,
       };
 
       await storeUserCourseStats(userId, courseId, currentModule, performanceData);
@@ -656,7 +684,7 @@ function LearningPage() {
         icon: "success",
         confirmButtonText: "OK",
       }).then(() => {
-        navigate("/dashboard"); // Optional: Redirect to dashboard after completion
+        navigate("/dashboard");
       });
       return;
     }
@@ -676,7 +704,7 @@ function LearningPage() {
       analysisScore: 0,
       totalQuestions: 0,
       correctAnswers: 0,
-      ModuleCovered: currentModule, // Update ModuleCovered for current progress
+      ModuleCovered: currentModule,
     };
     await storeUserCourseStats(userId, courseId, nextModule, performanceData);
   };
@@ -708,10 +736,6 @@ function LearningPage() {
         text: "Questions are still being generated. Please wait before proceeding.",
         icon: "warning",
       });
-      return;
-    }
-
-    if (currentModule === moduleLength && isCourseCompleted) {
       return;
     }
 
@@ -871,10 +895,7 @@ function LearningPage() {
                     className="next-button"
                     onClick={handleNext}
                     style={{
-                      display:
-                        isQuestionGenerated || (currentModule === moduleLength && isCourseCompleted)
-                          ? "none"
-                          : "inline-block",
+                      display: isQuestionGenerated || isCourseCompleted ? "none" : "inline-block",
                     }}
                   >
                     {currentModule === moduleLength ? "Complete" : "Next"}

@@ -191,12 +191,11 @@ function Stats() {
   ];
 
   const radarData = {
-    labels: ["Accuracy", "Analysis", "Memory", "Understanding"],
+    labels: ["Analysis", "Memory", "Understanding"],
     datasets: [
       {
         label: "Performance Analysis",
         data: [
-          performanceData.accuracy,
           performanceData.analysisScore,
           performanceData.memoryScore,
           performanceData.understandingScore,
@@ -220,13 +219,19 @@ function Stats() {
         angleLines: { display: true },
         suggestedMin: 0,
         suggestedMax: Math.max(
-          performanceData.accuracy,
           performanceData.analysisScore,
           performanceData.memoryScore,
-          performanceData.understandingScore,
-          100
-        ) || 100, // Ensure a minimum max of 100 if all values are 0
-        ticks: { stepSize: 20 },
+          performanceData.understandingScore
+        ) > 0
+          ? Math.ceil(
+              Math.max(
+                performanceData.analysisScore,
+                performanceData.memoryScore,
+                performanceData.understandingScore
+              ) / 10
+            ) * 10 + 10 // Round up to nearest 10 and add a buffer
+          : 10, // Default to 10 if all values are 0
+        ticks: { stepSize: 10 }, // Adjusted step size for smaller scale
       },
     },
     plugins: {
