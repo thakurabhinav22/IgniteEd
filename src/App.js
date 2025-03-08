@@ -11,7 +11,7 @@ import Swal from "sweetalert2";
 import Cookies from "js-cookie";
 import "./App.css";
 import { Link } from "react-router-dom";
-import logo from "../src/icons/logo.png";
+import logo from "../src/icons/learn.png";
 
 function App() {
   const [email, setEmail] = useState("");
@@ -29,30 +29,21 @@ function App() {
 
   const handleLogin = () => {
     const authInstance = getAuth();
-
     signInWithEmailAndPassword(authInstance, email, password)
       .then((userCredential) => {
         const user = userCredential.user;
         const userId = user.uid;
-
         const adminRef = ref(database, `user/${userId}`);
         get(adminRef)
           .then((snapshot) => {
             if (snapshot.exists()) {
               const userData = snapshot.val();
               if (userData) {
-                if (rememberMe) {
-                  Cookies.set("userSessionCred", userId, {
-                    expires: 365,
-                    secure: true,
-                    sameSite: "Strict",
-                  });
-                } else {
-                  Cookies.set("userSessionCred", userId, {
-                    secure: true,
-                    sameSite: "Strict",
-                  });
-                }
+                Cookies.set("userSessionCred", userId, {
+                  expires: rememberMe ? 365 : undefined,
+                  secure: true,
+                  sameSite: "Strict",
+                });
                 navigate("/Dashboard");
               }
             } else {
@@ -66,8 +57,6 @@ function App() {
       })
       .catch((error) => {
         let errorMessage = "Invalid credentials.";
-
-        // Check for specific Firebase error codes
         if (error.code === "auth/user-disabled") {
           errorMessage = "User banned from using this product.";
         } else if (error.code === "auth/user-not-found") {
@@ -75,18 +64,16 @@ function App() {
         } else if (error.code === "auth/wrong-password") {
           errorMessage = "Incorrect password.";
         }
-
         console.error("Login failed:", error);
         showAlertMessage(errorMessage, "error");
       });
   };
 
   const handleForgotPassword = () => {
-    if (email === "") {
+    if (!email) {
       showAlertMessage("Please enter your email address first.", "warning");
       return;
     }
-
     const authInstance = getAuth();
     sendPasswordResetEmail(authInstance, email)
       .then(() => {
@@ -117,60 +104,50 @@ function App() {
   };
 
   return (
-    <div className="login_page_cover">
-      <div className="login-container-cover">
+    <div className="login-page">
+      <div className="login-container fade-up">
         <div className="logo-container">
-          <img
-            src={logo}
-            alt="Logo"
-            className="logo"
-            style={{ width: "150px" }}
-          />
-
-          <h2 class="login-title">Login to your Account</h2>
+          <img src={logo} alt="LearnMax Logo" className="logo" />
+          <h2>Welcome Back</h2>
+          <p className="subtitle">Log in to your LearnMax account</p>
         </div>
-        <input
-          type="email"
-          placeholder="Email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          className="input-field-login"
-        />
-        <input
-          type="password"
-          placeholder="Password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          className="input-field-login"
-        />
+        <div className="form-group">
+          <input
+            type="email"
+            placeholder="Email Address"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            className="input-field"
+          />
+          <input
+            type="password"
+            placeholder="Password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            className="input-field"
+          />
+        </div>
         <div className="options-container">
-          <div className="checkbox-container">
+          <label className="checkbox-container">
             <input
               id="rememberme"
               type="checkbox"
-              className="checkbox-input"
               checked={rememberMe}
               onChange={() => setRememberMe(!rememberMe)}
             />
-            <label htmlFor="rememberme" className="RememberMeLabel">
-              Remember me
-            </label>
-          </div>
-          <a
-            href="#"
-            className="forgot-password"
-            onClick={handleForgotPassword}
-          >
+            <span>Remember me</span>
+          </label>
+          <button onClick={handleForgotPassword} className="forgot-password">
             Forgot Password?
-          </a>
+          </button>
         </div>
-        <button onClick={handleLogin} className="tlm-login-button">
-          Login
+        <button onClick={handleLogin} className="login-button">
+          Log In
         </button>
-        <div className="Signup">
-          <p>Don't Have an Account?</p>
+        <div className="signup-container">
+          <p>Don't have an account?</p>
           <Link to="/signin" className="create-account-link">
-            Create one
+            Sign Up
           </Link>
         </div>
       </div>

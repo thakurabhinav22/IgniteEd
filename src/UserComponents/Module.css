@@ -1,8 +1,8 @@
 .module-container {
   display: flex;
   flex-direction: column;
-  background-color: #121c2b;
-  color: #fff;
+  background-color: #F9FAFB; /* Very light gray background */
+  color: #1F2937; /* Dark gray text for contrast */
   height: 100vh;
   font-family: Arial, sans-serif;
   overflow: hidden;
@@ -15,14 +15,15 @@
   justify-content: space-between;
   align-items: center;
   padding: 20px;
-  background-color: #1f2a3a;
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  background-color: #FFFFFF; /* Pure white background */
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1); /* Subtle shadow */
   margin-left: 280px;
 }
 
 .header-container h1 {
   font-size: 24px;
   margin: 0;
+  color: #44c4ff; /* Vibrant light blue for title */
 }
 
 .filter-container {
@@ -33,24 +34,24 @@
 
 .search-input {
   padding: 8px 12px;
-  border: none;
+  border: 1px solid #D1D5DB; /* Light gray border */
   border-radius: 4px;
-  background-color: #1f2a3a;
-  color: #fff;
+  background-color: #FFFFFF; /* White background */
+  color: #1F2937;
   outline: none;
   font-size: 16px;
 }
 
 .search-input::placeholder {
-  color: #a0a0a0;
+  color: #9CA3AF; /* Neutral gray placeholder */
 }
 
 .filter-select {
   padding: 8px;
-  border: none;
+  border: 1px solid #D1D5DB; /* Light gray border */
   border-radius: 4px;
-  background-color: #1f2a3a;
-  color: #fff;
+  background-color: #FFFFFF; /* White background */
+  color: #1F2937;
   outline: none;
   font-size: 16px;
   cursor: pointer;
@@ -68,7 +69,7 @@
 }
 
 .course-card {
-  background-color: #1f2a3a;
+  background-color: #FFFFFF; /* White background */
   height: 250px;
   border-radius: 10px;
   padding: 15px;
@@ -76,6 +77,7 @@
   text-align: center;
   cursor: pointer;
   transition: transform 0.2s;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05); /* Subtle shadow */
 }
 
 .course-card:hover {
@@ -92,16 +94,17 @@
 .course-title {
   font-size: 18px;
   margin: 10px 0;
+  color: #44c4ff; /* Light blue for course titles */
 }
 
 .course-author {
   font-size: 14px;
-  color: #a0a0a0;
+  color: #6B7280; /* Medium gray */
 }
 
 .no-results {
   font-size: 18px;
-  color: #a0a0a0;
+  color: #6B7280; /* Medium gray */
   text-align: center;
   width: 100%;
 }

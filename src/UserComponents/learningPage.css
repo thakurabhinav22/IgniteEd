@@ -1,156 +1,164 @@
-.course-info{
-  user-select: none; 
-  -webkit-user-select: none;
+/* Reset and Base Styles */
+* {
+  font-family: Arial, Helvetica, sans-serif;
 }
+
 .learning-page-container {
-    overflow: hidden;
-    background-color: #121c2b;
-    font-family: "Arial", sans-serif;
-    color: #b3bccc;
-  }
-  
-  .learning-content {
-    padding: 25px;
-    width: calc(100% - 250px);
-    height: 100vh;
-    background-color: #121c2b;
-    margin-left: 290px;
-    overflow-y: auto;
-  }
-  
-  .learning-title {
-    color: #fff;
-    font-size: 2.2em;
-    font-weight: bold;
-    margin-bottom: 20px;
-    text-align: center;
-  }
-  .loading-container{
-    overflow: hidden;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    height: 90%;
-    background-color: #121c2b;
-  }
-  .loading-gif{
-    width: 120px;
-    height: 120px;
-    align-items: center;
-    justify-content: center;
-    display: flex;
-  }
-  .course-info {
-    display: flex;
-    flex-direction: column;
-    gap: 20px;
-    background-color: #1a2332;
-    border-radius: 17px;
-    padding: 20px;
-    box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
-  }
-  
-  .course-section {
-    background-color: #1a2332;
-    border: 1px solid #2b3445;
-    border-radius: 12px;
-    padding: 20px;
-  }
-  
-  .course-section h2 {
-    color: #9fef00;
-    margin-bottom: 10px;
-    font-size: 1.5em;
-  }
-  
-  .course-section p {
-    color: #b3bccc;
-    line-height: 1.6;
-  }
-  
-  .apply-button {
-    display: inline-block;
-    border: 1px solid #9fef00;
-    background-color: transparent;
-    color: #fff;
-    font-size: 1em;
-    font-weight: bold;
-    padding: 10px 20px;
-    border-radius: 8px;
-    /* border: none; */
-    cursor: pointer;
-    margin-top: 15px;
-    transition: background-color 0.3s ease;
-  }
-  
-  .apply-button:hover {
-    background-color: #9fef00;
-    color: black;
-  }
-  
-  .empty-content {
-    text-align: center;
-    color: #fff;
-    margin-top: 100px;
-  }
-  
-  .empty-content h2 {
-    font-size: 2em;
-    color: #9fef00;
-  }
-  
-  .empty-content p {
-    font-size: 1.2em;
-    color: #b3bccc;
-  }
-  .previous-button , .next-button{
-    display: inline-block;
-    border: 1px solid #9fef00;
-    background-color: transparent;
-    color: #fff;
-    font-size: 1em;
-    font-weight: bold;
-    padding: 10px 20px;
-    border-radius: 8px;
-    cursor: pointer;
-    margin-top: 15px;
-    transition: background-color 0.3s ease;
-    margin: 10px 10px 0 10px;
-  }
-  
-  .previous-button:hover , .next-button:hover{
-    background-color: #9fef00;
-    color: black;
-  }
+  overflow: hidden;
+  background-color: #F9FAFB; /* Very light gray background */
+  font-family: "Arial", sans-serif;
+  color: #1F2937; /* Dark gray text for contrast */
+}
+
+.learning-content {
+  padding: 25px;
+  width: calc(100% - 250px);
+  height: 100vh;
+  background-color: #FFFFFF; /* Pure white background */
+  margin-left: 290px;
+  overflow-y: auto;
+}
+
+.learning-title {
+  color: #44c4ff; /* Vibrant light blue for title */
+  font-size: 2.2em;
+  font-weight: bold;
+  margin-bottom: 20px;
+  text-align: center;
+}
+
+.loading-container {
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 90%;
+  background-color: #F9FAFB; /* Light background */
+}
+
+.loading-gif {
+  width: 120px;
+  height: 120px;
+  align-items: center;
+  justify-content: center;
+  display: flex;
+}
+
+.course-info {
+  user-select: none;
+  -webkit-user-select: none;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  background-color: #F3F4F6; /* Light gray background */
+  border-radius: 17px;
+  padding: 20px;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1); /* Subtle shadow */
+}
+
+.course-section {
+  background-color: #FFFFFF; /* White background */
+  border: 1px solid #D1D5DB; /* Light gray border */
+  border-radius: 12px;
+  padding: 20px;
+}
+
+.course-section h2 {
+  color: #44c4ff; /* Vibrant light blue for section headings */
+  margin-bottom: 10px;
+  font-size: 1.5em;
+}
+
+.course-section p {
+  color: #4B5563; /* Medium gray */
+  line-height: 1.6;
+}
+
+.apply-button {
+  display: inline-block;
+  border: 1px solid #44c4ff; /* Light blue border */
+  background-color: transparent;
+  color: #44c4ff;
+  font-size: 1em;
+  font-weight: bold;
+  padding: 10px 20px;
+  border-radius: 8px;
+  cursor: pointer;
+  margin-top: 15px;
+  transition: background-color 0.3s ease;
+}
+
+.apply-button:hover {
+  background-color: #44c4ff;
+  color: #FFFFFF;
+}
+
+.empty-content {
+  text-align: center;
+  color: #1F2937;
+  margin-top: 100px;
+}
+
+.empty-content h2 {
+  font-size: 2em;
+  color: #44c4ff; /* Light blue for empty content heading */
+}
+
+.empty-content p {
+  font-size: 1.2em;
+  color: #4B5563;
+}
+
+.previous-button,
+.next-button {
+  display: inline-block;
+  border: 1px solid #44c4ff;
+  background-color: transparent;
+  color: #44c4ff;
+  font-size: 1em;
+  font-weight: bold;
+  padding: 10px 20px;
+  border-radius: 8px;
+  cursor: pointer;
+  margin: 10px 10px 0 10px;
+  transition: background-color 0.3s ease;
+}
+
+.previous-button:hover,
+.next-button:hover {
+  background-color: #44c4ff;
+  color: #FFFFFF;
+}
+
 /* Style the question container */
 .question-course-info {
   display: flex;
   flex-direction: column;
   gap: 20px;
-  background-color: #1a2332;
+  background-color: #F3F4F6; /* Light gray background */
   border-radius: 17px;
   padding: 20px;
-  box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1); /* Subtle shadow */
 }
 
 /* Style the section for questions */
 .question-course-section {
-  background-color: #1a2332;
-  border: 1px solid #2b3445;
+  background-color: #FFFFFF; /* White background */
+  border: 1px solid #D1D5DB; /* Light gray border */
   border-radius: 12px;
   padding: 20px;
 }
 
 /* Question Title */
 .question-course-section h2 {
-  color: #9fef00;
+  color: #44c4ff; /* Light blue for question titles */
   margin-bottom: 10px;
   font-size: 1.5em;
 }
 
 /* Question Text */
 .question-course-section h3 {
-  color: #b3bccc;
+  color: #4B5563; /* Medium gray */
   font-size: 1.2em;
   margin-bottom: 20px;
 }
@@ -166,16 +174,15 @@
   padding: 12px 20px;
   margin-bottom: 10px;
   font-size: 1.1em;
-  color: #b3bccc;
+  color: #4B5563;
   cursor: pointer;
   border-radius: 8px;
   transition: background-color 0.3s, color 0.3s;
 }
 
-/* Hover effect for options */
 .question-course-section label:hover {
-  background-color: #2e3d5c;
-  color: #fff;
+  background-color: #E5E7EB; /* Light gray hover */
+  color: #1F2937;
 }
 
 /* Style for the radio button */
@@ -185,24 +192,26 @@
   transition: transform 0.2s;
 }
 
-/* On focus, the radio button gets a slight scale effect */
 .question-course-section input[type="radio"]:focus {
   transform: scale(1.2);
 }
-
+.NextQuestion{
+  background-color: #44c4ff;
+  border: 1px solide black;
+  color: black;
+}
 /* Selected option styles */
 .question-course-section input[type="radio"]:checked + .option-label {
-  background-color: #6d7dff;
-  color: #fff;
-  border: 2px solid #5a66d8;
+  background-color: #44c4ff; /* Light blue for selected option */
+  color: #FFFFFF;
+  border: 2px solid #2eaaff; /* Slightly darker blue border */
 }
 
 /* Style for unselected options */
 .question-course-section .option-label {
   display: inline-block;
-  padding-left: 5px;
-  padding-right: 5px;
-  background-color: #3c4b66;
+  padding: 5px 10px;
+  background-color: #E5E7EB; /* Light gray */
   border-radius: 8px;
   margin-left: 5px;
   cursor: pointer;
@@ -211,8 +220,8 @@
 
 /* Style for active selected option */
 .question-course-section input[type="radio"]:checked + .option-label {
-  background-color: #6d7dff;
-  color: white;
+  background-color: #44c4ff;
+  color: #FFFFFF;
 }
 
 /* The main container for the button */
@@ -220,31 +229,29 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 50px; /* Fixed button size */
+  width: 50px;
   height: 50px;
-  border-radius: 50%; /* Circular button */
-  background-color: rgb(0, 0, 0); /* Dark background for the button */
-  cursor: pointer; /* Pointer cursor on hover */
-  transition: background-color 0.3s ease, transform 0.3s ease; /* Smooth transition for hover effect */
+  border-radius: 50%;
+  background-color: #E5E7EB; /* Light gray background */
+  cursor: pointer;
+  transition: background-color 0.3s ease, transform 0.3s ease;
 }
 
-/* Hover effect */
 .speak_container:hover {
+  background-color: #D1D5DB; /* Slightly darker gray on hover */
+  transform: scale(1.1); /* Slight scale effect */
 }
 
 /* Styling for the speaker images */
 .speaker_icon {
-  width: 20px; /* Default icon size */
+  width: 20px;
   height: 20px;
-  filter: brightness(0) invert(1); /* Make the icon white */
-  transition: transform 0.3s ease, width 0.2s ease, height 0.2s ease; /* Smooth transition for scaling */
+  filter: brightness(0) invert(0); /* Reset to default (black) for light theme */
+  transition: transform 0.3s ease, width 0.2s ease, height 0.2s ease;
 }
 
-/* Hover effect for icon size */
 .speak_container:hover .speaker_icon {
-  width: 20px; /* Increase icon size on hover */
-  height: 20px;
+  width: 25px; /* Increase icon size on hover */
+  height: 25px;
+  transform: rotate(15deg); /* Add a subtle rotation for effect */
 }
-
-
-

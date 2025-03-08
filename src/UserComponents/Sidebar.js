@@ -67,7 +67,7 @@ function Sidebar({ isQuestionAnswered, isQuestionGenerated }) {
         break;
       case "google-hindi":
         selectedVoice = voices.find((v) => v.lang === "hi-IN") || voices.find((v) => v.lang.includes("hi")) || voices[0];
-        utterance.text = "नमस्ते, यह ऑडियो उदाहरण है ताकि आप अपने कोर्स रीडिंग में पसंदीदा ऑडियो चुन सकें।";
+        // utterance.text = "नमस्ते, यह ऑडियो उदाहरण है ताकि आप अपने कोर्स रीडिंग में पसंदीदा ऑडियो चुन सकें।";
         break;
       default:
         selectedVoice = voices[0];
@@ -135,7 +135,7 @@ function Sidebar({ isQuestionAnswered, isQuestionGenerated }) {
       title: "Confirm Account Deletion",
       html: `
         <p>Enter your password to confirm account deletion:</p>
-        <input type="password" id="swal-password" class="swal2-input dark-input" placeholder="Password">
+        <input type="password" id="swal-password" class="swal2-input user-details-box" placeholder="Password">
       `,
       showCancelButton: true,
       confirmButtonText: "Delete",
@@ -234,7 +234,7 @@ function Sidebar({ isQuestionAnswered, isQuestionGenerated }) {
       title: "Forgot Password",
       html: `
         <p>Enter your email to receive a reset link:</p>
-        <input type="email" id="swal-email" class="swal2-input dark-input" placeholder="Email">
+        <input type="email" id="swal-email" class="swal2-input user-details-box" placeholder="Email">
       `,
       showCancelButton: true,
       confirmButtonText: "Send",
@@ -323,20 +323,20 @@ function Sidebar({ isQuestionAnswered, isQuestionGenerated }) {
         <p>{branch || "Loading..."}</p>
       </div>
       <nav>
-        <Link to="/Dashboard" className="nav-item" onClick={handleSidebarLinkClick}>
-          <FaHome className="nav-icon" />
+        <Link to="/Dashboard" className="stud-nav-item" onClick={handleSidebarLinkClick}>
+          <FaHome className="stud-nav-icon" />
           <span>Dashboard</span>
         </Link>
-        <Link to="/analytics" className="nav-item" onClick={handleSidebarLinkClick}>
-          <FaCertificate className="nav-icon" />
+        <Link to="/analytics" className="stud-nav-item" onClick={handleSidebarLinkClick}>
+          <FaCertificate className="stud-nav-icon" />
           <span>Analytics</span>
         </Link>
-        <Link to="/Courses" className="nav-item" onClick={handleSidebarLinkClick}>
-          <FaQuestionCircle className="nav-icon" />
+        <Link to="/Courses" className="stud-nav-item" onClick={handleSidebarLinkClick}>
+          <FaQuestionCircle className="stud-nav-icon" />
           <span>Courses</span>
         </Link>
-        <div className="nav-item" onClick={() => setIsSettingsOpen(true)}>
-          <FaCog className="nav-icon" />
+        <div className="stud-nav-item" onClick={() => setIsSettingsOpen(true)}>
+          <FaCog className="stud-nav-icon" />
           <span>Settings</span>
         </div>
       </nav>
@@ -387,19 +387,19 @@ function Sidebar({ isQuestionAnswered, isQuestionGenerated }) {
                     <h3>Profile</h3>
                     <div className="input-group">
                       <input
-                        className="dark-input"
+                        className="user-details-box"
                         placeholder="First Name"
                         value={userName}
                         onChange={(e) => setUserName(e.target.value)}
                       />
                       <input
-                        className="dark-input"
+                        className="user-details-box"
                         placeholder="Surname"
                         value={surName}
                         onChange={(e) => setSurName(e.target.value)}
                       />
                       <input
-                        className="dark-input"
+                        className="user-details-box"
                         placeholder="Branch"
                         value={branch}
                         onChange={(e) => setBranch(e.target.value)}
@@ -432,7 +432,7 @@ function Sidebar({ isQuestionAnswered, isQuestionGenerated }) {
                     <div className="voice-select">
                       <select
                         id="voice-model"
-                        className="dark-input"
+                        className="user-details-box"
                         value={selectedVoiceModel}
                         onChange={(e) => {
                           const voice = e.target.value;

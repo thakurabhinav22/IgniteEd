@@ -1,11 +1,11 @@
 import React, { useEffect, useState } from "react";
-import "boxicons"; 
+import "boxicons";
 import "./AdminSidebar.css";
 import { Link, useNavigate } from "react-router-dom";
 import { get, ref } from "firebase/database";
 import { database } from "./firebase"; // Use 'database' instead of 'db'
-import crawler from '../icons/web.png';
-import magicWritter from '../icons/MagicWritter.png';
+import crawler from "../icons/web.png";
+import magicWritter from "../icons/MagicWritter.png";
 
 // Function to get cookie value by name
 const getCookie = (name) => {
@@ -47,7 +47,8 @@ function AdminSidebar() {
   }, []);
 
   const handleLogout = () => {
-    document.cookie = "userSessionCredAd=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/";
+    document.cookie =
+      "userSessionCredAd=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/";
     navigate("/Admin/");
   };
 
@@ -64,26 +65,23 @@ function AdminSidebar() {
       </div>
       <nav>
         <Link to="/Admin/Dashboard" className="nav-item">
-          <box-icon type="solid" color="white" name="home"></box-icon>
+          <box-icon type="solid" name="home" className="nav-icon"></box-icon>
           <span>Dashboard</span>
         </Link>
         <Link to="/Admin/CreateCourse" className="nav-item">
-          <box-icon type="solid" name="file-plus" color="white" className="nav-icon" />
+          <box-icon
+            type="solid"
+            name="file-plus"
+            className="nav-icon"
+          ></box-icon>
           <span>Create Course</span>
         </Link>
         <Link to="/Admin/ManageRepo" className="nav-item">
-          <box-icon type="solid" name="data" color="white" className="nav-icon" />
+          <box-icon type="solid" name="data" className="nav-icon"></box-icon>
           <span>Manage Course DB</span>
         </Link>
-        <Link to="/Admin/webcrawler" className="nav-item">
-          <img src={crawler} alt="Crawler" style={{ width: "30px" }} className="nav-icon" />
-          <span>Crawler Spider</span>
-        </Link>
-        <Link to="/Admin/MagicWritter" className="nav-item">
-          <img src={magicWritter} alt="Magic Writter" style={{ width: "25px" }} className="nav-icon" />
-          <span>Magic Writter</span>
-        </Link>
       </nav>
+
       <div className="logout" onClick={handleLogout}>
         <p>Logout</p>
       </div>

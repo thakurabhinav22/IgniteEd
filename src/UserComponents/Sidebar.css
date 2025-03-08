@@ -47,7 +47,7 @@
     gap: 15px;
   }
   
-  .nav-item {
+  .stud-nav-item {
     color: #000000b3;
     text-decoration: none;
     display: flex;
@@ -58,12 +58,12 @@
     transition: all 0.3s ease;
   }
   
-  .nav-icon {
+  .stud-nav-icon {
     margin-right: 10px;
     font-size: 1.2em;
   }
   
-  .nav-item:hover {
+  .stud-nav-item:hover {
     background: #44c4ff;
     color: #ffffff;
   }
@@ -234,9 +234,9 @@
 .dark-input {
   width: 100%;
   padding: 12px;
-  background: #1F2937;
-  border: 1px solid #4B5563;
-  color: #D1D5DB;
+  background: #F9FAFB; /* Light theme background color (very light gray) */
+  border: 1px solid #D1D5DB; /* Lighter border color for light theme */
+  color: #1F2937; /* Darker text for contrast in light theme */
   border-radius: 8px;
   font-size: 15px;
   transition: border-color 0.3s ease, box-shadow 0.3s ease;
@@ -250,7 +250,7 @@
 
 .dark-input select {
   appearance: none;
-  background: #1F2937 url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='%23D1D5DB' viewBox='0 0 16 16'%3E%3Cpath d='M7.247 11.14 2.451 5.658C1.885 5.013 2.345 4 3.204 4h9.592a1 1 0 0 1 .753 1.659l-4.796 5.48a1 1 0 0 1-1.506 0z'/%3E%3C/svg%3E") no-repeat right 10px center;
+  background: #F9FAFB url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='%231F2937' viewBox='0 0 16 16'%3E%3Cpath d='M7.247 11.14 2.451 5.658C1.885 5.013 2.345 4 3.204 4h9.592a1 1 0 0 1 .753 1.659l-4.796 5.48a1 1 0 0 1-1.506 0z'/%3E%3C/svg%3E") no-repeat right 10px center; /* Updated arrow color to match text */
   padding: 12px;
   cursor: pointer;
 }

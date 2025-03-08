@@ -49,7 +49,7 @@
   padding: 16px 24px;
   text-align: left;
   font-size: 1em;
-  color: #333333; /* Dark text for readability */
+   color: rgb(164, 177, 205);/* Dark text for readability */
 }
 
 .courses-table th {

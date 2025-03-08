@@ -6,14 +6,11 @@ import { ref, get } from "firebase/database";
 import { auth, database } from "./firebase";
 import Swal from "sweetalert2";  
 import './AdminLogin.css';
-import lightModeIcon from '../icons/lightMode.svg';
-import darkModeIcon from '../icons/darkMode.svg';
-import logo from "../icons/logo.png";
+import logo from "../icons/learn.png";
 
 function AdminLogin() {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
-  const [isDarkMode, setIsDarkMode] = useState(true);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -97,11 +94,6 @@ function AdminLogin() {
     });
   };
 
-  const toggleTheme = () => {
-    setIsDarkMode(!isDarkMode);
-    document.documentElement.setAttribute('data-theme', isDarkMode ? 'light' : 'dark');
-  };
-
   return (
     <div className="Admin-login-component-holder">
       <div className="login-container">
@@ -126,10 +118,6 @@ function AdminLogin() {
         <button onClick={handleLogin} className="login-button">
           Login
         </button>
-      </div>
-
-      <div className="theme-toggle" onClick={toggleTheme}>
-        <img src={isDarkMode ? lightModeIcon : darkModeIcon} alt="Theme Toggle" />
       </div>
     </div>
   );

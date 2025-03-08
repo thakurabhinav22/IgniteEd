@@ -1,159 +1,205 @@
-
-
+/* Reset and Base Styles */
 * {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
 }
 
-.login_page_cover {
+html, body {
+  height: 100%;
+  font-family: 'Inter', 'Arial', sans-serif;
+  background-color: #F7F9FC; /* Light blue-gray */
+  color: #FFFFFF; /* White text */
+  overflow: auto;
+}
+
+/* Scrollbar Styling - Light Blue */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #E5E7EB; /* Light gray */
+}
+
+::-webkit-scrollbar-thumb {
+  background: #4169E1; /* Light blue */
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #6B7280; /* Darker gray for contrast */
+}
+
+/* Login Page Styles - Light Theme */
+.login-page {
+  min-height: 100vh;
   display: flex;
-  align-items: center;
   justify-content: center;
-  width: 100vw;
-  height: 100vh;
-  background-color: #ffffff;
-  font-family: Arial, sans-serif;
+  align-items: center;
+  background: linear-gradient(135deg, #F7F9FC 0%, #E5E7EB 100%); /* Light gradient */
+  padding: 20px;
 }
 
-.login-container-cover {
-  width: 400px;
-  padding: 2rem;
-  background-color: white;
-  border-radius: 8px;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+/* Login Container - Light Blue Tint */
+.login-container {
+  background: rgba(65, 105, 225, 0.85); /* Light blue with transparency */
+  border-radius: 16px;
+  padding: 2.5rem;
+  width: 100%;
+  max-width: 400px;
+  box-shadow: 0 6px 20px rgba(65, 105, 225, 0.2); /* Light blue shadow */
   text-align: center;
-  color: black;
+  transition: transform 0.3s ease;
 }
 
+.login-container:hover {
+  transform: translateY(-4px);
+}
+
+/* Logo and Header - White Text */
 .logo-container {
-  margin-bottom: 1rem;
+  margin-bottom: 2rem;
 }
 
 .logo {
-  margin-bottom: 0.5rem;
+  width: 130px;
+  margin-bottom: 1rem;
 }
 
-.login-title {
-  font-size: 1.5rem;
+.logo-container h2 {
+  font-size: 1.8rem;
   font-weight: 600;
-  color: #000000;
+  color: #FFFFFF; /* White */
 }
 
-.input-field-login {
+.subtitle {
+  font-size: 0.95rem;
+  color: rgba(255, 255, 255, 0.8); /* Muted white */
+  margin-top: 0.3rem;
+}
+
+/* Form Inputs - Blue Border */
+.form-group {
+  margin-bottom: 1.5rem;
+}
+
+.input-field {
   width: 100%;
-  padding: 0.75rem;
+  padding: 0.9rem 1.2rem;
   margin: 0.5rem 0;
-  border: none;
-  border-radius: 4px;
-  background-color: rgb(247 247 247);
-  color: #000000;
+  border: 2px solid #4169E1 !important; /* Light blue border - Forced */
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.1); /* Semi-transparent white */
   font-size: 1rem;
+  color: #FFFFFF; /* White text */
+  transition: border-color 0.3s ease, box-shadow 0.3s ease;
 }
 
-.input-field-login:focus {
+.input-field::placeholder {
+  color: rgba(255, 255, 255, 0.6); /* Muted white placeholder */
+}
+
+.input-field:focus {
   outline: none;
-  border: 1px solid #44c4ff;
+  border-color: #FFFFFF !important; /* White on focus - Forced */
+  box-shadow: 0 0 6px rgba(255, 255, 255, 0.3); /* White glow */
 }
 
+/* Options Section - White Text, Blue Tick */
 .options-container {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin: 0.5rem 0;
+  margin-bottom: 1.5rem;
 }
 
 .checkbox-container {
   display: flex;
   align-items: center;
+  font-size: 0.9rem;
+  color: #FFFFFF; /* White */
 }
 
-.checkbox-container input[type="checkbox"] {
-  margin-right: 5px;
-  position: relative;
-  width: 20px;
-  height: 20px;
-  background-color: #c1c1c1;
-  border-radius: 4px;
-  appearance: none;
+.checkbox-container input {
+  margin-right: 0.5rem;
+  accent-color: #4169E1 !important; /* Light blue tick - Forced */
+  width: 16px; /* Slightly larger for visibility */
+  height: 16px;
 }
 
-.checkbox-container input[type="checkbox"]:checked {
-  background-color: white;
-  border-color: white;
-}
-
-.checkbox-container input[type="checkbox"]::before {
-  content: '';
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  font-size: 16px;
-  color: transparent;
-}
-
-.checkbox-container input[type="checkbox"]:checked::before {
-  content: '✔';
-  color: #000000;
-}
-
-.RememberMeLabel {
-  color: #8799b5;
+/* Ensure the checked state shows blue */
+.checkbox-container input:checked {
+  background-color: #4169E1 !important; /* Light blue background when checked */
+  border-color: #4169E1 !important;
 }
 
 .forgot-password {
+  background: none;
+  border: none;
+  color: rgba(255, 255, 255, 0.8); /* Muted white */
   font-size: 0.9rem;
-  color: #8799b5;
-  text-decoration: none;
-  transition: .1s ease-in;
+  cursor: pointer;
+  transition: color 0.3s ease;
 }
 
 .forgot-password:hover {
-  color: #44c4ff;
-  text-decoration: underline;
+  color: #FFFFFF; /* Full white */
 }
 
-.tlm-login-button {
+/* Login Button - White with Light Blue Hover */
+.login-button {
   width: 100%;
-  padding: 0.75rem;
-  margin-top: 1rem;
-  background-color: #44c4ff;
+  padding: 0.9rem;
+  background: #FFFFFF !important; /* White button */
   border: none;
-  border-radius: 4px;
-  font-size: 1rem;
-  font-weight: 600;
-  color: white;
+  border-radius: 8px;
+  color: #4169E1 !important; /* Light blue text */
+  font-size: 1.1rem;
+  font-weight: 500;
   cursor: pointer;
-  transition: 0.2s ease;
+  transition: background 0.3s ease, color 0.3s ease, transform 0.3s ease;
 }
 
-.tlm-login-button:hover {
-  background-color: #44c4ff;
+.login-button:hover {
+  background: #4169E1 !important; /* Light blue */
+  color: #FFFFFF !important; /* White text on hover */
+  transform: translateY(-2px);
 }
 
-.Signup p {
-  color: #8799b5;
-}
-
-.Signup {
-  margin: 3% 0 0 0;
-  width: 100%;
-  align-items: center;
-  justify-content: start;
+/* Signup Section - White Text */
+.signup-container {
+  margin-top: 1.5rem;
   display: flex;
-  gap: 5px;
+  justify-content: center;
+  gap: 0.5rem;
+  font-size: 0.9rem;
+  color: rgba(255, 255, 255, 0.8); /* Muted white */
 }
 
 .create-account-link {
-  color: #44c4ff;
+  color: #FFFFFF; /* White */
   text-decoration: none;
-  font-weight: 400;
-  transition: .2s ease;
+  font-weight: 500;
+  transition: color 0.3s ease;
 }
 
 .create-account-link:hover {
-  color: #0056b3; 
-  text-decoration: underline;
-  font-weight: 500;
+  color: #4169E1; /* Light blue */
+}
+
+/* Animation - Subtle Entry */
+@keyframes fadeUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.fade-up {
+  animation: fadeUp 0.7s ease-out forwards;
 }
