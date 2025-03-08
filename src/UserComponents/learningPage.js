@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from "react";
+import React, { useEffect, useState } from "react";
 import Sidebar from "./Sidebar";
 import "./learningPage.css";
 import { useLocation, useNavigate } from "react-router-dom";
@@ -33,8 +33,6 @@ function LearningPage() {
   const [userBranch, setUserBranch] = useState("");
   const [warningCount, setWarningCount] = useState(0);
   const [criticalWarningCount, setCriticalWarningCount] = useState(0);
-  const [moduleNumber, setModuleNumber] = useState(1);
-
 
   const db = getDatabase();
   const courseRef = ref(db, `Courses/${courseId}`);
@@ -64,11 +62,15 @@ function LearningPage() {
     const hours = Math.floor(seconds / 3600);
     const minutes = Math.floor((seconds % 3600) / 60);
     const secs = seconds % 60;
-    return `${hours.toString().padStart(2, "0")}:${minutes.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`;
+    return `${hours.toString().padStart(2, "0")}:${minutes
+      .toString()
+      .padStart(2, "0")}:${secs.toString().padStart(2, "0")}`;
   };
 
   const getUserIdFromCookie = () => {
-    const cookieValue = document.cookie.split("; ").find((row) => row.startsWith("userSessionCred="));
+    const cookieValue = document.cookie
+      .split("; ")
+      .find((row) => row.startsWith("userSessionCred="));
     return cookieValue ? cookieValue.split("=")[1] : null;
   };
 
@@ -80,6 +82,93 @@ function LearningPage() {
       await storeAdminStats(userId, courseId, currentModule);
     } catch (error) {
       console.error("Error storing learning metrics:", error);
+    }
+  };
+
+  const storeUserCourseStats = async (userId, courseId, moduleNumber, performance = {}) => {
+    const userCourseRef = ref(db, `user/${userId}/InProgressCourses/${courseId}`);
+    try {
+      const userSnapshot = await get(userCourseRef);
+      let currentData = {};
+
+      if (userSnapshot.exists()) {
+        currentData = userSnapshot.val();
+      } else {
+        currentData = {
+          noOfQuestion: 3,
+          ModuleCovered: 0,
+          TotalModules: 0,
+          Warning: 0,
+          CriticalWarning: 0,
+          CurrentModule: 1,
+          completed: false,
+          moduleDetail: {},
+          performanceAnalysis: {
+            understandingScore: 0,
+            memoryScore: 0,
+            analysisScore: 0,
+            totalQuestionsAnswered: 0,
+            correctAnswers: 0,
+            accuracy: 0,
+          },
+        };
+      }
+
+      const newTotalQuestions =
+        (currentData.performanceAnalysis?.totalQuestionsAnswered || 0) +
+        (performance.totalQuestions || 0);
+      const newCorrectAnswers =
+        (currentData.performanceAnalysis?.correctAnswers || 0) +
+        (performance.correctAnswers || 0);
+      const accuracy = newTotalQuestions > 0 ? (newCorrectAnswers / newTotalQuestions) * 100 : 0;
+
+      const statsData = {
+        CurrentModule: currentData.CurrentModule || 1,
+        Warning: currentData.Warning || 0,
+        CriticalWarning: currentData.CriticalWarning || 0,
+        moduleDetail: {
+          ...currentData.moduleDetail,
+          [`module${moduleNumber}`]: {
+            timeTaken:
+              performance.timeTaken ||
+              currentData.moduleDetail?.[`module${moduleNumber}`]?.timeTaken ||
+              0,
+            totalAttempts:
+              performance.totalAttempts ||
+              currentData.moduleDetail?.[`module${moduleNumber}`]?.totalAttempts ||
+              0,
+            totalWarning:
+              performance.totalWarning ||
+              currentData.moduleDetail?.[`module${moduleNumber}`]?.totalWarning ||
+              0,
+            score:
+              performance.score ||
+              currentData.moduleDetail?.[`module${moduleNumber}`]?.score ||
+              0,
+          },
+        },
+        performanceAnalysis: {
+          understandingScore:
+            (currentData.performanceAnalysis?.understandingScore || 0) +
+            (performance.understandingScore || 0),
+          memoryScore:
+            (currentData.performanceAnalysis?.memoryScore || 0) +
+            (performance.memoryScore || 0),
+          analysisScore:
+            (currentData.performanceAnalysis?.analysisScore || 0) +
+            (performance.analysisScore || 0),
+          totalQuestionsAnswered: newTotalQuestions,
+          correctAnswers: newCorrectAnswers,
+          accuracy: accuracy,
+        },
+      };
+
+      await update(userCourseRef, statsData);
+      console.log("User course stats stored successfully");
+      return true;
+    } catch (error) {
+      console.error("Error storing user course stats:", error);
+      throw error;
     }
   };
 
@@ -126,7 +215,10 @@ function LearningPage() {
 
   const storeAdminStats = async (userId, courseId, moduleNumber) => {
     const userCourseRef = ref(db, `user/${userId}/InProgressCourses/${courseId}`);
-    const adminStatsRef = ref(db, `admin/${ADMIN_ID}/courses/${courseId}/appliedStuds/${userId}/stats`);
+    const adminStatsRef = ref(
+      db,
+      `admin/${ADMIN_ID}/courses/${courseId}/appliedStuds/${userId}/stats`
+    );
     try {
       const userSnapshot = await get(userCourseRef);
       if (userSnapshot.exists()) {
@@ -136,11 +228,12 @@ function LearningPage() {
           totalWarning: userData.Warning || 0,
           criticalWarning: userData.CriticalWarning || 0,
           moduleDetails: {
-            [`module${moduleNumber}`]: userData.moduleDetail[`module${moduleNumber}`] || {
-              timeTaken: 0,
-              totalAttempts: 0,
-              totalWarning: 0,
-            },
+            [`module${moduleNumber}`]:
+              userData.moduleDetail[`module${moduleNumber}`] || {
+                timeTaken: 0,
+                totalAttempts: 0,
+                totalWarning: 0,
+              },
           },
         };
         await update(adminStatsRef, statsData);
@@ -152,17 +245,22 @@ function LearningPage() {
   };
 
   const storeQuestionPerformance = async (userId, courseId, moduleNumber, performance) => {
-    const adminStatsRef = ref(db, `admin/${ADMIN_ID}/courses/${courseId}/appliedStuds/${userId}/stats/performanceAnalysis`);
+    const adminStatsRef = ref(
+      db,
+      `admin/${ADMIN_ID}/courses/${courseId}/appliedStuds/${userId}/stats/performanceAnalysis`
+    );
     try {
       const snapshot = await get(adminStatsRef);
-      const currentData = snapshot.exists() ? snapshot.val() : {
-        understandingScore: 0,
-        memoryScore: 0,
-        analysisScore: 0,
-        totalQuestionsAnswered: 0,
-        correctAnswers: 0,
-        accuracy: 0,
-      };
+      const currentData = snapshot.exists()
+        ? snapshot.val()
+        : {
+            understandingScore: 0,
+            memoryScore: 0,
+            analysisScore: 0,
+            totalQuestionsAnswered: 0,
+            correctAnswers: 0,
+            accuracy: 0,
+          };
 
       const newTotalQuestions = currentData.totalQuestionsAnswered + performance.totalQuestions;
       const newCorrectAnswers = currentData.correctAnswers + performance.correctAnswers;
@@ -228,26 +326,27 @@ function LearningPage() {
 
     document.addEventListener("visibilitychange", handleVisibilityChange);
     return () => document.removeEventListener("visibilitychange", handleVisibilityChange);
-  }, [isQuestionAnswered, isQuestionGenerated]);
+  }, [courseId, isQuestionAnswered, isQuestionGenerated]);
 
   useEffect(() => {
     if (!courseId) {
       navigate(`/courses`);
-    } else {
-      get(courseRef)
-        .then((snapshot) => {
-          if (snapshot.exists()) {
-            const courseData = snapshot.val();
-            setCourseDetails(courseData);
-            setModuleLength(JSON.parse(courseData.courseContent).noOfModules || 3);
-          } else {
-            alert("Course not found.");
-          }
-        })
-        .catch((error) => {
-          alert("Error fetching course data: " + error.message);
-        });
+      return;
     }
+
+    get(courseRef)
+      .then((snapshot) => {
+        if (snapshot.exists()) {
+          const courseData = snapshot.val();
+          setCourseDetails(courseData);
+          setModuleLength(JSON.parse(courseData.courseContent).noOfModules || 3);
+        } else {
+          alert("Course not found.");
+        }
+      })
+      .catch((error) => {
+        alert("Error fetching course data: " + error.message);
+      });
 
     const handleMouseLeave = async (event) => {
       const userId = getUserIdFromCookie();
@@ -379,7 +478,9 @@ function LearningPage() {
       const userCourseRef = ref(db, `user/${userId}/InProgressCourses/${courseId}`);
       await update(userCourseRef, { CurrentModule: prevModule });
       await storeAdminStats(userId, courseId, currentModule);
-      get(ref(db, `user/${userId}/InProgressCourses/${courseId}/moduleDetail/module${prevModule}`)).then((snapshot) => {
+      get(
+        ref(db, `user/${userId}/InProgressCourses/${courseId}/moduleDetail/module${prevModule}`)
+      ).then((snapshot) => {
         if (snapshot.exists()) {
           setAttempts(snapshot.val().totalAttempts || 0);
         }
@@ -418,12 +519,11 @@ function LearningPage() {
       const response = await result.response;
       const text = response.text().replace("```json", "").replace("```", "").trim();
       const generatedQuestions = JSON.parse(text);
-      
-      // Validate generated questions
+
       if (!generatedQuestions.questions || !Array.isArray(generatedQuestions.questions)) {
         throw new Error("Invalid question format received from AI");
       }
-      
+
       setAiQuestions(generatedQuestions.questions);
       setIsGenerating(false);
       setIsQuestionGenerated(true);
@@ -441,7 +541,6 @@ function LearningPage() {
   };
 
   const handleQuestionValidate = async () => {
-    // Guard against invalid or empty aiQuestions
     if (!aiQuestions || !Array.isArray(aiQuestions) || aiQuestions.length === 0) {
       Swal.fire({
         title: "Error",
@@ -465,7 +564,6 @@ function LearningPage() {
 
     aiQuestions.forEach((question, index) => {
       const selectedOption = document.querySelector(`input[name="question-${index}"]:checked`);
-      // Ensure question has valid options
       if (!question.options || !Array.isArray(question.options)) {
         console.error(`Question ${index} has invalid options:`, question);
         return;
@@ -500,19 +598,18 @@ function LearningPage() {
     const score = totalQuestions > 0 ? (correctAnswersCount / totalQuestions) * 100 : 0;
 
     if (userId) {
-      const metricsData = {
-        moduleDetail: {
-          [`module${currentModule}`]: {
-            totalAttempts: attempts + 1,
-            timeTaken: timer,
-            totalWarning: warningCount,
-            score: score,
-          },
-        },
-        Warning: warningCount,
-        CriticalWarning: criticalWarningCount,
+      const performanceData = {
+        timeTaken: timer,
+        totalAttempts: attempts + 1,
+        totalWarning: warningCount,
+        score: score,
+        understandingScore: performance.understandingScore,
+        memoryScore: performance.memoryScore,
+        analysisScore: performance.analysisScore,
+        totalQuestions: performance.totalQuestions,
+        correctAnswers: performance.correctAnswers,
       };
-      await storeLearningMetrics(userId, courseId, metricsData);
+      await storeUserCourseStats(userId, courseId, currentModule, performanceData);
       await storeQuestionPerformance(userId, courseId, currentModule, performance);
     }
 
@@ -556,7 +653,7 @@ function LearningPage() {
         icon: "error",
         confirmButtonText: "OK",
       });
-      setAiQuestions([]); // Clear questions
+      setAiQuestions([]);
       setShowQuestions(false);
       setIsQuestionGenerated(false);
       setIsQuestionAnswered(false);
@@ -565,6 +662,8 @@ function LearningPage() {
 
   const handleNextModule = async () => {
     const userId = getUserIdFromCookie();
+    if (!userId) return;
+
     const moduleRef = ref(db, `user/${userId}/InProgressCourses/${courseId}`);
 
     if (currentModule === moduleLength) {
@@ -661,11 +760,10 @@ function LearningPage() {
       return;
     }
 
-    const moduleNumber = currentModule;
     const content = `
-      Title: ${JSON.parse(courseDetails.courseContent)[`moduletitle${moduleNumber}`]}
-      Concept: ${JSON.parse(courseDetails.courseContent)[`module${moduleNumber}concept`]}
-      Example and Analogy: ${JSON.parse(courseDetails.courseContent)[`module${moduleNumber}ExampleandAnalogy`]}
+      Title: ${JSON.parse(courseDetails.courseContent)[`moduletitle${currentModule}`]}
+      Concept: ${JSON.parse(courseDetails.courseContent)[`module${currentModule}concept`]}
+      Example and Analogy: ${JSON.parse(courseDetails.courseContent)[`module${currentModule}ExampleandAnalogy`]}
     `;
 
     const newSpeech = new SpeechSynthesisUtterance(content);
@@ -699,7 +797,8 @@ function LearningPage() {
               <div className="empty-content">
                 <h2>Thank you for applying!</h2>
                 <p>
-                  You have already enrolled in this course. You will receive further instructions in your registered email.
+                  You have already enrolled in this course. You will receive further instructions in
+                  your registered email.
                 </p>
               </div>
             ) : (
@@ -711,7 +810,8 @@ function LearningPage() {
                       <div className="course-section">
                         <h2>Introduction</h2>
                         <p>
-                          {courseDetails.courseContent && JSON.parse(courseDetails.courseContent).Introduction}
+                          {courseDetails.courseContent &&
+                            JSON.parse(courseDetails.courseContent).Introduction}
                         </p>
                         <button className="apply-button" onClick={handleApplyClick}>
                           Apply for Course
@@ -745,21 +845,30 @@ function LearningPage() {
                 <h2>Concept</h2>
                 <p>{JSON.parse(courseDetails.courseContent)[`module${currentModule}concept`]}</p>
                 <h2>Example and Analogy</h2>
-                <p>{JSON.parse(courseDetails.courseContent)[`module${moduleNumber}ExampleandAnalogy`]}</p>
+                <p>
+                  {JSON.parse(courseDetails.courseContent)[`module${currentModule}ExampleandAnalogy`]}
+                </p>
                 {showQuestions && (
                   <div className="question-course-info">
                     <p>Time: {formatTime(timer)}</p>
                     <h2>Answer the Questions</h2>
                     {aiQuestions.map((question, index) => (
                       <div key={index} className="question-course-section">
-                        <h3>{index + 1}. {question.question} ({question.type})</h3>
+                        <h3>
+                          {index + 1}. {question.question} ({question.type})
+                        </h3>
                         <div className="options-container">
-                          {question.options && question.options.map((option, optionIndex) => (
-                            <label key={optionIndex}>
-                              <input type="radio" value={option.option} name={`question-${index}`} />
-                              <span className="option-label">{option.option}</span>
-                            </label>
-                          ))}
+                          {question.options &&
+                            question.options.map((option, optionIndex) => (
+                              <label key={optionIndex}>
+                                <input
+                                  type="radio"
+                                  value={option.option}
+                                  name={`question-${index}`}
+                                />
+                                <span className="option-label">{option.option}</span>
+                              </label>
+                            ))}
                         </div>
                       </div>
                     ))}
@@ -783,7 +892,8 @@ function LearningPage() {
                     onClick={handleNext}
                     style={{
                       display:
-                        isQuestionGenerated || (currentModule === moduleLength && isCourseCompleted)
+                        isQuestionGenerated ||
+                        (currentModule === moduleLength && isCourseCompleted)
                           ? "none"
                           : "inline-block",
                     }}

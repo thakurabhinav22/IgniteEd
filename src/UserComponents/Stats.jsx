@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { ref, get } from "firebase/database";
-import { database } from "../Admin/firebase";
+import { database } from "../Admin/firebase"; // Adjust path as needed
 import { CircularProgressbar, buildStyles } from "react-circular-progressbar";
 import "react-circular-progressbar/dist/styles.css";
 import { Radar } from "react-chartjs-2";
@@ -14,7 +14,7 @@ import {
   Tooltip,
   Legend,
 } from "chart.js";
-import Cookies from "js-cookie"; // For userId
+import Cookies from "js-cookie";
 import "./Stats.css";
 
 // Register Chart.js components
@@ -28,11 +28,11 @@ function Stats() {
   const location = useLocation();
   const navigate = useNavigate();
 
-  const { courseId, progress } = location.state || {};
-  const userId = Cookies.get("userSessionCred"); // Assuming userId from cookies
+  const { courseId } = location.state || {};
+  const userId = Cookies.get("userSessionCred");
 
   useEffect(() => {
-    console.log("Stats - Received from Dashboard:", { courseId, progress });
+    console.log("Stats - Received from Dashboard:", { courseId });
 
     if (!courseId || !userId) {
       console.log("Missing courseId or userId, redirecting to dashboard");
@@ -47,56 +47,83 @@ function Stats() {
         // Fetch course details
         const courseRef = ref(database, `Courses/${courseId}`);
         const courseSnapshot = await get(courseRef);
+        console.log("Fetched course data:", courseSnapshot.val());
 
-        // Fetch stats
-        const statsRef = ref(database, `user/${userId}/InProgressCourses/${courseId}/stats`);
-        const statsSnapshot = await get(statsRef);
+        // Fetch user course data
+        const userCourseRef = ref(database, `user/${userId}/InProgressCourses/${courseId}`);
+        const userCourseSnapshot = await get(userCourseRef);
+        console.log("Fetched user course data:", userCourseSnapshot.val());
 
-        // Fetch performance analysis
-        const performanceRef = ref(database, `user/${userId}/InProgressCourses/${courseId}/stats/performanceAnalysis`);
-        const performanceSnapshot = await get(performanceRef);
-
-        if (courseSnapshot.exists()) {
+        if (courseSnapshot.exists() && userCourseSnapshot.exists()) {
           const courseData = courseSnapshot.val();
-          console.log("Fetched course data:", courseData);
+          const userCourseData = userCourseSnapshot.val();
 
-          const stats = statsSnapshot.exists() ? statsSnapshot.val() : {};
-          console.log("Fetched stats data:", stats);
+          // Calculate average time taken across all modules
+          const moduleDetails = userCourseData.moduleDetail || {};
+          const moduleCount = Object.keys(moduleDetails).length;
+          const totalTimeTaken = Object.values(moduleDetails).reduce(
+            (sum, detail) => sum + (detail.timeTaken || 0),
+            0
+          );
+          const averageTimeTaken = moduleCount > 0 ? totalTimeTaken / moduleCount / 60 : 0;
 
-          const performance = performanceSnapshot.exists() ? performanceSnapshot.val() : {};
-          console.log("Fetched performance data:", performance);
+          // Calculate completion rate
+          const totalModules = userCourseData.TotalModules || courseData.noOfModules || 0;
+          const modulesCovered = userCourseData.ModuleCovered || 0;
+          const completionRate = totalModules > 0 ? (modulesCovered / totalModules) * 100 : 0;
 
-          setCourseDetails({
+          const courseStats = {
             courseId,
             courseName: courseData.courseName || "Unknown Course",
-            totalModules: courseData.totalModules || 0,
-            modulesCovered: progress === 100 ? courseData.totalModules || 0 : 0,
-            completionRate: progress || 0,
-          });
+            totalModules,
+            modulesCovered,
+            completionRate,
+          };
+          console.log("Processed courseDetails:", courseStats);
+          setCourseDetails(courseStats);
 
-          setStatsData({
-            averageTimeTaken: stats.averageTimeTaken || 0,
-            criticalWarning: stats.criticalWarning || "None",
-            currentModule: stats.currentModule || 0,
-          });
+          const stats = {
+            averageTimeTaken: averageTimeTaken.toFixed(2),
+            criticalWarning: userCourseData.CriticalWarning || 0,
+            currentModule: userCourseData.CurrentModule || 1,
+            totalWarning: userCourseData.Warning || 0,
+          };
+          console.log("Processed statsData:", stats);
+          setStatsData(stats);
 
-          setPerformanceData({
-            accuracy: performance.accuracy || 0,
-            analysisScore: performance.analysisScore || 0,
-            memoryScore: performance.memoryScore || 0,
-            understandingScore: performance.understandingScore || 0,
-          });
+          const performance = {
+            accuracy: userCourseData.performanceAnalysis?.accuracy || 0,
+            analysisScore: userCourseData.performanceAnalysis?.analysisScore || 0,
+            memoryScore: userCourseData.performanceAnalysis?.memoryScore || 0,
+            understandingScore: userCourseData.performanceAnalysis?.understandingScore || 0,
+            totalQuestionsAnswered: userCourseData.performanceAnalysis?.totalQuestionsAnswered || 0,
+            correctAnswers: userCourseData.performanceAnalysis?.correctAnswers || 0,
+          };
+          console.log("Processed performanceData:", performance);
+          setPerformanceData(performance);
         } else {
-          console.log("Course not found in Firebase");
+          console.log("Course or user data not found in Firebase");
           setCourseDetails({
             courseId,
             courseName: "Course Not Found",
             totalModules: 0,
             modulesCovered: 0,
-            completionRate: progress || 0,
+            completionRate: 0,
           });
-          setStatsData({ averageTimeTaken: 0, criticalWarning: "None", currentModule: 0 });
-          setPerformanceData({ accuracy: 0, analysisScore: 0, memoryScore: 0, understandingScore: 0 });
+          setStatsData({
+            averageTimeTaken: 0,
+            criticalWarning: 0,
+            currentModule: 1,
+            totalWarning: 0,
+          });
+          setPerformanceData({
+            accuracy: 0,
+            analysisScore: 0,
+            memoryScore: 0,
+            understandingScore: 0,
+            totalQuestionsAnswered: 0,
+            correctAnswers: 0,
+          });
         }
       } catch (error) {
         console.error("Error fetching data:", error);
@@ -105,17 +132,29 @@ function Stats() {
           courseName: "Error Loading Course",
           totalModules: 0,
           modulesCovered: 0,
-          completionRate: progress || 0,
+          completionRate: 0,
         });
-        setStatsData({ averageTimeTaken: 0, criticalWarning: "Error", currentModule: 0 });
-        setPerformanceData({ accuracy: 0, analysisScore: 0, memoryScore: 0, understandingScore: 0 });
+        setStatsData({
+          averageTimeTaken: 0,
+          criticalWarning: 0,
+          currentModule: 1,
+          totalWarning: 0,
+        });
+        setPerformanceData({
+          accuracy: 0,
+          analysisScore: 0,
+          memoryScore: 0,
+          understandingScore: 0,
+          totalQuestionsAnswered: 0,
+          correctAnswers: 0,
+        });
       } finally {
         setLoading(false);
       }
     };
 
     fetchData();
-  }, [courseId, progress, userId, navigate]);
+  }, [courseId, userId, navigate]);
 
   if (loading) {
     return (
@@ -144,9 +183,13 @@ function Stats() {
       color: "#4CAF50",
       label: "Completion Rate",
     },
+    {
+      value: performanceData.accuracy,
+      color: "#2196F3",
+      label: "Accuracy",
+    },
   ];
 
-  // Radar chart data
   const radarData = {
     labels: ["Accuracy", "Analysis", "Memory", "Understanding"],
     datasets: [
@@ -169,12 +212,20 @@ function Stats() {
     ],
   };
 
+  console.log("Radar chart data:", radarData);
+
   const radarOptions = {
     scales: {
       r: {
         angleLines: { display: true },
         suggestedMin: 0,
-        suggestedMax: 100,
+        suggestedMax: Math.max(
+          performanceData.accuracy,
+          performanceData.analysisScore,
+          performanceData.memoryScore,
+          performanceData.understandingScore,
+          100
+        ) || 100, // Ensure a minimum max of 100 if all values are 0
         ticks: { stepSize: 20 },
       },
     },
@@ -187,7 +238,13 @@ function Stats() {
   return (
     <div className="stats-main-container">
       <header className="stats-header">
-        <h1 className="stats-header-title">Course Performance Overview</h1>
+        <h1 className="stats-header-title">Course Performance Dashboard</h1>
+        <button
+          onClick={() => navigate("/dashboard")}
+          className="stats-header-back-button"
+        >
+          Back to Dashboard
+        </button>
       </header>
 
       <section className="stats-course-summary">
@@ -215,14 +272,18 @@ function Stats() {
       </section>
 
       <section className="stats-details-section">
-        <h4 className="stats-details-title">Course Statistics</h4>
+        <h4 className="stats-details-title">Detailed Statistics</h4>
         <div className="stats-details-grid">
           <div className="stats-detail-item">
-            <span className="stats-detail-label">Average Time Taken:</span>
+            <span className="stats-detail-label">Average Time per Module:</span>
             <span className="stats-detail-value">{statsData.averageTimeTaken} mins</span>
           </div>
           <div className="stats-detail-item">
-            <span className="stats-detail-label">Critical Warning:</span>
+            <span className="stats-detail-label">Total Warnings:</span>
+            <span className="stats-detail-value">{statsData.totalWarning}</span>
+          </div>
+          <div className="stats-detail-item">
+            <span className="stats-detail-label">Critical Warnings:</span>
             <span className="stats-detail-value">{statsData.criticalWarning}</span>
           </div>
           <div className="stats-detail-item">
@@ -231,7 +292,15 @@ function Stats() {
           </div>
           <div className="stats-detail-item">
             <span className="stats-detail-label">Modules Completed:</span>
-            <span className="stats-detail-value">{courseDetails.modulesCovered} / {courseDetails.totalModules}</span>
+            <span className="stats-detail-value">
+              {courseDetails.modulesCovered} / {courseDetails.totalModules}
+            </span>
+          </div>
+          <div className="stats-detail-item">
+            <span className="stats-detail-label">Questions Answered:</span>
+            <span className="stats-detail-value">
+              {performanceData.correctAnswers} / {performanceData.totalQuestionsAnswered}
+            </span>
           </div>
         </div>
       </section>
@@ -241,12 +310,6 @@ function Stats() {
         <div className="stats-radar-chart">
           <Radar data={radarData} options={radarOptions} />
         </div>
-      </section>
-
-      <section className="stats-actions-section">
-        <button onClick={() => navigate("/dashboard")} className="stats-return-button">
-          Back to Dashboard
-        </button>
       </section>
     </div>
   );
