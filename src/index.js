@@ -19,6 +19,7 @@ import Homepage from './UserComponents/Homepage';
 import Webcrawler from './Admin/webcrawler';
 import MagicWritter from './Admin/MagicWritter';
 import Stats from './UserComponents/Stats';
+import AnalyticsPage from './UserComponents/AnalyticsPage';
 
 
 
@@ -71,6 +72,10 @@ const router = createBrowserRouter([
   {
     path: "/Courses",
     element: <Courses />,
+  },
+  {
+    path: "/analytics",
+    element: <AnalyticsPage />,
   },
   {
     path: "/Courses/learn",

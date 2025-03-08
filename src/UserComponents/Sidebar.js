@@ -89,9 +89,9 @@ function Sidebar({ isQuestionAnswered, isQuestionGenerated }) {
           <FaHome className="nav-icon" />
           <span>Dashboard</span>
         </Link>
-        <Link to="/exams" className="nav-item" onClick={handleSidebarLinkClick}>
+        <Link to="/analytics" className="nav-item" onClick={handleSidebarLinkClick}>
           <FaCertificate className="nav-icon" />
-          <span>Exams</span>
+          <span>Analytics</span>
         </Link>
         <Link to="/Courses" className="nav-item" onClick={handleSidebarLinkClick}>
           <FaQuestionCircle className="nav-icon" />

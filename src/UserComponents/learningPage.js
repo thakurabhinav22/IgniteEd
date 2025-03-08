@@ -70,6 +70,33 @@ function LearningPage() {
     return cookieValue ? cookieValue.split("=")[1] : null;
   };
 
+  const updateUserAnalytics = async (userId, performance = {}, isCompleted = false, isNewCourse = false) => {
+    const analyticsRef = ref(db, `user/${userId}/analytics`);
+    try {
+      const analyticsSnapshot = await get(analyticsRef);
+      let currentAnalytics = analyticsSnapshot.exists() ? analyticsSnapshot.val() : {
+        memoryScore: 0,
+        analysisScore: 0,
+        understandingScore: 0,
+        totalCoursesApplied: 0,
+        totalCoursesCompleted: 0
+      };
+
+      const updatedAnalytics = {
+        memoryScore: (currentAnalytics.memoryScore || 0) + (performance.memoryScore || 0),
+        analysisScore: (currentAnalytics.analysisScore || 0) + (performance.analysisScore || 0),
+        understandingScore: (currentAnalytics.understandingScore || 0) + (performance.understandingScore || 0),
+        totalCoursesApplied: isNewCourse ? (currentAnalytics.totalCoursesApplied || 0) + 1 : (currentAnalytics.totalCoursesApplied || 0),
+        totalCoursesCompleted: isCompleted ? (currentAnalytics.totalCoursesCompleted || 0) + 1 : (currentAnalytics.totalCoursesCompleted || 0)
+      };
+
+      await set(analyticsRef, updatedAnalytics);
+      console.log("Updated user analytics:", updatedAnalytics);
+    } catch (error) {
+      console.error("Error updating user analytics:", error);
+    }
+  };
+
   const storeUserCourseStats = async (userId, courseId, moduleNumber, performance = {}) => {
     const userCourseRef = ref(db, `user/${userId}/InProgressCourses/${courseId}`);
     try {
@@ -98,7 +125,7 @@ function LearningPage() {
       const accuracy = newTotalQuestions > 0 ? (newCorrectAnswers / newTotalQuestions) * 100 : 0;
 
       const statsData = {
-        CurrentModule: currentModule,
+        CurrentModule: performance.CurrentModule !== undefined ? performance.CurrentModule : currentModule, // Use provided CurrentModule or current state
         ModuleCovered: performance.ModuleCovered !== undefined ? performance.ModuleCovered : currentData.ModuleCovered || 0,
         TotalModules: moduleLength,
         Warning: warningCount,
@@ -126,15 +153,18 @@ function LearningPage() {
       await update(userCourseRef, statsData);
       console.log("Stored user course stats:", statsData);
 
-      // Sync with admin
       await syncAdminStats(userId, courseId, statsData);
-
-      // Update user-level analysis scores
       await updateUserAnalysisScores(userId, {
         understandingScore: performance.understandingScore || 0,
         memoryScore: performance.memoryScore || 0,
         analysisScore: performance.analysisScore || 0,
       });
+
+      await updateUserAnalytics(userId, {
+        understandingScore: performance.understandingScore || 0,
+        memoryScore: performance.memoryScore || 0,
+        analysisScore: performance.analysisScore || 0
+      }, statsData.completed);
 
       return true;
     } catch (error) {
@@ -351,25 +381,31 @@ function LearningPage() {
       const userCourseRef = ref(db, `user/${userId}/InProgressCourses/${courseId}`);
       const userRef = ref(db, `user/${userId}`);
       const CourseRef = ref(db, `Courses/${courseId}`);
+
       get(userCourseRef).then((snapshot) => {
         if (snapshot.exists()) {
           const userData = snapshot.val();
           setIsAlreadyApplied(true);
           setContentVisible(false);
-          setCurrentModule(userData.CurrentModule || 1);
+          const savedModule = userData.CurrentModule || 1;
+          setCurrentModule(savedModule); // Set to the saved CurrentModule
           setModuleLength(userData.TotalModules || 3);
           setIsCourseCompleted(userData.completed || false);
           setWarningCount(userData.Warning || 0);
           setCriticalWarningCount(userData.CriticalWarning || 0);
+
           // Check if the current module is completed
-          if (userData.moduleDetail && userData.moduleDetail[`module${userData.CurrentModule}`]) {
-            setAttempts(userData.moduleDetail[`module${userData.CurrentModule}`].totalAttempts || 0);
-            setIsModuleCompleted(userData.moduleDetail[`module${userData.CurrentModule}`].score >= 60);
+          if (userData.moduleDetail && userData.moduleDetail[`module${savedModule}`]) {
+            setAttempts(userData.moduleDetail[`module${savedModule}`].totalAttempts || 0);
+            setIsModuleCompleted(userData.moduleDetail[`module${savedModule}`].score >= 60);
           } else {
-            setIsModuleCompleted(false); // Ensure it’s false if no data exists
+            setIsModuleCompleted(false);
           }
         }
+      }).catch((error) => {
+        console.error("Error fetching user course data:", error);
       });
+
       get(userRef).then((snapshot) => {
         if (snapshot.exists()) {
           const userData = snapshot.val();
@@ -377,6 +413,7 @@ function LearningPage() {
           setUserBranch(userData.Branch || "Unknown");
         }
       });
+
       get(CourseRef).then((snapshot) => {
         if (snapshot.exists()) {
           const CourseData = snapshot.val();
@@ -419,9 +456,11 @@ function LearningPage() {
     try {
       await set(userCourseRef, courseData);
       await storeAdminAppliedStudent(userId, courseId, userName, userBranch);
+      await updateUserAnalytics(userId, {}, false, true);
       alert("You have successfully applied for this course!");
       setIsAlreadyApplied(true);
       setContentVisible(false);
+      setCurrentModule(1); // Explicitly set to 1 for new course
     } catch (error) {
       console.error("Error applying for the course: ", error);
       alert("An error occurred while applying for the course. Please try again.");
@@ -449,6 +488,7 @@ function LearningPage() {
         analysisScore: 0,
         totalQuestions: 0,
         correctAnswers: 0,
+        CurrentModule: prevModule, // Update CurrentModule
       };
       await storeUserCourseStats(userId, courseId, prevModule, performanceData);
       get(ref(db, `user/${userId}/InProgressCourses/${courseId}/moduleDetail/module${prevModule}`)).then((snapshot) => {
@@ -583,6 +623,7 @@ function LearningPage() {
         totalQuestions: totalQuestions,
         correctAnswers: performance.correctAnswers,
         ModuleCovered: currentModule >= moduleLength ? moduleLength : currentModule,
+        CurrentModule: currentModule, // Ensure CurrentModule is preserved
       };
       await storeUserCourseStats(userId, courseId, currentModule, performanceData);
     }
@@ -672,6 +713,7 @@ function LearningPage() {
         totalQuestions: 0,
         correctAnswers: 0,
         ModuleCovered: moduleLength,
+        CurrentModule: moduleLength, // Keep CurrentModule at the last module
         completed: true,
         moduleDetail: updatedModuleDetail,
       };
@@ -705,6 +747,7 @@ function LearningPage() {
       totalQuestions: 0,
       correctAnswers: 0,
       ModuleCovered: currentModule,
+      CurrentModule: nextModule, // Update CurrentModule to the next module
     };
     await storeUserCourseStats(userId, courseId, nextModule, performanceData);
   };

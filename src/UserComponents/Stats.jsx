@@ -279,10 +279,7 @@ function Stats() {
       <section className="stats-details-section">
         <h4 className="stats-details-title">Detailed Statistics</h4>
         <div className="stats-details-grid">
-          <div className="stats-detail-item">
-            <span className="stats-detail-label">Average Time per Module:</span>
-            <span className="stats-detail-value">{statsData.averageTimeTaken} mins</span>
-          </div>
+
           <div className="stats-detail-item">
             <span className="stats-detail-label">Total Warnings:</span>
             <span className="stats-detail-value">{statsData.totalWarning}</span>
