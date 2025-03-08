@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { ref, get, onValue, off } from "firebase/database";
+import { ref, get, onValue, off, set } from "firebase/database";
 import { database } from "../Admin/firebase";
 import { useNavigate } from "react-router-dom";
 import List from "../icons/List.svg";
@@ -10,13 +10,10 @@ import "react-circular-progressbar/dist/styles.css";
 
 function DashboardContent() {
   const [inProgressCourses, setInProgressCourses] = useState([]);
+  const [streak, setStreak] = useState(0);
+  const [completionRate, setCompletionRate] = useState(0);
   const navigate = useNavigate();
   const userId = Cookies.get("userSessionCred");
-
-  const stats = [
-    { value: 0, color: "#e43a3c", label: "Completion Rate" },
-    { value: 0, color: "#9fef00", label: "Streaks" },
-  ];
 
   useEffect(() => {
     if (!userId) {
@@ -24,9 +21,46 @@ function DashboardContent() {
       return;
     }
 
-    const userRef = ref(database, `user/${userId}/InProgressCourses`);
+    const userRef = ref(database, `user/${userId}`);
+    const coursesRef = ref(database, `user/${userId}/InProgressCourses`);
+    const streakRef = ref(database, `user/${userId}/streak`);
 
-    const unsubscribe = onValue(userRef, (snapshot) => {
+    // Update login streak on page load (simulating login)
+    const updateLoginStreak = async () => {
+      const today = new Date().toISOString().split("T")[0]; // YYYY-MM-DD
+      const streakSnapshot = await get(streakRef);
+      let currentStreak = 0;
+      let lastLogin = today;
+
+      if (streakSnapshot.exists()) {
+        const streakData = streakSnapshot.val();
+        currentStreak = streakData.current || 0;
+        lastLogin = streakData.lastLogin || today;
+      }
+
+      const lastDate = new Date(lastLogin);
+      const currentDate = new Date(today);
+      const diffDays = Math.floor((currentDate - lastDate) / (1000 * 60 * 60 * 24));
+
+      if (diffDays === 1) {
+        currentStreak += 1; // Increment streak for consecutive login
+      } else if (diffDays > 1) {
+        currentStreak = 1; // Reset to 1 if gap > 1 day
+      } else if (diffDays === 0) {
+        // No change if same day
+      } else if (diffDays < 0) {
+        // Prevent future date issues
+        currentStreak = 1;
+      }
+
+      setStreak(currentStreak);
+      await set(streakRef, { current: currentStreak, lastLogin: today });
+    };
+
+    updateLoginStreak();
+
+    // Real-time listener for in-progress courses
+    const unsubscribe = onValue(coursesRef, (snapshot) => {
       if (snapshot.exists()) {
         const coursesData = snapshot.val();
         const coursesArray = Object.entries(coursesData).map(([id, data]) => ({
@@ -37,25 +71,32 @@ function DashboardContent() {
         const coursePromises = coursesArray.map(async (course) => {
           const courseRef = ref(database, `Courses/${course.id}/courseName`);
           const courseSnapshot = await get(courseRef);
-
           return {
             ...course,
-            courseName: courseSnapshot.exists()
-              ? courseSnapshot.val()
-              : "Name Not Available",
+            courseName: courseSnapshot.exists() ? courseSnapshot.val() : "Name Not Available",
           };
         });
 
         Promise.all(coursePromises).then((completedCourses) => {
           setInProgressCourses(completedCourses);
+
+          // Calculate completion rate
+          const totalCourses = completedCourses.length;
+          const totalProgress = completedCourses.reduce((sum, course) => {
+            const progress = course.TotalModules > 0 ? (course.ModuleCovered / course.TotalModules) * 100 : 0;
+            return sum + progress;
+          }, 0);
+          const rate = totalCourses > 0 ? totalProgress / totalCourses : 0;
+          setCompletionRate(rate);
         });
       } else {
         setInProgressCourses([]);
+        setCompletionRate(0);
       }
     });
 
     return () => {
-      off(userRef);
+      off(coursesRef);
     };
   }, [navigate, userId]);
 
@@ -64,13 +105,18 @@ function DashboardContent() {
   };
 
   const handleContinue = (courseId, progress) => {
-    console.log("Navigating with courseId:", courseId, "Progress:", progress); // Debug log
+    console.log("Navigating with courseId:", courseId, "Progress:", progress);
     if (progress === 100) {
       navigate("/stats", { state: { courseId, progress } });
     } else {
       navigate("/courses/learn", { state: { courseId } });
     }
   };
+
+  const stats = [
+    { value: completionRate, color: "#e43a3c", label: "Completion Rate" },
+    { value: streak, color: "#9fef00", label: "Login Streaks" },
+  ];
 
   return (
     <div className="dashboard-content">
@@ -81,8 +127,8 @@ function DashboardContent() {
           <div key={index} className="progress-circle">
             <CircularProgressbar
               value={stat.value}
-              maxValue={stat.label === "Streaks" ? 365 : 100}
-              text={stat.label === "Streaks" ? `${stat.value} Days` : `${stat.value.toFixed(2)}%`}
+              maxValue={stat.label === "Login Streaks" ? 365 : 100}
+              text={stat.label === "Login Streaks" ? `${stat.value} Days` : `${stat.value.toFixed(1)}%`}
               styles={buildStyles({
                 textColor: "black",
                 pathColor: stat.color,
@@ -144,10 +190,7 @@ function DashboardContent() {
           ) : (
             <div className="no-courses">
               <p>No courses in progress.</p>
-              <button
-                onClick={handleGoToCourses}
-                style={{ cursor: "pointer" }}
-              >
+              <button onClick={handleGoToCourses} style={{ cursor: "pointer" }}>
                 Explore Courses
               </button>
             </div>

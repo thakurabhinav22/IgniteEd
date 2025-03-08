@@ -99,7 +99,7 @@ function Sidebar({ isQuestionAnswered, isQuestionGenerated }) {
         </Link>
         <Link to="/paths" className="nav-item" onClick={handleSidebarLinkClick}>
           <FaUser className="nav-icon" />
-          <span>Paths</span>
+          <span>Settings</span>
         </Link>
       </nav>
       <div className="logout-btn" onClick={handleLogout}>
