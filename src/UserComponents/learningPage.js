@@ -62,47 +62,93 @@ function LearningPage() {
     const hours = Math.floor(seconds / 3600);
     const minutes = Math.floor((seconds % 3600) / 60);
     const secs = seconds % 60;
-    return `${hours.toString().padStart(2, "0")}:${minutes
-      .toString()
-      .padStart(2, "0")}:${secs.toString().padStart(2, "0")}`;
+    return `${hours.toString().padStart(2, "0")}:${minutes.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`;
   };
 
   const getUserIdFromCookie = () => {
-    const cookieValue = document.cookie
-      .split("; ")
-      .find((row) => row.startsWith("userSessionCred="));
+    const cookieValue = document.cookie.split("; ").find((row) => row.startsWith("userSessionCred="));
     return cookieValue ? cookieValue.split("=")[1] : null;
-  };
-
-  const storeLearningMetrics = async (userId, courseId, metrics) => {
-    const courseProgressRef = ref(db, `user/${userId}/InProgressCourses/${courseId}`);
-    try {
-      await update(courseProgressRef, metrics);
-      console.log("Learning metrics stored successfully");
-      await storeAdminStats(userId, courseId, currentModule);
-    } catch (error) {
-      console.error("Error storing learning metrics:", error);
-    }
   };
 
   const storeUserCourseStats = async (userId, courseId, moduleNumber, performance = {}) => {
     const userCourseRef = ref(db, `user/${userId}/InProgressCourses/${courseId}`);
     try {
       const userSnapshot = await get(userCourseRef);
-      let currentData = {};
+      let currentData = userSnapshot.exists() ? userSnapshot.val() : {
+        noOfQuestion: 3,
+        ModuleCovered: 0,
+        TotalModules: moduleLength,
+        Warning: 0,
+        CriticalWarning: 0,
+        CurrentModule: 1,
+        completed: false,
+        moduleDetail: {},
+        performanceAnalysis: {
+          understandingScore: 0,
+          memoryScore: 0,
+          analysisScore: 0,
+          totalQuestionsAnswered: 0,
+          correctAnswers: 0,
+          accuracy: 0,
+        },
+      };
 
-      if (userSnapshot.exists()) {
-        currentData = userSnapshot.val();
-      } else {
-        currentData = {
-          noOfQuestion: 3,
-          ModuleCovered: 0,
-          TotalModules: 0,
-          Warning: 0,
-          CriticalWarning: 0,
-          CurrentModule: 1,
-          completed: false,
-          moduleDetail: {},
+      const newTotalQuestions = (currentData.performanceAnalysis?.totalQuestionsAnswered || 0) + (performance.totalQuestions || 0);
+      const newCorrectAnswers = (currentData.performanceAnalysis?.correctAnswers || 0) + (performance.correctAnswers || 0);
+      const accuracy = newTotalQuestions > 0 ? (newCorrectAnswers / newTotalQuestions) * 100 : 0;
+
+      const statsData = {
+        CurrentModule: currentModule,
+        ModuleCovered: performance.ModuleCovered !== undefined ? performance.ModuleCovered : currentData.ModuleCovered || 0,
+        TotalModules: moduleLength,
+        Warning: warningCount,
+        CriticalWarning: criticalWarningCount,
+        completed: performance.completed !== undefined ? performance.completed : currentData.completed || false,
+        moduleDetail: performance.moduleDetail || {
+          ...currentData.moduleDetail,
+          [`module${moduleNumber}`]: {
+            timeTaken: performance.timeTaken || currentData.moduleDetail?.[`module${moduleNumber}`]?.timeTaken || 0,
+            totalAttempts: performance.totalAttempts || currentData.moduleDetail?.[`module${moduleNumber}`]?.totalAttempts || 0,
+            totalWarning: performance.totalWarning || currentData.moduleDetail?.[`module${moduleNumber}`]?.totalWarning || 0,
+            score: performance.score || currentData.moduleDetail?.[`module${moduleNumber}`]?.score || 0,
+          },
+        },
+        performanceAnalysis: {
+          understandingScore: (currentData.performanceAnalysis?.understandingScore || 0) + (performance.understandingScore || 0),
+          memoryScore: (currentData.performanceAnalysis?.memoryScore || 0) + (performance.memoryScore || 0),
+          analysisScore: (currentData.performanceAnalysis?.analysisScore || 0) + (performance.analysisScore || 0),
+          totalQuestionsAnswered: newTotalQuestions,
+          correctAnswers: newCorrectAnswers,
+          accuracy: accuracy,
+        },
+      };
+
+      await update(userCourseRef, statsData);
+      console.log("Stored user course stats:", statsData);
+
+      // Sync with admin
+      await syncAdminStats(userId, courseId, statsData);
+      return true;
+    } catch (error) {
+      console.error("Error storing user course stats:", error);
+      throw error;
+    }
+  };
+
+  const syncAdminStats = async (userId, courseId, userStats) => {
+    const adminStatsRef = ref(db, `admin/${ADMIN_ID}/courses/${courseId}/appliedStuds/${userId}`);
+    try {
+      const adminSnapshot = await get(adminStatsRef);
+      let adminData = adminSnapshot.exists() ? adminSnapshot.val() : {
+        Name: userName,
+        Branch: userBranch,
+        atModule: 1,
+        status: "applied",
+        stats: {
+          currentModule: 1,
+          totalWarning: 0,
+          criticalWarning: 0,
+          moduleDetails: {},
           performanceAnalysis: {
             understandingScore: 0,
             memoryScore: 0,
@@ -111,64 +157,25 @@ function LearningPage() {
             correctAnswers: 0,
             accuracy: 0,
           },
-        };
-      }
-
-      const newTotalQuestions =
-        (currentData.performanceAnalysis?.totalQuestionsAnswered || 0) +
-        (performance.totalQuestions || 0);
-      const newCorrectAnswers =
-        (currentData.performanceAnalysis?.correctAnswers || 0) +
-        (performance.correctAnswers || 0);
-      const accuracy = newTotalQuestions > 0 ? (newCorrectAnswers / newTotalQuestions) * 100 : 0;
-
-      const statsData = {
-        CurrentModule: currentData.CurrentModule || 1,
-        Warning: currentData.Warning || 0,
-        CriticalWarning: currentData.CriticalWarning || 0,
-        moduleDetail: {
-          ...currentData.moduleDetail,
-          [`module${moduleNumber}`]: {
-            timeTaken:
-              performance.timeTaken ||
-              currentData.moduleDetail?.[`module${moduleNumber}`]?.timeTaken ||
-              0,
-            totalAttempts:
-              performance.totalAttempts ||
-              currentData.moduleDetail?.[`module${moduleNumber}`]?.totalAttempts ||
-              0,
-            totalWarning:
-              performance.totalWarning ||
-              currentData.moduleDetail?.[`module${moduleNumber}`]?.totalWarning ||
-              0,
-            score:
-              performance.score ||
-              currentData.moduleDetail?.[`module${moduleNumber}`]?.score ||
-              0,
-          },
-        },
-        performanceAnalysis: {
-          understandingScore:
-            (currentData.performanceAnalysis?.understandingScore || 0) +
-            (performance.understandingScore || 0),
-          memoryScore:
-            (currentData.performanceAnalysis?.memoryScore || 0) +
-            (performance.memoryScore || 0),
-          analysisScore:
-            (currentData.performanceAnalysis?.analysisScore || 0) +
-            (performance.analysisScore || 0),
-          totalQuestionsAnswered: newTotalQuestions,
-          correctAnswers: newCorrectAnswers,
-          accuracy: accuracy,
         },
       };
 
-      await update(userCourseRef, statsData);
-      console.log("User course stats stored successfully");
-      return true;
+      const adminStats = {
+        ...adminData,
+        atModule: userStats.CurrentModule,
+        stats: {
+          currentModule: userStats.CurrentModule,
+          totalWarning: userStats.Warning,
+          criticalWarning: userStats.CriticalWarning,
+          moduleDetails: userStats.moduleDetail,
+          performanceAnalysis: userStats.performanceAnalysis,
+        },
+      };
+
+      await set(adminStatsRef, adminStats);
+      console.log("Synced admin stats:", adminStats);
     } catch (error) {
-      console.error("Error storing user course stats:", error);
-      throw error;
+      console.error("Error syncing admin stats:", error);
     }
   };
 
@@ -196,89 +203,9 @@ function LearningPage() {
     };
     try {
       await set(adminRef, studentData);
-      console.log("Student applied data stored in admin successfully");
+      console.log("Student applied data stored in admin:", studentData);
     } catch (error) {
       console.error("Error storing admin applied student data:", error);
-    }
-  };
-
-  const updateAdminAppliedStudent = async (userId, courseId, currentModule) => {
-    const adminRef = ref(db, `admin/${ADMIN_ID}/courses/${courseId}/appliedStuds/${userId}`);
-    const updateData = { atModule: currentModule };
-    try {
-      await update(adminRef, updateData);
-      console.log("Admin applied student data updated successfully");
-    } catch (error) {
-      console.error("Error updating admin applied student data:", error);
-    }
-  };
-
-  const storeAdminStats = async (userId, courseId, moduleNumber) => {
-    const userCourseRef = ref(db, `user/${userId}/InProgressCourses/${courseId}`);
-    const adminStatsRef = ref(
-      db,
-      `admin/${ADMIN_ID}/courses/${courseId}/appliedStuds/${userId}/stats`
-    );
-    try {
-      const userSnapshot = await get(userCourseRef);
-      if (userSnapshot.exists()) {
-        const userData = userSnapshot.val();
-        const statsData = {
-          currentModule: userData.CurrentModule || 1,
-          totalWarning: userData.Warning || 0,
-          criticalWarning: userData.CriticalWarning || 0,
-          moduleDetails: {
-            [`module${moduleNumber}`]:
-              userData.moduleDetail[`module${moduleNumber}`] || {
-                timeTaken: 0,
-                totalAttempts: 0,
-                totalWarning: 0,
-              },
-          },
-        };
-        await update(adminStatsRef, statsData);
-        await updateAdminAppliedStudent(userId, courseId, userData.CurrentModule || 1);
-      }
-    } catch (error) {
-      console.error("Error storing admin stats:", error);
-    }
-  };
-
-  const storeQuestionPerformance = async (userId, courseId, moduleNumber, performance) => {
-    const adminStatsRef = ref(
-      db,
-      `admin/${ADMIN_ID}/courses/${courseId}/appliedStuds/${userId}/stats/performanceAnalysis`
-    );
-    try {
-      const snapshot = await get(adminStatsRef);
-      const currentData = snapshot.exists()
-        ? snapshot.val()
-        : {
-            understandingScore: 0,
-            memoryScore: 0,
-            analysisScore: 0,
-            totalQuestionsAnswered: 0,
-            correctAnswers: 0,
-            accuracy: 0,
-          };
-
-      const newTotalQuestions = currentData.totalQuestionsAnswered + performance.totalQuestions;
-      const newCorrectAnswers = currentData.correctAnswers + performance.correctAnswers;
-      const accuracy = newTotalQuestions > 0 ? (newCorrectAnswers / newTotalQuestions) * 100 : 0;
-
-      const updatedData = {
-        understandingScore: currentData.understandingScore + (performance.understandingScore || 0),
-        memoryScore: currentData.memoryScore + (performance.memoryScore || 0),
-        analysisScore: currentData.analysisScore + (performance.analysisScore || 0),
-        totalQuestionsAnswered: newTotalQuestions,
-        correctAnswers: newCorrectAnswers,
-        accuracy: accuracy,
-      };
-
-      await update(adminStatsRef, updatedData);
-      console.log("Question performance stored successfully");
-    } catch (error) {
-      console.error("Error storing question performance:", error);
     }
   };
 
@@ -304,17 +231,15 @@ function LearningPage() {
         if (userId) {
           setWarningCount((prev) => prev + 1);
           setCriticalWarningCount((prev) => prev + 1);
-          const metricsData = {
-            Warning: increment(1),
-            CriticalWarning: increment(1),
-            moduleDetail: {
-              [`module${currentModule}`]: {
-                totalWarning: increment(1),
-                timestamp: new Date().toISOString(),
-              },
-            },
+          const performanceData = {
+            totalWarning: warningCount + 1,
+            understandingScore: 0,
+            memoryScore: 0,
+            analysisScore: 0,
+            totalQuestions: 0,
+            correctAnswers: 0,
           };
-          await storeLearningMetrics(userId, courseId, metricsData);
+          await storeUserCourseStats(userId, courseId, currentModule, performanceData);
         }
 
         stopTimer();
@@ -326,7 +251,7 @@ function LearningPage() {
 
     document.addEventListener("visibilitychange", handleVisibilityChange);
     return () => document.removeEventListener("visibilitychange", handleVisibilityChange);
-  }, [courseId, isQuestionAnswered, isQuestionGenerated]);
+  }, [courseId, isQuestionAnswered, isQuestionGenerated, currentModule, warningCount, criticalWarningCount]);
 
   useEffect(() => {
     if (!courseId) {
@@ -359,16 +284,15 @@ function LearningPage() {
 
         if (userId) {
           setWarningCount((prev) => prev + 1);
-          const metricsData = {
-            Warning: increment(1),
-            moduleDetail: {
-              [`module${currentModule}`]: {
-                totalWarning: increment(1),
-                timestamp: new Date().toISOString(),
-              },
-            },
+          const performanceData = {
+            totalWarning: warningCount + 1,
+            understandingScore: 0,
+            memoryScore: 0,
+            analysisScore: 0,
+            totalQuestions: 0,
+            correctAnswers: 0,
           };
-          await storeLearningMetrics(userId, courseId, metricsData);
+          await storeUserCourseStats(userId, courseId, currentModule, performanceData);
         }
       }
     };
@@ -388,7 +312,7 @@ function LearningPage() {
       window.removeEventListener("mouseout", handleMouseLeave);
       window.removeEventListener("beforeunload", handleBeforeUnload);
     };
-  }, [courseId, isQuestionAnswered, isQuestionGenerated, navigate]);
+  }, [courseId, isQuestionAnswered, isQuestionGenerated, currentModule, warningCount]);
 
   useEffect(() => {
     const userId = getUserIdFromCookie();
@@ -447,6 +371,14 @@ function LearningPage() {
       CurrentModule: 1,
       completed: false,
       moduleDetail: {},
+      performanceAnalysis: {
+        understandingScore: 0,
+        memoryScore: 0,
+        analysisScore: 0,
+        totalQuestionsAnswered: 0,
+        correctAnswers: 0,
+        accuracy: 0,
+      },
     };
 
     try {
@@ -475,12 +407,16 @@ function LearningPage() {
     setAttempts(0);
     const userId = getUserIdFromCookie();
     if (userId) {
-      const userCourseRef = ref(db, `user/${userId}/InProgressCourses/${courseId}`);
-      await update(userCourseRef, { CurrentModule: prevModule });
-      await storeAdminStats(userId, courseId, currentModule);
-      get(
-        ref(db, `user/${userId}/InProgressCourses/${courseId}/moduleDetail/module${prevModule}`)
-      ).then((snapshot) => {
+      const performanceData = {
+        totalWarning: warningCount,
+        understandingScore: 0,
+        memoryScore: 0,
+        analysisScore: 0,
+        totalQuestions: 0,
+        correctAnswers: 0,
+      };
+      await storeUserCourseStats(userId, courseId, prevModule, performanceData);
+      get(ref(db, `user/${userId}/InProgressCourses/${courseId}/moduleDetail/module${prevModule}`)).then((snapshot) => {
         if (snapshot.exists()) {
           setAttempts(snapshot.val().totalAttempts || 0);
         }
@@ -606,11 +542,11 @@ function LearningPage() {
         understandingScore: performance.understandingScore,
         memoryScore: performance.memoryScore,
         analysisScore: performance.analysisScore,
-        totalQuestions: performance.totalQuestions,
+        totalQuestions: totalQuestions,
         correctAnswers: performance.correctAnswers,
+        ModuleCovered: currentModule >= moduleLength ? moduleLength : currentModule, // Update ModuleCovered
       };
       await storeUserCourseStats(userId, courseId, currentModule, performanceData);
-      await storeQuestionPerformance(userId, courseId, currentModule, performance);
     }
 
     stopTimer();
@@ -664,16 +600,63 @@ function LearningPage() {
     const userId = getUserIdFromCookie();
     if (!userId) return;
 
-    const moduleRef = ref(db, `user/${userId}/InProgressCourses/${courseId}`);
-
     if (currentModule === moduleLength) {
-      await update(moduleRef, { completed: true });
+      // When course is completed, update all modules
+      const userCourseRef = ref(db, `user/${userId}/InProgressCourses/${courseId}`);
+      const userSnapshot = await get(userCourseRef);
+      let currentData = userSnapshot.exists() ? userSnapshot.val() : {
+        noOfQuestion: 3,
+        ModuleCovered: 0,
+        TotalModules: moduleLength,
+        Warning: 0,
+        CriticalWarning: 0,
+        CurrentModule: 1,
+        completed: false,
+        moduleDetail: {},
+        performanceAnalysis: {
+          understandingScore: 0,
+          memoryScore: 0,
+          analysisScore: 0,
+          totalQuestionsAnswered: 0,
+          correctAnswers: 0,
+          accuracy: 0,
+        },
+      };
+
+      // Ensure all modules are represented in moduleDetail
+      const updatedModuleDetail = { ...currentData.moduleDetail };
+      for (let i = 1; i <= moduleLength; i++) {
+        if (!updatedModuleDetail[`module${i}`]) {
+          updatedModuleDetail[`module${i}`] = {
+            timeTaken: 0,
+            totalAttempts: 0,
+            totalWarning: 0,
+            score: 0, // Default score if not completed
+          };
+        }
+      }
+
+      const performanceData = {
+        totalWarning: warningCount,
+        understandingScore: 0,
+        memoryScore: 0,
+        analysisScore: 0,
+        totalQuestions: 0,
+        correctAnswers: 0,
+        ModuleCovered: moduleLength, // All modules covered
+        completed: true,
+        moduleDetail: updatedModuleDetail, // Include all modules
+      };
+
+      await storeUserCourseStats(userId, courseId, currentModule, performanceData);
       setIsCourseCompleted(true);
       Swal.fire({
         title: "Course Completed!",
         text: "Congratulations on completing the course!",
         icon: "success",
         confirmButtonText: "OK",
+      }).then(() => {
+        navigate("/dashboard"); // Optional: Redirect to dashboard after completion
       });
       return;
     }
@@ -686,15 +669,16 @@ function LearningPage() {
     setIsQuestionAnswered(false);
     setAttempts(0);
 
-    try {
-      await update(moduleRef, {
-        ModuleCovered: nextModule,
-        CurrentModule: nextModule,
-      });
-      await storeAdminStats(userId, courseId, currentModule);
-    } catch (error) {
-      console.error("Error updating user progress:", error);
-    }
+    const performanceData = {
+      totalWarning: warningCount,
+      understandingScore: 0,
+      memoryScore: 0,
+      analysisScore: 0,
+      totalQuestions: 0,
+      correctAnswers: 0,
+      ModuleCovered: currentModule, // Update ModuleCovered for current progress
+    };
+    await storeUserCourseStats(userId, courseId, nextModule, performanceData);
   };
 
   const showTestRulesAndGenerateQuestions = async () => {
@@ -797,8 +781,7 @@ function LearningPage() {
               <div className="empty-content">
                 <h2>Thank you for applying!</h2>
                 <p>
-                  You have already enrolled in this course. You will receive further instructions in
-                  your registered email.
+                  You have already enrolled in this course. You will receive further instructions in your registered email.
                 </p>
               </div>
             ) : (
@@ -810,8 +793,7 @@ function LearningPage() {
                       <div className="course-section">
                         <h2>Introduction</h2>
                         <p>
-                          {courseDetails.courseContent &&
-                            JSON.parse(courseDetails.courseContent).Introduction}
+                          {courseDetails.courseContent && JSON.parse(courseDetails.courseContent).Introduction}
                         </p>
                         <button className="apply-button" onClick={handleApplyClick}>
                           Apply for Course
@@ -845,9 +827,7 @@ function LearningPage() {
                 <h2>Concept</h2>
                 <p>{JSON.parse(courseDetails.courseContent)[`module${currentModule}concept`]}</p>
                 <h2>Example and Analogy</h2>
-                <p>
-                  {JSON.parse(courseDetails.courseContent)[`module${currentModule}ExampleandAnalogy`]}
-                </p>
+                <p>{JSON.parse(courseDetails.courseContent)[`module${currentModule}ExampleandAnalogy`]}</p>
                 {showQuestions && (
                   <div className="question-course-info">
                     <p>Time: {formatTime(timer)}</p>
@@ -892,8 +872,7 @@ function LearningPage() {
                     onClick={handleNext}
                     style={{
                       display:
-                        isQuestionGenerated ||
-                        (currentModule === moduleLength && isCourseCompleted)
+                        isQuestionGenerated || (currentModule === moduleLength && isCourseCompleted)
                           ? "none"
                           : "inline-block",
                     }}
