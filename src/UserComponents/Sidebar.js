@@ -24,6 +24,66 @@ function Sidebar({ isQuestionAnswered, isQuestionGenerated }) {
 
   const userId = getCookie("userSessionCred");
 
+  // Function to handle logout
+  const handleLogout = () => {
+    // Clear the userSessionCred cookie by setting it to expire in the past
+    document.cookie = "userSessionCred=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/";
+    // Optionally, show a success message
+    Swal.fire({
+      title: "Logged Out",
+      text: "You have been successfully logged out.",
+      icon: "success",
+      confirmButtonColor: "#1E3A8A",
+      timer: 1500, // Auto-close after 1.5 seconds
+      showConfirmButton: false,
+    }).then(() => {
+      navigate("/"); // Redirect to root after logout
+    });
+  };
+
+  useEffect(() => {
+    if (!userId) {
+      navigate("/");
+      return;
+    }
+
+    const fetchUserData = async () => {
+      try {
+        const db = getDatabase();
+        const userRef = ref(db, `/user/${userId}`);
+        const snapshot = await get(userRef);
+        if (snapshot.exists()) {
+          const userData = snapshot.val();
+          setUserName(userData.Name || "");
+          setSurName(userData.Surname || "");
+          setBranch(userData.Branch || "");
+          if (userData.PrefferedAudio) {
+            setSelectedVoiceModel(userData.PrefferedAudio);
+          }
+          document.body.className = "light";
+        }
+      } catch (error) {
+        console.error("Error fetching user data:", error);
+      }
+    };
+
+    fetchUserData();
+
+    const handleClickOutside = (event) => {
+      if (settingsRef.current && !settingsRef.current.contains(event.target)) {
+        stopAudio();
+        setIsSettingsOpen(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+
+    return () => {
+      stopAudio();
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [userId, navigate]);
+
   const handleSidebarLinkClick = (event) => {
     if (!isQuestionAnswered && isQuestionGenerated) {
       event.preventDefault();
@@ -67,7 +127,6 @@ function Sidebar({ isQuestionAnswered, isQuestionGenerated }) {
         break;
       case "google-hindi":
         selectedVoice = voices.find((v) => v.lang === "hi-IN") || voices.find((v) => v.lang.includes("hi")) || voices[0];
-        // utterance.text = "नमस्ते, यह ऑडियो उदाहरण है ताकि आप अपने कोर्स रीडिंग में पसंदीदा ऑडियो चुन सकें।";
         break;
       default:
         selectedVoice = voices[0];
@@ -261,53 +320,15 @@ function Sidebar({ isQuestionAnswered, isQuestionGenerated }) {
     });
   };
 
-  useEffect(() => {
-    const fetchUserData = async () => {
-      if (!userId) return;
-      try {
-        const db = getDatabase();
-        const userRef = ref(db, `/user/${userId}`);
-        const snapshot = await get(userRef);
-        if (snapshot.exists()) {
-          const userData = snapshot.val();
-          setUserName(userData.Name || "");
-          setSurName(userData.Surname || "");
-          setBranch(userData.Branch || "");
-          if (userData.PrefferedAudio) {
-            setSelectedVoiceModel(userData.PrefferedAudio);
-          }
-          document.body.className = "light";
-        }
-      } catch (error) {
-        console.error("Error fetching user data:", error);
-      }
-    };
-
-    fetchUserData();
-
-    const handleClickOutside = (event) => {
-      if (settingsRef.current && !settingsRef.current.contains(event.target)) {
-        stopAudio(); // Stop audio when clicking outside
-        setIsSettingsOpen(false);
-      }
-    };
-
-    // Cleanup: stop audio when component unmounts
-    return () => {
-      stopAudio();
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
-  }, [userId]);
-
   const [activeTab, setActiveTab] = useState("profile");
 
   const handleTabChange = (tab) => {
-    stopAudio(); // Stop audio when switching tabs
+    stopAudio();
     setActiveTab(tab);
   };
 
   const handleCloseSettings = () => {
-    stopAudio(); // Stop audio when closing settings
+    stopAudio();
     setIsSettingsOpen(false);
   };
 
@@ -340,7 +361,7 @@ function Sidebar({ isQuestionAnswered, isQuestionGenerated }) {
           <span>Settings</span>
         </div>
       </nav>
-      <div className="logout-btn" onClick={() => navigate("/")}>
+      <div className="logout-btn" onClick={handleLogout}>
         <p>Logout</p>
       </div>
 
