@@ -33,6 +33,7 @@ function LearningPage() {
   const [userBranch, setUserBranch] = useState("");
   const [warningCount, setWarningCount] = useState(0);
   const [criticalWarningCount, setCriticalWarningCount] = useState(0);
+  const [preferredVoice, setPreferredVoice] = useState("microsoft-david"); // New state for preferred voice
 
   const db = getDatabase();
   const courseRef = ref(db, `Courses/${courseId}`);
@@ -411,6 +412,10 @@ function LearningPage() {
           const userData = snapshot.val();
           setUserName(`${userData.Name || "Unknown"} ${userData.Surname || ""}`.trim());
           setUserBranch(userData.Branch || "Unknown");
+          // Fetch preferred audio setting
+          if (userData.PrefferedAudio) {
+            setPreferredVoice(userData.PrefferedAudio);
+          }
         }
       });
 
@@ -818,7 +823,48 @@ function LearningPage() {
     `;
 
     const newSpeech = new SpeechSynthesisUtterance(content);
-    newSpeech.lang = "en-US";
+    
+    // Set the voice based on user's preferred voice
+    const voices = window.speechSynthesis.getVoices();
+    let selectedVoice;
+
+    switch (preferredVoice) {
+      case "microsoft-david":
+        selectedVoice = voices.find((v) => v.name.includes("David") && v.lang === "en-US") || voices.find((v) => v.lang === "en-US") || voices[0];
+        break;
+      case "microsoft-hazel":
+        selectedVoice = voices.find((v) => v.name.includes("Hazel") && v.lang === "en-GB") || voices.find((v) => v.lang === "en-GB") || voices[0];
+        break;
+      case "microsoft-susan":
+        selectedVoice = voices.find((v) => v.name.includes("Susan") && v.lang === "en-GB") || voices.find((v) => v.lang === "en-GB") || voices[0];
+        break;
+      case "microsoft-heera":
+        selectedVoice = voices.find((v) => v.name.includes("Heera") && v.lang === "en-IN") || voices.find((v) => v.lang === "en-IN") || voices[0];
+        break;
+      case "microsoft-ravi":
+        selectedVoice = voices.find((v) => v.name.includes("Ravi") && v.lang === "en-IN") || voices.find((v) => v.lang === "en-IN") || voices[0];
+        break;
+      case "google-hindi":
+        selectedVoice = voices.find((v) => v.lang === "hi-IN") || voices.find((v) => v.lang.includes("hi")) || voices[0];
+        newSpeech.text = `शीर्षक: ${JSON.parse(courseDetails.courseContent)[`moduletitle${currentModule}`]}
+        अवधारणा: ${JSON.parse(courseDetails.courseContent)[`module${currentModule}concept`]}
+        उदाहरण और उपमा: ${JSON.parse(courseDetails.courseContent)[`module${currentModule}ExampleandAnalogy`]}`;
+        break;
+      default:
+        selectedVoice = voices[0];
+    }
+
+    if (selectedVoice) {
+      newSpeech.voice = selectedVoice;
+    } else {
+      console.warn("No suitable voice found for:", preferredVoice);
+      Swal.fire({
+        title: "Warning",
+        text: "No suitable voice found. Using default voice.",
+        icon: "warning",
+      });
+    }
+
     newSpeech.rate = speed;
     newSpeech.pitch = 1;
 
@@ -837,6 +883,22 @@ function LearningPage() {
       speech.rate = parseFloat(e.target.value);
     }
   };
+
+  // Ensure voices are loaded before attempting to use them
+  useEffect(() => {
+    const populateVoices = () => {
+      const voices = window.speechSynthesis.getVoices();
+      if (voices.length > 0) {
+        console.log("Available voices:", voices);
+      }
+    };
+
+    if (window.speechSynthesis.getVoices().length === 0) {
+      window.speechSynthesis.onvoiceschanged = populateVoices;
+    } else {
+      populateVoices();
+    }
+  }, []);
 
   return (
     <div className="learning-page-container">
