@@ -83,4 +83,222 @@
   .logout-btn {
     background-color: #ef0000;
   }
-  
+  /* Settings Popup Overlay and Glassmorphism Effect */
+.settings-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5); /* Dimmed background */
+  backdrop-filter: blur(10px); /* Blur effect */
+  -webkit-backdrop-filter: blur(10px); /* Safari support */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+  animation: fadeIn 0.3s ease-in-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+/* Settings Popup Container */
+.settings-popup {
+  background: rgba(255, 255, 255, 0.9); /* Slight transparency for glass effect */
+  border-radius: 16px;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.2);
+  width: 700px;
+  max-height: 80vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  backdrop-filter: blur(10px); /* Glassmorphism blur */
+  -webkit-backdrop-filter: blur(10px); /* Safari support */
+}
+
+/* Settings Header */
+.settings-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px 25px;
+  background: rgba(30, 58, 138, 0.1); /* Subtle header background */
+  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.logo-placeholder {
+  font-size: 1.2em;
+  color: #1E3A8A;
+  font-weight: 600;
+  margin-right: 15px;
+}
+
+.settings-header h2 {
+  font-size: 20px;
+  color: #1E3A8A;
+  font-weight: 700;
+  margin: 0;
+  flex-grow: 1;
+  text-align: center;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.close-btn {
+  background: none;
+  border: none;
+  font-size: 20px;
+  color: #6B7280;
+  cursor: pointer;
+  transition: color 0.3s ease, transform 0.3s ease;
+}
+
+.close-btn:hover {
+  color: #DC2626;
+  transform: rotate(90deg);
+}
+
+/* Settings Container */
+.settings-container {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+}
+
+/* Settings Sidebar */
+.settings-sidebar {
+  width: 220px;
+  background: rgba(30, 58, 138, 0.05); /* Subtle sidebar background */
+  padding: 15px 0;
+  border-right: 1px solid rgba(255, 255, 255, 0.2);
+  overflow-y: auto;
+}
+
+.settings-section {
+  display: flex;
+  align-items: center;
+  padding: 14px 20px;
+  color: #1F2937;
+  font-size: 15px;
+  cursor: pointer;
+  transition: background-color 0.3s ease, color 0.3s ease;
+  font-weight: 500;
+}
+
+.settings-section.active {
+  background: rgba(30, 58, 138, 0.2);
+  color: #1E3A8A;
+}
+
+.section-icon {
+  margin-right: 10px;
+  font-size: 18px;
+  color: #1E3A8A;
+}
+
+/* Settings Content */
+.settings-content {
+  flex: 1;
+  padding: 25px;
+  overflow-y: auto;
+  background: rgba(255, 255, 255, 0.95);
+}
+
+.settings-tab {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.settings-tab h3 {
+  font-size: 18px;
+  color: #1E3A8A;
+  margin-bottom: 20px;
+  font-weight: 700;
+  border-bottom: 1px solid rgba(30, 58, 138, 0.1);
+  padding-bottom: 10px;
+}
+
+/* Input and Select Styles */
+.input-group,
+.voice-select {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.dark-input {
+  width: 100%;
+  padding: 12px;
+  background: #1F2937;
+  border: 1px solid #4B5563;
+  color: #D1D5DB;
+  border-radius: 8px;
+  font-size: 15px;
+  transition: border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+.dark-input:focus {
+  border-color: #1E3A8A;
+  box-shadow: 0 0 8px rgba(30, 58, 138, 0.3);
+  outline: none;
+}
+
+.dark-input select {
+  appearance: none;
+  background: #1F2937 url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='%23D1D5DB' viewBox='0 0 16 16'%3E%3Cpath d='M7.247 11.14 2.451 5.658C1.885 5.013 2.345 4 3.204 4h9.592a1 1 0 0 1 .753 1.659l-4.796 5.48a1 1 0 0 1-1.506 0z'/%3E%3C/svg%3E") no-repeat right 10px center;
+  padding: 12px;
+  cursor: pointer;
+}
+
+.dark-input select:focus {
+  border-color: #1E3A8A;
+  box-shadow: 0 0 8px rgba(30, 58, 138, 0.3);
+  outline: none;
+}
+
+/* Buttons */
+.swal2-settings-btn {
+  background-color: #1E3A8A;
+  color: #FFFFFF;
+  border: none;
+  padding: 12px 20px;
+  border-radius: 8px;
+  font-size: 15px;
+  cursor: pointer;
+  transition: background-color 0.3s ease, transform 0.3s ease;
+  font-weight: 500;
+  width: fit-content;
+}
+
+.swal2-settings-btn:hover {
+  background-color: #172554;
+  transform: translateY(-2px);
+}
+
+.swal2-danger-btn {
+  background-color: #DC2626;
+}
+
+.swal2-danger-btn:hover {
+  background-color: #991B1B;
+}
+
+.forgot-password {
+  margin-top: 15px;
+  font-size: 14px;
+}
+
+.forgot-password a {
+  color: #1E3A8A;
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.forgot-password a:hover {
+  text-decoration: underline;
+}
