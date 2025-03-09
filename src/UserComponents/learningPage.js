@@ -33,7 +33,7 @@ function LearningPage() {
   const [userBranch, setUserBranch] = useState("");
   const [warningCount, setWarningCount] = useState(0);
   const [criticalWarningCount, setCriticalWarningCount] = useState(0);
-  const [preferredVoice, setPreferredVoice] = useState("microsoft-david"); // New state for preferred voice
+  const [preferredVoice, setPreferredVoice] = useState("microsoft-david");
 
   const db = getDatabase();
   const courseRef = ref(db, `Courses/${courseId}`);
@@ -126,11 +126,11 @@ function LearningPage() {
       const accuracy = newTotalQuestions > 0 ? (newCorrectAnswers / newTotalQuestions) * 100 : 0;
 
       const statsData = {
-        CurrentModule: performance.CurrentModule !== undefined ? performance.CurrentModule : currentModule, // Use provided CurrentModule or current state
+        CurrentModule: performance.CurrentModule !== undefined ? performance.CurrentModule : currentModule,
         ModuleCovered: performance.ModuleCovered !== undefined ? performance.ModuleCovered : currentData.ModuleCovered || 0,
         TotalModules: moduleLength,
-        Warning: warningCount,
-        CriticalWarning: criticalWarningCount,
+        Warning: performance.totalWarning !== undefined ? performance.totalWarning : warningCount,
+        CriticalWarning: performance.criticalWarning !== undefined ? performance.criticalWarning : criticalWarningCount,
         completed: performance.completed !== undefined ? performance.completed : currentData.completed || false,
         moduleDetail: performance.moduleDetail || {
           ...currentData.moduleDetail,
@@ -295,6 +295,7 @@ function LearningPage() {
           setCriticalWarningCount((prev) => prev + 1);
           const performanceData = {
             totalWarning: warningCount + 1,
+            criticalWarning: criticalWarningCount + 1, // Explicitly include criticalWarning
             understandingScore: 0,
             memoryScore: 0,
             analysisScore: 0,
@@ -348,6 +349,7 @@ function LearningPage() {
           setWarningCount((prev) => prev + 1);
           const performanceData = {
             totalWarning: warningCount + 1,
+            criticalWarning: criticalWarningCount, // Include current criticalWarningCount
             understandingScore: 0,
             memoryScore: 0,
             analysisScore: 0,
@@ -374,7 +376,7 @@ function LearningPage() {
       window.removeEventListener("mouseout", handleMouseLeave);
       window.removeEventListener("beforeunload", handleBeforeUnload);
     };
-  }, [courseId, isQuestionAnswered, isQuestionGenerated, currentModule, warningCount]);
+  }, [courseId, isQuestionAnswered, isQuestionGenerated, currentModule, warningCount, criticalWarningCount]);
 
   useEffect(() => {
     const userId = getUserIdFromCookie();
@@ -389,13 +391,12 @@ function LearningPage() {
           setIsAlreadyApplied(true);
           setContentVisible(false);
           const savedModule = userData.CurrentModule || 1;
-          setCurrentModule(savedModule); // Set to the saved CurrentModule
+          setCurrentModule(savedModule);
           setModuleLength(userData.TotalModules || 3);
           setIsCourseCompleted(userData.completed || false);
           setWarningCount(userData.Warning || 0);
           setCriticalWarningCount(userData.CriticalWarning || 0);
 
-          // Check if the current module is completed
           if (userData.moduleDetail && userData.moduleDetail[`module${savedModule}`]) {
             setAttempts(userData.moduleDetail[`module${savedModule}`].totalAttempts || 0);
             setIsModuleCompleted(userData.moduleDetail[`module${savedModule}`].score >= 60);
@@ -412,7 +413,6 @@ function LearningPage() {
           const userData = snapshot.val();
           setUserName(`${userData.Name || "Unknown"} ${userData.Surname || ""}`.trim());
           setUserBranch(userData.Branch || "Unknown");
-          // Fetch preferred audio setting
           if (userData.PrefferedAudio) {
             setPreferredVoice(userData.PrefferedAudio);
           }
@@ -465,7 +465,7 @@ function LearningPage() {
       alert("You have successfully applied for this course!");
       setIsAlreadyApplied(true);
       setContentVisible(false);
-      setCurrentModule(1); // Explicitly set to 1 for new course
+      setCurrentModule(1);
     } catch (error) {
       console.error("Error applying for the course: ", error);
       alert("An error occurred while applying for the course. Please try again.");
@@ -488,12 +488,13 @@ function LearningPage() {
     if (userId) {
       const performanceData = {
         totalWarning: warningCount,
+        criticalWarning: criticalWarningCount,
         understandingScore: 0,
         memoryScore: 0,
         analysisScore: 0,
         totalQuestions: 0,
         correctAnswers: 0,
-        CurrentModule: prevModule, // Update CurrentModule
+        CurrentModule: prevModule,
       };
       await storeUserCourseStats(userId, courseId, prevModule, performanceData);
       get(ref(db, `user/${userId}/InProgressCourses/${courseId}/moduleDetail/module${prevModule}`)).then((snapshot) => {
@@ -510,6 +511,8 @@ function LearningPage() {
   const generateQuestions = async (moduleNumber) => {
     setIsGenerating(true);
     try {
+      const parsedContent = JSON.parse(courseDetails.courseContent);
+      const module = parsedContent.modules[moduleNumber - 1];
       const result = await model.generateContent(`
         Generate ${questionCount} questions based on the below content, categorized by Bloom's Taxonomy levels:
         - 1 question at "Remember" level (recall facts),
@@ -531,9 +534,11 @@ function LearningPage() {
           ]
         }
         Content:
-          Title: ${JSON.parse(courseDetails.courseContent)[`moduletitle${moduleNumber}`]}
-          Concept: ${JSON.parse(courseDetails.courseContent)[`module${moduleNumber}concept`]}
-          Example and Analogy: ${JSON.parse(courseDetails.courseContent)[`module${moduleNumber}ExampleandAnalogy`]}
+          Title: ${module.moduleTitle}
+          Overview: ${module.moduleOverview}
+          Detailed Explanation: ${module.detailedExplanation}
+          Examples and Analogies: ${module.examplesAndAnalogies}
+          Key Takeaways: ${module.keyTakeaways.join(", ")}
       `);
       const response = await result.response;
       const text = response.text().replace("```json", "").replace("```", "").trim();
@@ -621,6 +626,7 @@ function LearningPage() {
         timeTaken: timer,
         totalAttempts: attempts + 1,
         totalWarning: warningCount,
+        criticalWarning: criticalWarningCount,
         score: score,
         understandingScore: performance.understandingScore,
         memoryScore: performance.memoryScore,
@@ -628,7 +634,7 @@ function LearningPage() {
         totalQuestions: totalQuestions,
         correctAnswers: performance.correctAnswers,
         ModuleCovered: currentModule >= moduleLength ? moduleLength : currentModule,
-        CurrentModule: currentModule, // Ensure CurrentModule is preserved
+        CurrentModule: currentModule,
       };
       await storeUserCourseStats(userId, courseId, currentModule, performanceData);
     }
@@ -712,13 +718,14 @@ function LearningPage() {
 
       const performanceData = {
         totalWarning: warningCount,
+        criticalWarning: criticalWarningCount,
         understandingScore: 0,
         memoryScore: 0,
         analysisScore: 0,
         totalQuestions: 0,
         correctAnswers: 0,
         ModuleCovered: moduleLength,
-        CurrentModule: moduleLength, // Keep CurrentModule at the last module
+        CurrentModule: moduleLength,
         completed: true,
         moduleDetail: updatedModuleDetail,
       };
@@ -746,13 +753,14 @@ function LearningPage() {
 
     const performanceData = {
       totalWarning: warningCount,
+      criticalWarning: criticalWarningCount,
       understandingScore: 0,
       memoryScore: 0,
       analysisScore: 0,
       totalQuestions: 0,
       correctAnswers: 0,
       ModuleCovered: currentModule,
-      CurrentModule: nextModule, // Update CurrentModule to the next module
+      CurrentModule: nextModule,
     };
     await storeUserCourseStats(userId, courseId, nextModule, performanceData);
   };
@@ -816,15 +824,17 @@ function LearningPage() {
       return;
     }
 
+    const parsedContent = JSON.parse(courseDetails.courseContent);
+    const module = parsedContent.modules[currentModule - 1];
     const content = `
-      Title: ${JSON.parse(courseDetails.courseContent)[`moduletitle${currentModule}`]}
-      Concept: ${JSON.parse(courseDetails.courseContent)[`module${currentModule}concept`]}
-      Example and Analogy: ${JSON.parse(courseDetails.courseContent)[`module${currentModule}ExampleandAnalogy`]}
+      Module Title: ${module.moduleTitle}
+      Overview: ${module.moduleOverview}
+      Detailed Explanation: ${module.detailedExplanation}
+      Examples and Analogies: ${module.examplesAndAnalogies}
+      Key Takeaways: ${module.keyTakeaways.join(", ")}
     `;
 
     const newSpeech = new SpeechSynthesisUtterance(content);
-    
-    // Set the voice based on user's preferred voice
     const voices = window.speechSynthesis.getVoices();
     let selectedVoice;
 
@@ -846,9 +856,11 @@ function LearningPage() {
         break;
       case "google-hindi":
         selectedVoice = voices.find((v) => v.lang === "hi-IN") || voices.find((v) => v.lang.includes("hi")) || voices[0];
-        newSpeech.text = `शीर्षक: ${JSON.parse(courseDetails.courseContent)[`moduletitle${currentModule}`]}
-        अवधारणा: ${JSON.parse(courseDetails.courseContent)[`module${currentModule}concept`]}
-        उदाहरण और उपमा: ${JSON.parse(courseDetails.courseContent)[`module${currentModule}ExampleandAnalogy`]}`;
+        newSpeech.text = `मॉड्यूल शीर्षक: ${module.moduleTitle}
+        अवलोकन: ${module.moduleOverview}
+        विस्तृत व्याख्या: ${module.detailedExplanation}
+        उदाहरण और उपमाएँ: ${module.examplesAndAnalogies}
+        मुख्य निष्कर्ष: ${module.keyTakeaways.join(", ")}`;
         break;
       default:
         selectedVoice = voices[0];
@@ -884,7 +896,6 @@ function LearningPage() {
     }
   };
 
-  // Ensure voices are loaded before attempting to use them
   useEffect(() => {
     const populateVoices = () => {
       const voices = window.speechSynthesis.getVoices();
@@ -920,10 +931,40 @@ function LearningPage() {
                     <h1 className="learning-title">{courseDetails.courseName}</h1>
                     <div className="course-info">
                       <div className="course-section">
-                        <h2>Introduction</h2>
-                        <p>
-                          {courseDetails.courseContent && JSON.parse(courseDetails.courseContent).Introduction}
-                        </p>
+                        {courseDetails.courseContent && (() => {
+                          const parsedContent = JSON.parse(courseDetails.courseContent);
+                          return (
+                            <>
+                              <h2>Course Title</h2>
+                              <p>{parsedContent.title}</p>
+
+                              <h2>Introduction</h2>
+                              <p style={{ whiteSpace: "pre-wrap" }}>{parsedContent.introduction}</p>
+
+                              <h2>Number of Modules</h2>
+                              <p>{parsedContent.noOfModules}</p>
+
+                              <h2>Modules</h2>
+                              {parsedContent.modules.map((module, index) => (
+                                <div key={index} className="module-section">
+                                  <h3>Module {index + 1}: {module.moduleTitle}</h3>
+                                  <h4>Overview</h4>
+                                  <p>{module.moduleOverview}</p>
+                                  <h4>Detailed Explanation</h4>
+                                  <p>{module.detailedExplanation}</p>
+                                  <h4>Examples and Analogies</h4>
+                                  <p>{module.examplesAndAnalogies}</p>
+                                  <h4>Key Takeaways</h4>
+                                  <ul>
+                                    {module.keyTakeaways.map((takeaway, idx) => (
+                                      <li key={idx}>{takeaway}</li>
+                                    ))}
+                                  </ul>
+                                </div>
+                              ))}
+                            </>
+                          );
+                        })()}
                         <button className="apply-button" onClick={handleApplyClick}>
                           Apply for Course
                         </button>
@@ -952,11 +993,28 @@ function LearningPage() {
                 </button>
 
                 <h2>Module {currentModule}</h2>
-                <h2>{JSON.parse(courseDetails.courseContent)[`moduletitle${currentModule}`]}</h2>
-                <h2>Concept</h2>
-                <p>{JSON.parse(courseDetails.courseContent)[`module${currentModule}concept`]}</p>
-                <h2>Example and Analogy</h2>
-                <p>{JSON.parse(courseDetails.courseContent)[`module${currentModule}ExampleandAnalogy`]}</p>
+                {courseDetails.courseContent && (() => {
+                  const parsedContent = JSON.parse(courseDetails.courseContent);
+                  const module = parsedContent.modules[currentModule - 1];
+                  return (
+                    <>
+                      <h3>{module.moduleTitle}</h3>
+                      <h4>Overview</h4>
+                      <p>{module.moduleOverview}</p>
+                      <h4>Detailed Explanation</h4>
+                      <p>{module.detailedExplanation}</p>
+                      <h4>Examples and Analogies</h4>
+                      <p>{module.examplesAndAnalogies}</p>
+                      <h4>Key Takeaways</h4>
+                      <ul>
+                        {module.keyTakeaways.map((takeaway, idx) => (
+                          <li key={idx}>{takeaway}</li>
+                        ))}
+                      </ul>
+                    </>
+                  );
+                })()}
+
                 {showQuestions && (
                   <div className="question-course-info">
                     <p>Time: {formatTime(timer)}</p>

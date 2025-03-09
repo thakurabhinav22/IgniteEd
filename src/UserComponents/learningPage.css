@@ -1,230 +1,254 @@
 /* Reset and Base Styles */
 * {
-  font-family: Arial, Helvetica, sans-serif;
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: 'Arial', Helvetica, sans-serif;
 }
 
+body {
+  background-color: #F9FAFB; /* Light gray background for the entire page */
+  color: #1F2937; /* Dark gray text for readability */
+  line-height: 1.6;
+}
+
+/* Main Container */
 .learning-page-container {
+  display: flex;
+  min-height: 100vh;
+  background-color: #F9FAFB;
   overflow: hidden;
-  background-color: #F9FAFB; /* Very light gray background */
-  font-family: "Arial", sans-serif;
-  color: #1F2937; /* Dark gray text for contrast */
 }
 
+/* Learning Content */
 .learning-content {
-  padding: 25px;
-  width: calc(100% - 250px);
-  height: 100vh;
-  background-color: #FFFFFF; /* Pure white background */
-  margin-left: 290px;
+  flex: 1;
+  padding: 40px;
+  width: calc(100% - 290px);
+  margin-left: 290px; /* Matches sidebar width */
+  background-color: #FFFFFF;
   overflow-y: auto;
+  box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.05); /* Subtle inset shadow */
 }
 
+/* Title Styling */
 .learning-title {
-  color: #44c4ff; /* Vibrant light blue for title */
-  font-size: 2.2em;
-  font-weight: bold;
-  margin-bottom: 20px;
+  color: #44c4ff; /* Vibrant light blue */
+  font-size: 2.5em;
+  font-weight: 700;
+  margin-bottom: 30px;
   text-align: center;
+  letter-spacing: -0.02em;
 }
 
+/* Loading Container */
 .loading-container {
-  overflow: hidden;
   display: flex;
   align-items: center;
   justify-content: center;
-  height: 90%;
-  background-color: #F9FAFB; /* Light background */
+  height: 90vh;
+  background-color: #F9FAFB;
 }
 
 .loading-gif {
   width: 120px;
   height: 120px;
-  align-items: center;
-  justify-content: center;
-  display: flex;
 }
 
+/* Course Info Container */
 .course-info {
-  user-select: none;
-  -webkit-user-select: none;
   display: flex;
   flex-direction: column;
-  gap: 20px;
-  background-color: #F3F4F6; /* Light gray background */
+  gap: 25px;
+  background-color: #F3F4F6;
   border-radius: 17px;
-  padding: 20px;
-  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1); /* Subtle shadow */
+  padding: 25px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  user-select: none;
+  -webkit-user-select: none;
 }
 
+/* Course Section */
 .course-section {
-  background-color: #FFFFFF; /* White background */
-  border: 1px solid #D1D5DB; /* Light gray border */
+  background-color: #FFFFFF;
+  border: 1px solid #E5E7EB;
   border-radius: 12px;
-  padding: 20px;
+  padding: 25px;
 }
 
+/* Headings */
 .course-section h2 {
-  color: #44c4ff; /* Vibrant light blue for section headings */
-  margin-bottom: 10px;
-  font-size: 1.5em;
+  color: #44c4ff;
+  font-size: 1.75em;
+  font-weight: 600;
+  margin-bottom: 15px;
+  border-bottom: 2px solid #E5E7EB; /* Subtle underline */
+  padding-bottom: 5px;
 }
 
+.course-section h3 {
+  color: #1F2937;
+  font-size: 1.4em;
+  font-weight: 500;
+  margin: 20px 0 10px;
+}
+
+.course-section h4 {
+  color: #6B7280; /* Gray for subheadings */
+  font-size: 1.2em;
+  font-weight: 500;
+  margin: 15px 0 8px;
+}
+
+/* Paragraphs and Lists */
 .course-section p {
-  color: #4B5563; /* Medium gray */
-  line-height: 1.6;
+  color: #4B5563;
+  font-size: 1.1em;
+  line-height: 1.8;
+  margin-bottom: 15px;
 }
 
-.apply-button {
+.course-section ul {
+  list-style-type: disc;
+  margin-left: 25px;
+  color: #4B5563;
+}
+
+.course-section li {
+  margin-bottom: 8px;
+  font-size: 1.1em;
+}
+
+/* Buttons */
+.apply-button,
+.previous-button,
+.next-button,
+.NextQuestion {
   display: inline-block;
-  border: 1px solid #44c4ff; /* Light blue border */
+  border: 2px solid #44c4ff;
   background-color: transparent;
   color: #44c4ff;
-  font-size: 1em;
-  font-weight: bold;
-  padding: 10px 20px;
+  font-size: 1.1em;
+  font-weight: 600;
+  padding: 12px 24px;
   border-radius: 8px;
   cursor: pointer;
-  margin-top: 15px;
-  transition: background-color 0.3s ease;
+  margin: 10px 10px 0 0;
+  transition: all 0.3s ease;
 }
 
-.apply-button:hover {
+.apply-button:hover,
+.previous-button:hover,
+.next-button:hover,
+.NextQuestion:hover {
   background-color: #44c4ff;
   color: #FFFFFF;
+  transform: translateY(-2px); /* Slight lift on hover */
 }
 
+.NextQuestion {
+  background-color: #44c4ff;
+  color: #FFFFFF;
+  border: 2px solid #2eaaff;
+}
+
+/* Empty Content */
 .empty-content {
   text-align: center;
+  padding: 50px;
   color: #1F2937;
-  margin-top: 100px;
 }
 
 .empty-content h2 {
-  font-size: 2em;
-  color: #44c4ff; /* Light blue for empty content heading */
+  font-size: 2.2em;
+  color: #44c4ff;
+  margin-bottom: 15px;
 }
 
 .empty-content p {
-  font-size: 1.2em;
+  font-size: 1.3em;
   color: #4B5563;
 }
 
-.previous-button,
-.next-button {
-  display: inline-block;
-  border: 1px solid #44c4ff;
-  background-color: transparent;
-  color: #44c4ff;
-  font-size: 1em;
-  font-weight: bold;
-  padding: 10px 20px;
-  border-radius: 8px;
-  cursor: pointer;
-  margin: 10px 10px 0 10px;
-  transition: background-color 0.3s ease;
-}
-
-.previous-button:hover,
-.next-button:hover {
-  background-color: #44c4ff;
-  color: #FFFFFF;
-}
-
-/* Style the question container */
+/* Question Container */
 .question-course-info {
   display: flex;
   flex-direction: column;
-  gap: 20px;
-  background-color: #F3F4F6; /* Light gray background */
+  gap: 25px;
+  background-color: #F3F4F6;
   border-radius: 17px;
-  padding: 20px;
-  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1); /* Subtle shadow */
+  padding: 25px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
 }
 
-/* Style the section for questions */
+/* Question Section */
 .question-course-section {
-  background-color: #FFFFFF; /* White background */
-  border: 1px solid #D1D5DB; /* Light gray border */
+  background-color: #FFFFFF;
+  border: 1px solid #E5E7EB;
   border-radius: 12px;
   padding: 20px;
 }
 
-/* Question Title */
 .question-course-section h2 {
-  color: #44c4ff; /* Light blue for question titles */
-  margin-bottom: 10px;
-  font-size: 1.5em;
+  color: #44c4ff;
+  font-size: 1.75em;
+  font-weight: 600;
+  margin-bottom: 15px;
 }
 
-/* Question Text */
 .question-course-section h3 {
-  color: #4B5563; /* Medium gray */
-  font-size: 1.2em;
+  color: #4B5563;
+  font-size: 1.3em;
+  font-weight: 500;
   margin-bottom: 20px;
 }
 
-/* Options container */
+/* Options */
 .options-container {
-  margin-top: 20px;
+  margin-top: 15px;
 }
 
-/* Label for each option */
 .question-course-section label {
-  display: block;
-  padding: 12px 20px;
+  display: flex;
+  align-items: center;
+  padding: 12px 15px;
   margin-bottom: 10px;
   font-size: 1.1em;
   color: #4B5563;
-  cursor: pointer;
+  background-color: #F9FAFB;
   border-radius: 8px;
-  transition: background-color 0.3s, color 0.3s;
+  cursor: pointer;
+  transition: all 0.3s ease;
 }
 
 .question-course-section label:hover {
-  background-color: #E5E7EB; /* Light gray hover */
+  background-color: #E5E7EB;
   color: #1F2937;
 }
 
-/* Style for the radio button */
 .question-course-section input[type="radio"] {
-  margin-right: 10px;
-  vertical-align: middle;
-  transition: transform 0.2s;
-}
-
-.question-course-section input[type="radio"]:focus {
-  transform: scale(1.2);
-}
-.NextQuestion{
-  background-color: #44c4ff;
-  border: 1px solide black;
-  color: black;
-}
-/* Selected option styles */
-.question-course-section input[type="radio"]:checked + .option-label {
-  background-color: #44c4ff; /* Light blue for selected option */
-  color: #FFFFFF;
-  border: 2px solid #2eaaff; /* Slightly darker blue border */
-}
-
-/* Style for unselected options */
-.question-course-section .option-label {
-  display: inline-block;
-  padding: 5px 10px;
-  background-color: #E5E7EB; /* Light gray */
-  border-radius: 8px;
-  margin-left: 5px;
+  margin-right: 12px;
+  accent-color: #44c4ff; /* Custom radio button color */
+  width: 18px;
+  height: 18px;
   cursor: pointer;
-  transition: background-color 0.3s, color 0.3s;
 }
 
-/* Style for active selected option */
 .question-course-section input[type="radio"]:checked + .option-label {
   background-color: #44c4ff;
   color: #FFFFFF;
+  font-weight: 500;
 }
 
-/* The main container for the button */
+/* Option Label */
+.option-label {
+  flex: 1;
+  padding: 5px 10px;
+  border-radius: 6px;
+  transition: all 0.3s ease;
+}
+
+/* Speaker Button */
 .speak_container {
   display: flex;
   align-items: center;
@@ -232,26 +256,34 @@
   width: 50px;
   height: 50px;
   border-radius: 50%;
-  background-color: #E5E7EB; /* Light gray background */
+  background-color: #E5E7EB;
+  border: none;
   cursor: pointer;
-  transition: background-color 0.3s ease, transform 0.3s ease;
+  margin-bottom: 20px;
+  transition: all 0.3s ease;
 }
 
 .speak_container:hover {
-  background-color: #D1D5DB; /* Slightly darker gray on hover */
-  transform: scale(1.1); /* Slight scale effect */
+  background-color: #D1D5DB;
+  transform: scale(1.05);
 }
 
-/* Styling for the speaker images */
 .speaker_icon {
-  width: 20px;
-  height: 20px;
-  filter: brightness(0) invert(0); /* Reset to default (black) for light theme */
-  transition: transform 0.3s ease, width 0.2s ease, height 0.2s ease;
+  width: 24px;
+  height: 24px;
+  transition: all 0.3s ease;
 }
 
 .speak_container:hover .speaker_icon {
-  width: 25px; /* Increase icon size on hover */
-  height: 25px;
-  transform: rotate(15deg); /* Add a subtle rotation for effect */
+  width: 28px;
+  height: 28px;
+}
+
+/* Module Section */
+.module-section {
+  margin-bottom: 20px;
+  padding: 20px;
+  background-color: #F9FAFB;
+  border: 1px solid #E5E7EB;
+  border-radius: 12px;
 }

@@ -208,10 +208,23 @@ export default function CreateCourse({ AdminName, Role }) {
 
       if (combinedContent.trim()) {
         const result = await model.generateContent(`
-         Read the provided PDF content and create a module-wise course in clear and concise language. The course should have a meaningful title ,Introduction to Course (Brief the Course what we will learn from the course it should be about 2 paragraph) and be divided into logical modules, each focusing on specific key concepts, methodologies, findings, and practical applications. For each module, provide a title, a paragrap that covers the entire module concept , a detailed paragraph explanation of the core ideas, and examples or analogies to enhance understanding. 
-         
-         Content: ${combinedContent}
-        `);
+          Read the provided PDF content carefully and create a well-structured, module-wise course with clarity and depth. The course should be professionally structured, engaging, and easy to understand. Ensure the following elements are included:
+      
+          1. **Course Title**: A meaningful and concise title that reflects the essence of the course.  
+          2. **Introduction to the Course**: Write a compelling introduction (approximately two paragraphs) that outlines what the course covers, its objectives, and the key skills or knowledge learners will gain. Make it engaging and informative.  
+          3. **Modules Breakdown**: Divide the course into well-defined modules, each covering a specific theme or concept. For each module, include:
+             - **Module Title**: A clear and precise title reflecting the topic.
+             - **Module Overview**: A concise paragraph summarizing what the module covers.
+             - **Detailed Explanation**: A comprehensive paragraph explaining the core concepts, methodologies, and key learnings.
+             - **Examples & Analogies**: Real-world examples, practical applications, or analogies to enhance understanding and retention.
+             - **Key Takeaways**: A bullet-point summary highlighting the most important aspects of the module.
+      
+          Ensure the language is engaging, professional, and suitable for learners of various levels. Use structured formatting for clarity and readability.
+      
+          **Content Source:**  
+          ${combinedContent}
+      `);
+      
 
         const response = await result.response;
         const generatedCourse = await response.text();

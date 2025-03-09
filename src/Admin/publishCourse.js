@@ -33,19 +33,50 @@ const PublishCourse = () => {
 
     try {
       const result = await model.generateContent(`
-        convert this data into json keep all the data same only convert the data in json.Give only json nothing else. follow this format for converting into json. Covert
-
-            noOfModules
-            Title
-            Introduction
-            moduletitle1:
-            module1concept:
-            module1ExampleandAnalogy:
-            moduletitle2
-            module2concept:
-            module2ExampleandAnalogy:
-
-        Content: ${updatedContent}`);
+        Convert the provided course content into a structured JSON format while keeping all data intact. Ensure that no modifications are made to the original content except for formatting it into JSON. Return only JSON, nothing else.
+    
+        Follow this JSON structure:
+    
+        {
+          "title": "<Course Title>",
+          "introduction": "<Course Introduction>",
+          "noOfModules": <number_of_modules>,
+          "modules": [
+            {
+              "moduleTitle": "<Module 1 Title>",
+              "moduleOverview": "<Module 1 Overview>",
+              "detailedExplanation": "<Module 1 Detailed Explanation>",
+              "examplesAndAnalogies": "<Module 1 Examples and Analogies>",
+              "keyTakeaways": [
+                "<Key Takeaway 1>",
+                "<Key Takeaway 2>",
+                "<Key Takeaway 3>"
+              ]
+            },
+            {
+              "moduleTitle": "<Module 2 Title>",
+              "moduleOverview": "<Module 2 Overview>",
+              "detailedExplanation": "<Module 2 Detailed Explanation>",
+              "examplesAndAnalogies": "<Module 2 Examples and Analogies>",
+              "keyTakeaways": [
+                "<Key Takeaway 1>",
+                "<Key Takeaway 2>",
+                "<Key Takeaway 3>"
+              ]
+            }
+            // Additional modules will follow the same structure
+          ]
+        }
+    
+        Ensure that:
+        - The JSON is well-formatted and follows the above schema precisely.
+        - The module count reflects the actual number of modules in the content.
+        - Key takeaways are listed as an array for better readability.
+    
+        **Course Content:**  
+        ${updatedContent}
+    `);
+    
 
       const response = await result.response;
       generatedCourse = await response.text();
