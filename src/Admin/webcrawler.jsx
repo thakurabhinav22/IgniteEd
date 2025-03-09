@@ -20,28 +20,26 @@ export default function WebCrawler() {
   const [selectedScrapedLinks, setSelectedScrapedLinks] = useState([]); // For Link Scraper
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState([]); // For YT Video Courses
+  const [selectedVideos, setSelectedVideos] = useState([]); // For selected videos
   const [isSaveModalOpen, setIsSaveModalOpen] = useState(false);
   const [repoName, setRepoName] = useState("");
   const [scrapedText, setScrapedText] = useState("");
   const [isViewModalOpen, setIsViewModalOpen] = useState(false);
-  const [isSearchPopupOpen, setIsSearchPopupOpen] = useState(false); // For search popup
-  const [cseLoading, setCseLoading] = useState(false); // New state for CSE loading
+  const [isSearchPopupOpen, setIsSearchPopupOpen] = useState(false);
+  const [cseLoading, setCseLoading] = useState(false);
 
   const server_end_point = "https://b978747b-0cfa-4ac8-aa74-e01288e8d3c1-00-2tmnjhgcuv5r3.pike.replit.dev/scrape";
   const download_endpoint = "https://b978747b-0cfa-4ac8-aa74-e01288e8d3c1-00-2tmnjhgcuv5r3.pike.replit.dev/download-pdfs-as-text";
-  const youtube_search_endpoint = "https://d7150945-fc09-42e1-800c-b55c84548d79-00-1r5xa442n98oj.sisko.replit.dev/search_videos"; // Added for new function
+  const youtube_search_endpoint = "https://d7150945-fc09-42e1-800c-b55c84548d79-00-1r5xa442n98oj.sisko.replit.dev/search_videos";
 
-  const cseRef = useRef(null); // Ref to the CSE container div
+  const cseRef = useRef(null);
 
   const checkServerStatus = async () => {
     try {
       const response = await fetch(server_end_point, { method: "HEAD", mode: "cors" });
       console.log("Server status check response:", response.status);
-      if (response.status === 405 || response.ok) {
-        setServerStatus("online");
-      } else {
-        setServerStatus("offline");
-      }
+      if (response.status === 405 || response.ok) setServerStatus("online");
+      else setServerStatus("offline");
     } catch (err) {
       console.error("Error checking server status:", err);
       setServerStatus("offline");
@@ -54,7 +52,6 @@ export default function WebCrawler() {
     return () => clearInterval(interval);
   }, []);
 
-  // Load Google CSE script
   useEffect(() => {
     const script = document.createElement("script");
     script.type = "text/javascript";
@@ -70,24 +67,17 @@ export default function WebCrawler() {
       setError("Failed to load Google Custom Search Engine.");
     };
     document.body.appendChild(script);
-
-    // Cleanup script on unmount
-    return () => {
-      document.body.removeChild(script);
-    };
+    return () => document.body.removeChild(script);
   }, []);
 
-  // Ensure CSE is rendered when popup opens
   useEffect(() => {
     if (isSearchPopupOpen && cseRef.current) {
       setCseLoading(true);
-      setTimeout(() => setCseLoading(false), 1000); // Fallback to stop loading after 1s
+      setTimeout(() => setCseLoading(false), 1000);
     }
   }, [isSearchPopupOpen]);
 
-  const handleLinksChange = (e) => {
-    setLinks(e.target.value);
-  };
+  const handleLinksChange = (e) => setLinks(e.target.value);
 
   const extractLinks = async () => {
     const regex = /https?:\/\/[^\s]+/g;
@@ -123,16 +113,18 @@ export default function WebCrawler() {
   };
 
   const serverStatusStyle = {
-    padding: "10px",
+    padding: "8px 16px",
     color: "#fff",
     textAlign: "center",
-    fontWeight: "bold",
-    borderRadius: "5px",
+    fontWeight: "600",
+    fontSize: "14px",
+    borderRadius: "20px",
     position: "fixed",
     top: "20px",
     right: "20px",
     zIndex: "1000",
-    backgroundColor: serverStatus === "online" ? "green" : "red",
+    backgroundColor: serverStatus === "online" ? "#34c759" : "#dc3545",
+    boxShadow: "0 2px 4px rgba(0, 0, 0, 0.1)",
   };
 
   const toggleContentVisibility = (url) => {
@@ -177,17 +169,13 @@ export default function WebCrawler() {
 
   const handleCheckboxChange = (link) => {
     setSelectedLinks((prev) =>
-      prev.includes(link)
-        ? prev.filter((item) => item !== link)
-        : [...prev, link]
+      prev.includes(link) ? prev.filter((item) => item !== link) : [...prev, link]
     );
   };
 
   const handleScrapedCheckboxChange = (url) => {
     setSelectedScrapedLinks((prev) =>
-      prev.includes(url)
-        ? prev.filter((item) => item !== url)
-        : [...prev, url]
+      prev.includes(url) ? prev.filter((item) => item !== url) : [...prev, url]
     );
   };
 
@@ -311,31 +299,29 @@ export default function WebCrawler() {
     }
   };
 
-  const handleSearchQuery = (e) => {
-    setSearchQuery(e.target.value);
-  };
+  const handleSearchQuery = (e) => setSearchQuery(e.target.value);
 
   const handleYTVideoSearch = async () => {
     if (!searchQuery.trim()) {
       alert("Please enter a search query.");
       return;
     }
-  
+
     try {
       setLoading(true);
       setError(null);
-      const apiKey = "AIzaSyAP4B0ZgKDayt0FHQmKKippqdlnoLoOsNA"; // Your API key
+      const apiKey = "AIzaSyAP4B0ZgKDayt0FHQmKKippqdlnoLoOsNA";
       const response = await fetch(
         `https://www.googleapis.com/youtube/v3/search?part=snippet&q=${encodeURIComponent(
           searchQuery
         )}&type=video&maxResults=5&key=${apiKey}`
       );
-  
+
       if (!response.ok) {
         const errorData = await response.json();
         throw new Error(errorData.error.message || "Failed to fetch YouTube video results");
       }
-  
+
       const data = await response.json();
       const formattedResults = (data.items || []).map(item => ({
         link: `https://www.youtube.com/watch?v=${item.id.videoId}`,
@@ -350,13 +336,13 @@ export default function WebCrawler() {
       console.error("Error fetching YouTube video results:", err);
     }
   };
-  // New function to fetch and show only YouTube video URLs
+
   const handleYTVideoUrlSearch = async () => {
     if (!searchQuery.trim()) {
       alert("Please enter a search query.");
       return;
     }
-  
+
     try {
       setLoading(true);
       setError(null);
@@ -369,9 +355,9 @@ export default function WebCrawler() {
           mode: "cors",
         }
       );
-  
+
       console.log("Response status:", response.status);
-  
+
       if (!response.ok) {
         const errorData = await response.json();
         console.log("Error data:", errorData);
@@ -380,7 +366,7 @@ export default function WebCrawler() {
         }
         throw new Error(errorData.error || "Failed to fetch YouTube video URLs");
       }
-  
+
       const data = await response.json();
       console.log("Received data:", data);
       const formattedResults = (data.results || []).map(url => ({
@@ -396,11 +382,38 @@ export default function WebCrawler() {
       console.error("Error fetching YouTube video URLs:", err);
     }
   };
+
+  const handleVideoCheckboxChange = (link) => {
+    setSelectedVideos((prev) =>
+      prev.includes(link) ? prev.filter((item) => item !== link) : [...prev, link]
+    );
+  };
+
+  const handleCreateCourse = () => {
+    Swal.fire({
+      title: "Comming Soon!!!",
+      text: "This is Feature is under development",
+      icon: "info",
+    })
+
+    // if (selectedVideos.length === 0) {
+    //   alert("No videos selected for course creation.");
+    //   return;
+    // }
+    // const courseContent = selectedVideos
+    //   .map((link) => {
+    //     const result = searchResults.find((r) => r.link === link);
+    //     return `--- Video: ${result.title} ---\nURL: ${link}\nDescription: ${result.snippet || "No description available"}`;
+    //   })
+    //   .join("\n\n");
+    // setScrapedText(courseContent);
+    // setIsSaveModalOpen(true);
+  };
+
   return (
     <div className="crawler-main">
       <AdminSidebar />
 
-      {/* Tab Menu */}
       <div className="crawler-tabs">
         <button
           className={activeTab === "link-scraper" ? "tab-active" : "tab-btn"}
@@ -422,196 +435,236 @@ export default function WebCrawler() {
         </button>
       </div>
 
-      {/* Tab Content */}
       <div className="crawler-content">
-        {/* Link Scraper Tab */}
+
         {activeTab === "link-scraper" && (
           <div className="tab-panel">
-            <h2>🔗 Link Scraper</h2>
-            <p>Enter the text with URLs to extract and scrape their content.</p>
-            <textarea
-              className="link-input"
-              placeholder="Enter text with links (e.g., https://example.com, https://example.com/file.pdf)..."
-              value={links}
-              onChange={handleLinksChange}
-            ></textarea>
-            <button className="extract-btn" onClick={extractLinks}>
-              Start Crawling
-            </button>
-
-            {loading && <p>Loading content...</p>}
-            {error && <p style={{ color: "red" }}>{error}</p>}
-
+            <div className="panel-header">
+              <h2 className="section-title">🔗 Link Scraper</h2>
+              <p className="section-subtitle">Extract and scrape content from provided URLs.</p>
+            </div>
+            <div className="search-container">
+              <textarea
+                className="search-input large"
+                placeholder="Enter text with links (e.g., https://example.com, https://example.com/file.pdf)..."
+                value={links}
+                onChange={handleLinksChange}
+              ></textarea>
+              <button className="action-btn link-scraper-btn" onClick={extractLinks}>
+                <FaSearch /> Start Crawling
+              </button>
+            </div>
+            {loading && (
+              <div className="loading-spinner">
+                <div className="spinner"></div>
+                <p>Loading content...</p>
+              </div>
+            )}
+            {error && <p className="error-message">{error}</p>}
             {processedLinks.length > 0 && (
-              <div className="extracted-links">
-                <h3>Extracted Links:</h3>
-                <ul>
+              <div className="results-section">
+                <h3 className="sub-heading">Extracted Links:</h3>
+                <ul className="link-list">
                   {processedLinks.map((link, index) => (
-                    <li key={index}>
+                    <li key={index} className="link-item">
                       <input
                         type="checkbox"
                         onChange={() => handleScrapedCheckboxChange(link)}
                         checked={selectedScrapedLinks.includes(link)}
+                        className="link-checkbox"
                       />
-                      <a href={link} target="_blank" rel="noopener noreferrer">
-                        {link}
-                      </a>
-                      {scrapedContent.some((item) => item.url === link && item.visible) ? (
-                        <button
-                          className="toggle-button"
-                          onClick={() => toggleContentVisibility(link)}
-                        >
-                          <FaAngleUp />
-                        </button>
-                      ) : (
-                        <button
-                          className="toggle-button"
-                          onClick={() => toggleContentVisibility(link)}
-                        >
-                          <FaAngleDown />
-                        </button>
-                      )}
-                      {scrapedContent
-                        .filter((item) => item.url === link && item.visible)
-                        .map((item, index) => (
-                          <div key={index} className="scraped-item">
-                            <h4>{item.url}</h4>
-                            <p>{item.content}</p>
-                          </div>
-                        ))}
+                      <div className="link-content">
+                        <a href={link} target="_blank" rel="noopener noreferrer" className="link-text">
+                          {link}
+                        </a>
+                        {scrapedContent.some((item) => item.url === link) && (
+                          <button
+                            className="toggle-button"
+                            onClick={() => toggleContentVisibility(link)}
+                          >
+                            {scrapedContent.some((item) => item.url === link && item.visible) ? (
+                              <FaAngleUp />
+                            ) : (
+                              <FaAngleDown />
+                            )}
+                          </button>
+                        )}
+                        {scrapedContent
+                          .filter((item) => item.url === link && item.visible)
+                          .map((item, idx) => (
+                            <div key={idx} className="scraped-content">
+                              <h4>{item.url}</h4>
+                              <p>{item.content}</p>
+                            </div>
+                          ))}
+                      </div>
                     </li>
                   ))}
                 </ul>
                 {scrapedContent.length > 0 && (
-                  <button className="save-btn" onClick={handleSaveLinkScraperContent}>
+                  <button className="action-btn secondary" onClick={handleSaveLinkScraperContent}>
                     <FaSave /> Save to Repository
                   </button>
                 )}
               </div>
             )}
+            {processedLinks.length === 0 && !loading && !error && links.trim() && (
+              <p className="no-results">No links found in the provided text.</p>
+            )}
           </div>
         )}
 
-        {/* Keyword Searcher Tab */}
         {activeTab === "keyword-searcher" && (
           <div className="tab-panel">
-            <h2>🔑 Keyword Searcher</h2>
-            <input
-              className="keyword-input"
-              type="text"
-              placeholder="Enter keyword to search"
-              value={keyword}
-              onChange={(e) => setKeyword(e.target.value)}
-            />
-            <button className="search-btn" onClick={handleKeywordSearch}>
-              Search
-            </button>
-
-            {loading && <p>Loading...</p>}
-            {error && <p style={{ color: "red" }}>{error}</p>}
-
-            <div className="search-results">
-              <h3>Results:</h3>
-              {keyScraped.length > 0 ? (
-                Object.entries(
-                  keyScraped.reduce((acc, link) => {
-                    try {
-                      const url = new URL(link);
-                      const domain = url.hostname;
-                      if (!acc[domain]) acc[domain] = [];
-                      acc[domain].push(link);
-                    } catch (error) {
-                      console.error("Invalid URL:", link);
-                    }
-                    return acc;
-                  }, {})
-                ).map(([domain, links]) => (
-                  <div key={domain} className="domain-group">
-                    <h4>{domain}</h4>
-                    {links.map((link, index) => (
-                      <div key={index} className="scraped-item">
-                        <input
-                          type="checkbox"
-                          onChange={() => handleCheckboxChange(link)}
-                          checked={selectedLinks.includes(link)}
-                        />
-                        <a href={link} target="_blank" rel="noopener noreferrer">
-                          {link}
-                        </a>
-                      </div>
-                    ))}
-                  </div>
-                ))
-              ) : (
-                <p>No results found for "{keyword}".</p>
-              )}
-
-              {selectedLinks.length > 0 && (
-                <div className="download_button_container">
-                  <button className="process-btn" onClick={handleProcessSelected}>
+            <div className="panel-header">
+              <h2 className="section-title">🔑 Keyword Searcher</h2>
+              <p className="section-subtitle">Search for content using keywords.</p>
+            </div>
+            <div className="search-container">
+              <input
+                className="search-input"
+                type="text"
+                placeholder="Enter keyword to search"
+                value={keyword}
+                onChange={(e) => setKeyword(e.target.value)}
+              />
+              <button className="action-btn" onClick={handleKeywordSearch}>
+                <FaSearch /> Search
+              </button>
+            </div>
+            {loading && (
+              <div className="loading-spinner">
+                <div className="spinner"></div>
+                <p>Loading...</p>
+              </div>
+            )}
+            {error && <p className="error-message">{error}</p>}
+            {keyScraped.length > 0 && (
+              <div className="results-section">
+                <h3 className="sub-heading">Results:</h3>
+                <ul className="link-list">
+                  {Object.entries(
+                    keyScraped.reduce((acc, link) => {
+                      try {
+                        const url = new URL(link);
+                        const domain = url.hostname;
+                        if (!acc[domain]) acc[domain] = [];
+                        acc[domain].push(link);
+                      } catch (error) {
+                        console.error("Invalid URL:", link);
+                      }
+                      return acc;
+                    }, {})
+                  ).map(([domain, links]) => (
+                    <div key={domain} className="domain-group">
+                      <h4 className="domain-title">{domain}</h4>
+                      {links.map((link, index) => (
+                        <li key={index} className="link-item">
+                          <input
+                            type="checkbox"
+                            onChange={() => handleCheckboxChange(link)}
+                            checked={selectedLinks.includes(link)}
+                            className="link-checkbox"
+                          />
+                          <a href={link} target="_blank" rel="noopener noreferrer" className="link-text">
+                            {link}
+                          </a>
+                        </li>
+                      ))}
+                    </div>
+                  ))}
+                </ul>
+                {selectedLinks.length > 0 && (
+                  <button className="action-btn secondary" onClick={handleProcessSelected}>
                     Process Selected
                   </button>
-                </div>
-              )}
-            </div>
+                )}
+              </div>
+            )}
+            {keyScraped.length === 0 && !loading && !error && keyword.trim() && (
+              <p className="no-results">No results found for "{keyword}".</p>
+            )}
           </div>
         )}
 
-        {/* YT Video Courses Tab */}
         {activeTab === "yt-video-courses" && (
-          <div className="tab-panel">
-            <h2>🎥 YT Video Courses</h2>
-            <p>Search for YouTube video courses related to your topic.</p>
-            <div className="search-input-container">
+          <div className="tab-panel yt-video-courses-panel">
+            <div className="panel-header">
+              <h2 className="section-title">🎥 YT Video Courses</h2>
+              <p className="section-subtitle">Discover and curate YouTube video courses for your learning journey.</p>
+            </div>
+            <div className="search-container">
               <input
-                type="text"
                 className="search-input"
+                type="text"
                 placeholder="Enter topic (e.g., 'React tutorials')..."
                 value={searchQuery}
                 onChange={handleSearchQuery}
               />
-              {/* <button className="search-btn" onClick={handleYTVideoSearch}>
-                <FaSearch /> Search
-              </button> */}
-              {/* Added new button for URL-only search */}
-              <button className="search-btn" onClick={handleYTVideoSearch}>
+              <button className="action-btn" onClick={handleYTVideoSearch}>
                 <FaSearch /> Search URLs
               </button>
             </div>
-            {loading && <p>Loading...</p>}
-            {error && <p style={{ color: "red" }}>{error}</p>}
+            {loading && (
+              <div className="loading-spinner">
+                <div className="spinner"></div>
+                <p>Loading videos...</p>
+              </div>
+            )}
+            {error && <p className="error-message">{error}</p>}
             {searchResults.length > 0 && (
-              <ul className="search-results-list">
-                {searchResults.map((result, index) => (
-                  <li key={index}>
-                    <a href={result.link} target="_blank" rel="noopener noreferrer">
-                      {result.title}
-                    </a>
-                    <p>{result.snippet}</p>
-                  </li>
-                ))}
-              </ul>
+              <div className="results-section">
+                <ul className="video-list">
+                  {searchResults.map((result, index) => (
+                    <li key={index} className="video-item">
+                      <input
+                        type="checkbox"
+                        checked={selectedVideos.includes(result.link)}
+                        onChange={() => handleVideoCheckboxChange(result.link)}
+                        className="video-checkbox"
+                      />
+                      <div className="video-content">
+                        <a
+                          href={result.link}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="video-title"
+                        >
+                          {result.title}
+                        </a>
+                        <p className="video-description">{result.snippet || "No description available"}</p>
+                        <iframe
+                          width="100%"
+                          height="315"
+                          src={result.link.replace("watch?v=", "embed/")}
+                          title={result.title}
+                          frameBorder="0"
+                          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                          allowFullScreen
+                          className="video-player"
+                        ></iframe>
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+                <button className="action-btn secondary" onClick={handleCreateCourse}>
+                  Create Course from Selected ({selectedVideos.length})
+                </button>
+              </div>
+            )}
+            {searchResults.length === 0 && !loading && !error && searchQuery.trim() && (
+              <p className="no-results">No results found for "{searchQuery}".</p>
             )}
           </div>
         )}
       </div>
 
-      {/* Floating Search Button (Global) */}
-      {/* <button
-        className="floating-search-btn"
-        onClick={() => setIsSearchPopupOpen(true)}
-      >
-        <FaSearch /> Search
-      </button> */}
-
-      {/* Server Status */}
       <div style={serverStatusStyle}>Server is {serverStatus.toUpperCase()}</div>
 
-      {/* Save to Repo Modal */}
       {isSaveModalOpen && (
         <div className="modal-overlay">
           <div className="modal">
-            <h3>Save to Repository</h3>
+            <h3 className="modal-title">Save to Repository</h3>
             <input
               type="text"
               value={repoName}
@@ -620,13 +673,13 @@ export default function WebCrawler() {
               className="modal-input"
             />
             <div className="modal-actions">
-              <button className="modal-btn view-btn" onClick={handleViewScrapedContent}>
+              <button className="action-btn secondary" onClick={handleViewScrapedContent}>
                 <FaEye /> View Content
               </button>
-              <button className="modal-btn save-btn" onClick={handleSaveToRepo}>
+              <button className="action-btn" onClick={handleSaveToRepo}>
                 Save
               </button>
-              <button className="modal-btn cancel-btn" onClick={() => setIsSaveModalOpen(false)}>
+              <button className="action-btn cancel" onClick={() => setIsSaveModalOpen(false)}>
                 Cancel
               </button>
             </div>
@@ -634,54 +687,19 @@ export default function WebCrawler() {
         </div>
       )}
 
-      {/* View Scraped Content Modal */}
       {isViewModalOpen && (
         <div className="modal-overlay">
           <div className="modal view-modal">
-            <h3>Scraped Content</h3>
+            <h3 className="modal-title">Scraped Content</h3>
             <pre className="scraped-text">{scrapedText}</pre>
             <div className="modal-actions">
-              <button className="modal-btn close-btn" onClick={() => setIsViewModalOpen(false)}>
+              <button className="action-btn cancel" onClick={() => setIsViewModalOpen(false)}>
                 Close
               </button>
             </div>
           </div>
         </div>
       )}
-
-      {/* Search Popup Modal with Google CSE */}
-      {/* {isSearchPopupOpen && (
-        <div className="modal-overlay search-popup-overlay">
-          <div className="modal search-popup">
-            <h3>Search</h3>
-            {cseLoading ? (
-              <p>Loading Google Search... Please wait.</p>
-            ) : error ? (
-              <p style={{ color: "red" }}>{error}</p>
-            ) : (
-              <div
-                className="google-search"
-                ref={cseRef}
-                dangerouslySetInnerHTML={{
-                  __html: '<gcse:searchbox-only resultsUrl="/searchresults"></gcse:searchbox-only>',
-                }}
-              />
-            )}
-            <div className="modal-actions">
-              <button
-                className Anglerock className="modal-btn close-btn"
-                onClick={() => {
-                  setIsSearchPopupOpen(false);
-                  setSearchQuery("");
-                  setError(null); // Clear error on close
-                }}
-              >
-                Close
-              </button>
-            </div>
-          </div>
-        </div>
-      )} */}
     </div>
   );
 }
