@@ -991,27 +991,7 @@ function LearningPage() {
                               <h2>Introduction</h2>
                               <p style={{ whiteSpace: "pre-wrap" }}>{boldData(parsedContent.introduction)}</p>
 
-                              <h2>Number of Modules</h2>
-                              <p>{parsedContent.noOfModules}</p>
 
-                              <h2>Modules</h2>
-                              {parsedContent.modules.map((module, index) => (
-                                <div key={index} className="module-section">
-                                  <h3>Module {index + 1}: {boldData(module.moduleTitle)}</h3>
-                                  <h4><strong>Overview</strong></h4>
-                                  <p>{boldData(module.moduleOverview)}</p>
-                                  <h4><strong>Detailed Explanation</strong></h4>
-                                  <p>{boldData(module.detailedExplanation)}</p>
-                                  <h4><strong>Examples and Analogies</strong></h4>
-                                  <p>{boldData(module.examplesAndAnalogies)}</p>
-                                  <h4><strong>Key Takeaways</strong></h4>
-                                  <ul>
-                                    {module.keyTakeaways.map((takeaway, idx) => (
-                                      <li key={idx}>{boldData(takeaway)}</li>
-                                    ))}
-                                  </ul>
-                                </div>
-                              ))}
                             </>
                           );
                         })()}

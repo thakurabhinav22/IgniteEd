@@ -29,9 +29,7 @@ export default function WebCrawler() {
 
   const server_end_point = "https://b978747b-0cfa-4ac8-aa74-e01288e8d3c1-00-2tmnjhgcuv5r3.pike.replit.dev/scrape";
   const download_endpoint = "https://b978747b-0cfa-4ac8-aa74-e01288e8d3c1-00-2tmnjhgcuv5r3.pike.replit.dev/download-pdfs-as-text";
-  // Fallback local endpoint (uncomment if Replit fails)
-  // const server_end_point = "http://localhost:5000/scrape";
-  // const download_endpoint = "http://localhost:5000/download-pdfs-as-text";
+  const youtube_search_endpoint = "https://d7150945-fc09-42e1-800c-b55c84548d79-00-1r5xa442n98oj.sisko.replit.dev/search_videos"; // Added for new function
 
   const cseRef = useRef(null); // Ref to the CSE container div
 
@@ -322,19 +320,29 @@ export default function WebCrawler() {
       alert("Please enter a search query.");
       return;
     }
-
+  
     try {
       setLoading(true);
       setError(null);
+      const apiKey = "AIzaSyAP4B0ZgKDayt0FHQmKKippqdlnoLoOsNA"; // Your API key
       const response = await fetch(
-        `https://www.googleapis.com/customsearch/v1?key=YOUR_API_KEY&cx=13cbaf0acfe7f4937&q=${encodeURIComponent(
-          searchQuery + " site:youtube.com -inurl:(signup | login)"
-        )}&num=5`
+        `https://www.googleapis.com/youtube/v3/search?part=snippet&q=${encodeURIComponent(
+          searchQuery
+        )}&type=video&maxResults=5&key=${apiKey}`
       );
-      if (!response.ok) throw new Error("Failed to fetch YouTube video results");
-
+  
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error.message || "Failed to fetch YouTube video results");
+      }
+  
       const data = await response.json();
-      setSearchResults(data.items || []);
+      const formattedResults = (data.items || []).map(item => ({
+        link: `https://www.youtube.com/watch?v=${item.id.videoId}`,
+        title: item.snippet.title,
+        snippet: item.snippet.description
+      }));
+      setSearchResults(formattedResults);
       setLoading(false);
     } catch (err) {
       setError(err.message || "Error fetching YouTube video results");
@@ -342,7 +350,52 @@ export default function WebCrawler() {
       console.error("Error fetching YouTube video results:", err);
     }
   };
-
+  // New function to fetch and show only YouTube video URLs
+  const handleYTVideoUrlSearch = async () => {
+    if (!searchQuery.trim()) {
+      alert("Please enter a search query.");
+      return;
+    }
+  
+    try {
+      setLoading(true);
+      setError(null);
+      console.log("Fetching YouTube URLs for query:", searchQuery);
+      const response = await fetch(
+        `${youtube_search_endpoint}?query=${encodeURIComponent(searchQuery)}`,
+        {
+          method: "GET",
+          headers: { "Content-Type": "application/json" },
+          mode: "cors",
+        }
+      );
+  
+      console.log("Response status:", response.status);
+  
+      if (!response.ok) {
+        const errorData = await response.json();
+        console.log("Error data:", errorData);
+        if (response.status === 404) {
+          throw new Error("No videos found. Try a different search term or check server status.");
+        }
+        throw new Error(errorData.error || "Failed to fetch YouTube video URLs");
+      }
+  
+      const data = await response.json();
+      console.log("Received data:", data);
+      const formattedResults = (data.results || []).map(url => ({
+        link: url,
+        title: "YouTube Video",
+        snippet: ""
+      }));
+      setSearchResults(formattedResults);
+      setLoading(false);
+    } catch (err) {
+      setError(err.message || "Error fetching YouTube video URLs");
+      setLoading(false);
+      console.error("Error fetching YouTube video URLs:", err);
+    }
+  };
   return (
     <div className="crawler-main">
       <AdminSidebar />
@@ -517,8 +570,12 @@ export default function WebCrawler() {
                 value={searchQuery}
                 onChange={handleSearchQuery}
               />
-              <button className="search-btn" onClick={handleYTVideoSearch}>
+              {/* <button className="search-btn" onClick={handleYTVideoSearch}>
                 <FaSearch /> Search
+              </button> */}
+              {/* Added new button for URL-only search */}
+              <button className="search-btn" onClick={handleYTVideoSearch}>
+                <FaSearch /> Search URLs
               </button>
             </div>
             {loading && <p>Loading...</p>}
@@ -612,7 +669,7 @@ export default function WebCrawler() {
             )}
             <div className="modal-actions">
               <button
-                className="modal-btn close-btn"
+                className Anglerock className="modal-btn close-btn"
                 onClick={() => {
                   setIsSearchPopupOpen(false);
                   setSearchQuery("");
