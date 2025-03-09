@@ -27,6 +27,8 @@ export default function WebCrawler() {
   const [isViewModalOpen, setIsViewModalOpen] = useState(false);
   const [isSearchPopupOpen, setIsSearchPopupOpen] = useState(false);
   const [cseLoading, setCseLoading] = useState(false);
+  const apiKey = process.env.REACT_APP_YOUTUBE_API;
+  // alert(apiKey)
 
   const server_end_point = "https://b978747b-0cfa-4ac8-aa74-e01288e8d3c1-00-2tmnjhgcuv5r3.pike.replit.dev/scrape";
   const download_endpoint = "https://b978747b-0cfa-4ac8-aa74-e01288e8d3c1-00-2tmnjhgcuv5r3.pike.replit.dev/download-pdfs-as-text";
@@ -307,10 +309,15 @@ export default function WebCrawler() {
       return;
     }
 
+    if (!apiKey) {
+      setError("YouTube API key is not configured. Please contact the administrator.");
+      return;
+    }
+
     try {
       setLoading(true);
       setError(null);
-      const apiKey = "AIzaSyAP4B0ZgKDayt0FHQmKKippqdlnoLoOsNA";
+
       const response = await fetch(
         `https://www.googleapis.com/youtube/v3/search?part=snippet&q=${encodeURIComponent(
           searchQuery
@@ -337,369 +344,370 @@ export default function WebCrawler() {
     }
   };
 
-  const handleYTVideoUrlSearch = async () => {
-    if (!searchQuery.trim()) {
-      alert("Please enter a search query.");
-      return;
-    }
 
-    try {
-      setLoading(true);
-      setError(null);
-      console.log("Fetching YouTube URLs for query:", searchQuery);
-      const response = await fetch(
-        `${youtube_search_endpoint}?query=${encodeURIComponent(searchQuery)}`,
-        {
-          method: "GET",
-          headers: { "Content-Type": "application/json" },
-          mode: "cors",
-        }
-      );
+const handleYTVideoUrlSearch = async () => {
+  if (!searchQuery.trim()) {
+    alert("Please enter a search query.");
+    return;
+  }
 
-      console.log("Response status:", response.status);
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        console.log("Error data:", errorData);
-        if (response.status === 404) {
-          throw new Error("No videos found. Try a different search term or check server status.");
-        }
-        throw new Error(errorData.error || "Failed to fetch YouTube video URLs");
+  try {
+    setLoading(true);
+    setError(null);
+    console.log("Fetching YouTube URLs for query:", searchQuery);
+    const response = await fetch(
+      `${youtube_search_endpoint}?query=${encodeURIComponent(searchQuery)}`,
+      {
+        method: "GET",
+        headers: { "Content-Type": "application/json" },
+        mode: "cors",
       }
-
-      const data = await response.json();
-      console.log("Received data:", data);
-      const formattedResults = (data.results || []).map(url => ({
-        link: url,
-        title: "YouTube Video",
-        snippet: ""
-      }));
-      setSearchResults(formattedResults);
-      setLoading(false);
-    } catch (err) {
-      setError(err.message || "Error fetching YouTube video URLs");
-      setLoading(false);
-      console.error("Error fetching YouTube video URLs:", err);
-    }
-  };
-
-  const handleVideoCheckboxChange = (link) => {
-    setSelectedVideos((prev) =>
-      prev.includes(link) ? prev.filter((item) => item !== link) : [...prev, link]
     );
-  };
 
-  const handleCreateCourse = () => {
-    Swal.fire({
-      title: "Comming Soon!!!",
-      text: "This is Feature is under development",
-      icon: "info",
-    })
+    console.log("Response status:", response.status);
 
-    // if (selectedVideos.length === 0) {
-    //   alert("No videos selected for course creation.");
-    //   return;
-    // }
-    // const courseContent = selectedVideos
-    //   .map((link) => {
-    //     const result = searchResults.find((r) => r.link === link);
-    //     return `--- Video: ${result.title} ---\nURL: ${link}\nDescription: ${result.snippet || "No description available"}`;
-    //   })
-    //   .join("\n\n");
-    // setScrapedText(courseContent);
-    // setIsSaveModalOpen(true);
-  };
+    if (!response.ok) {
+      const errorData = await response.json();
+      console.log("Error data:", errorData);
+      if (response.status === 404) {
+        throw new Error("No videos found. Try a different search term or check server status.");
+      }
+      throw new Error(errorData.error || "Failed to fetch YouTube video URLs");
+    }
 
-  return (
-    <div className="crawler-main">
-      <AdminSidebar />
+    const data = await response.json();
+    console.log("Received data:", data);
+    const formattedResults = (data.results || []).map(url => ({
+      link: url,
+      title: "YouTube Video",
+      snippet: ""
+    }));
+    setSearchResults(formattedResults);
+    setLoading(false);
+  } catch (err) {
+    setError(err.message || "Error fetching YouTube video URLs");
+    setLoading(false);
+    console.error("Error fetching YouTube video URLs:", err);
+  }
+};
 
-      <div className="crawler-tabs">
-        <button
-          className={activeTab === "link-scraper" ? "tab-active" : "tab-btn"}
-          onClick={() => setActiveTab("link-scraper")}
-        >
-          Link Scraper
-        </button>
-        <button
-          className={activeTab === "keyword-searcher" ? "tab-active" : "tab-btn"}
-          onClick={() => setActiveTab("keyword-searcher")}
-        >
-          Keyword Searcher
-        </button>
-        <button
-          className={activeTab === "yt-video-courses" ? "tab-active" : "tab-btn"}
-          onClick={() => setActiveTab("yt-video-courses")}
-        >
-          YT Video Courses
-        </button>
-      </div>
+const handleVideoCheckboxChange = (link) => {
+  setSelectedVideos((prev) =>
+    prev.includes(link) ? prev.filter((item) => item !== link) : [...prev, link]
+  );
+};
 
-      <div className="crawler-content">
+const handleCreateCourse = () => {
+  Swal.fire({
+    title: "Comming Soon!!!",
+    text: "This is Feature is under development",
+    icon: "info",
+  })
 
-        {activeTab === "link-scraper" && (
-          <div className="tab-panel">
-            <div className="panel-header">
-              <h2 className="section-title">🔗 Link Scraper</h2>
-              <p className="section-subtitle">Extract and scrape content from provided URLs.</p>
+  // if (selectedVideos.length === 0) {
+  //   alert("No videos selected for course creation.");
+  //   return;
+  // }
+  // const courseContent = selectedVideos
+  //   .map((link) => {
+  //     const result = searchResults.find((r) => r.link === link);
+  //     return `--- Video: ${result.title} ---\nURL: ${link}\nDescription: ${result.snippet || "No description available"}`;
+  //   })
+  //   .join("\n\n");
+  // setScrapedText(courseContent);
+  // setIsSaveModalOpen(true);
+};
+
+return (
+  <div className="crawler-main">
+    <AdminSidebar />
+
+    <div className="crawler-tabs">
+      <button
+        className={activeTab === "link-scraper" ? "tab-active" : "tab-btn"}
+        onClick={() => setActiveTab("link-scraper")}
+      >
+        Link Scraper
+      </button>
+      <button
+        className={activeTab === "keyword-searcher" ? "tab-active" : "tab-btn"}
+        onClick={() => setActiveTab("keyword-searcher")}
+      >
+        Keyword Searcher
+      </button>
+      <button
+        className={activeTab === "yt-video-courses" ? "tab-active" : "tab-btn"}
+        onClick={() => setActiveTab("yt-video-courses")}
+      >
+        YT Video Courses
+      </button>
+    </div>
+
+    <div className="crawler-content">
+
+      {activeTab === "link-scraper" && (
+        <div className="tab-panel">
+          <div className="panel-header">
+            <h2 className="section-title">🔗 Link Scraper</h2>
+            <p className="section-subtitle">Extract and scrape content from provided URLs.</p>
+          </div>
+          <div className="search-container">
+            <textarea
+              className="search-input large"
+              placeholder="Enter text with links (e.g., https://example.com, https://example.com/file.pdf)..."
+              value={links}
+              onChange={handleLinksChange}
+            ></textarea>
+            <button className="action-btn link-scraper-btn" onClick={extractLinks}>
+              <FaSearch /> Start Crawling
+            </button>
+          </div>
+          {loading && (
+            <div className="loading-spinner">
+              <div className="spinner"></div>
+              <p>Loading content...</p>
             </div>
-            <div className="search-container">
-              <textarea
-                className="search-input large"
-                placeholder="Enter text with links (e.g., https://example.com, https://example.com/file.pdf)..."
-                value={links}
-                onChange={handleLinksChange}
-              ></textarea>
-              <button className="action-btn link-scraper-btn" onClick={extractLinks}>
-                <FaSearch /> Start Crawling
-              </button>
+          )}
+          {error && <p className="error-message">{error}</p>}
+          {processedLinks.length > 0 && (
+            <div className="results-section">
+              <h3 className="sub-heading">Extracted Links:</h3>
+              <ul className="link-list">
+                {processedLinks.map((link, index) => (
+                  <li key={index} className="link-item">
+                    <input
+                      type="checkbox"
+                      onChange={() => handleScrapedCheckboxChange(link)}
+                      checked={selectedScrapedLinks.includes(link)}
+                      className="link-checkbox"
+                    />
+                    <div className="link-content">
+                      <a href={link} target="_blank" rel="noopener noreferrer" className="link-text">
+                        {link}
+                      </a>
+                      {scrapedContent.some((item) => item.url === link) && (
+                        <button
+                          className="toggle-button"
+                          onClick={() => toggleContentVisibility(link)}
+                        >
+                          {scrapedContent.some((item) => item.url === link && item.visible) ? (
+                            <FaAngleUp />
+                          ) : (
+                            <FaAngleDown />
+                          )}
+                        </button>
+                      )}
+                      {scrapedContent
+                        .filter((item) => item.url === link && item.visible)
+                        .map((item, idx) => (
+                          <div key={idx} className="scraped-content">
+                            <h4>{item.url}</h4>
+                            <p>{item.content}</p>
+                          </div>
+                        ))}
+                    </div>
+                  </li>
+                ))}
+              </ul>
+              {scrapedContent.length > 0 && (
+                <button className="action-btn secondary" onClick={handleSaveLinkScraperContent}>
+                  <FaSave /> Save to Repository
+                </button>
+              )}
             </div>
-            {loading && (
-              <div className="loading-spinner">
-                <div className="spinner"></div>
-                <p>Loading content...</p>
-              </div>
-            )}
-            {error && <p className="error-message">{error}</p>}
-            {processedLinks.length > 0 && (
-              <div className="results-section">
-                <h3 className="sub-heading">Extracted Links:</h3>
-                <ul className="link-list">
-                  {processedLinks.map((link, index) => (
-                    <li key={index} className="link-item">
-                      <input
-                        type="checkbox"
-                        onChange={() => handleScrapedCheckboxChange(link)}
-                        checked={selectedScrapedLinks.includes(link)}
-                        className="link-checkbox"
-                      />
-                      <div className="link-content">
+          )}
+          {processedLinks.length === 0 && !loading && !error && links.trim() && (
+            <p className="no-results">No links found in the provided text.</p>
+          )}
+        </div>
+      )}
+
+      {activeTab === "keyword-searcher" && (
+        <div className="tab-panel">
+          <div className="panel-header">
+            <h2 className="section-title">🔑 Keyword Searcher</h2>
+            <p className="section-subtitle">Search for content using keywords.</p>
+          </div>
+          <div className="search-container">
+            <input
+              className="search-input"
+              type="text"
+              placeholder="Enter keyword to search"
+              value={keyword}
+              onChange={(e) => setKeyword(e.target.value)}
+            />
+            <button className="action-btn" onClick={handleKeywordSearch}>
+              <FaSearch /> Search
+            </button>
+          </div>
+          {loading && (
+            <div className="loading-spinner">
+              <div className="spinner"></div>
+              <p>Loading...</p>
+            </div>
+          )}
+          {error && <p className="error-message">{error}</p>}
+          {keyScraped.length > 0 && (
+            <div className="results-section">
+              <h3 className="sub-heading">Results:</h3>
+              <ul className="link-list">
+                {Object.entries(
+                  keyScraped.reduce((acc, link) => {
+                    try {
+                      const url = new URL(link);
+                      const domain = url.hostname;
+                      if (!acc[domain]) acc[domain] = [];
+                      acc[domain].push(link);
+                    } catch (error) {
+                      console.error("Invalid URL:", link);
+                    }
+                    return acc;
+                  }, {})
+                ).map(([domain, links]) => (
+                  <div key={domain} className="domain-group">
+                    <h4 className="domain-title">{domain}</h4>
+                    {links.map((link, index) => (
+                      <li key={index} className="link-item">
+                        <input
+                          type="checkbox"
+                          onChange={() => handleCheckboxChange(link)}
+                          checked={selectedLinks.includes(link)}
+                          className="link-checkbox"
+                        />
                         <a href={link} target="_blank" rel="noopener noreferrer" className="link-text">
                           {link}
                         </a>
-                        {scrapedContent.some((item) => item.url === link) && (
-                          <button
-                            className="toggle-button"
-                            onClick={() => toggleContentVisibility(link)}
-                          >
-                            {scrapedContent.some((item) => item.url === link && item.visible) ? (
-                              <FaAngleUp />
-                            ) : (
-                              <FaAngleDown />
-                            )}
-                          </button>
-                        )}
-                        {scrapedContent
-                          .filter((item) => item.url === link && item.visible)
-                          .map((item, idx) => (
-                            <div key={idx} className="scraped-content">
-                              <h4>{item.url}</h4>
-                              <p>{item.content}</p>
-                            </div>
-                          ))}
-                      </div>
-                    </li>
-                  ))}
-                </ul>
-                {scrapedContent.length > 0 && (
-                  <button className="action-btn secondary" onClick={handleSaveLinkScraperContent}>
-                    <FaSave /> Save to Repository
-                  </button>
-                )}
-              </div>
-            )}
-            {processedLinks.length === 0 && !loading && !error && links.trim() && (
-              <p className="no-results">No links found in the provided text.</p>
-            )}
-          </div>
-        )}
-
-        {activeTab === "keyword-searcher" && (
-          <div className="tab-panel">
-            <div className="panel-header">
-              <h2 className="section-title">🔑 Keyword Searcher</h2>
-              <p className="section-subtitle">Search for content using keywords.</p>
-            </div>
-            <div className="search-container">
-              <input
-                className="search-input"
-                type="text"
-                placeholder="Enter keyword to search"
-                value={keyword}
-                onChange={(e) => setKeyword(e.target.value)}
-              />
-              <button className="action-btn" onClick={handleKeywordSearch}>
-                <FaSearch /> Search
-              </button>
-            </div>
-            {loading && (
-              <div className="loading-spinner">
-                <div className="spinner"></div>
-                <p>Loading...</p>
-              </div>
-            )}
-            {error && <p className="error-message">{error}</p>}
-            {keyScraped.length > 0 && (
-              <div className="results-section">
-                <h3 className="sub-heading">Results:</h3>
-                <ul className="link-list">
-                  {Object.entries(
-                    keyScraped.reduce((acc, link) => {
-                      try {
-                        const url = new URL(link);
-                        const domain = url.hostname;
-                        if (!acc[domain]) acc[domain] = [];
-                        acc[domain].push(link);
-                      } catch (error) {
-                        console.error("Invalid URL:", link);
-                      }
-                      return acc;
-                    }, {})
-                  ).map(([domain, links]) => (
-                    <div key={domain} className="domain-group">
-                      <h4 className="domain-title">{domain}</h4>
-                      {links.map((link, index) => (
-                        <li key={index} className="link-item">
-                          <input
-                            type="checkbox"
-                            onChange={() => handleCheckboxChange(link)}
-                            checked={selectedLinks.includes(link)}
-                            className="link-checkbox"
-                          />
-                          <a href={link} target="_blank" rel="noopener noreferrer" className="link-text">
-                            {link}
-                          </a>
-                        </li>
-                      ))}
-                    </div>
-                  ))}
-                </ul>
-                {selectedLinks.length > 0 && (
-                  <button className="action-btn secondary" onClick={handleProcessSelected}>
-                    Process Selected
-                  </button>
-                )}
-              </div>
-            )}
-            {keyScraped.length === 0 && !loading && !error && keyword.trim() && (
-              <p className="no-results">No results found for "{keyword}".</p>
-            )}
-          </div>
-        )}
-
-        {activeTab === "yt-video-courses" && (
-          <div className="tab-panel yt-video-courses-panel">
-            <div className="panel-header">
-              <h2 className="section-title">🎥 YT Video Courses</h2>
-              <p className="section-subtitle">Discover and curate YouTube video courses for your learning journey.</p>
-            </div>
-            <div className="search-container">
-              <input
-                className="search-input"
-                type="text"
-                placeholder="Enter topic (e.g., 'React tutorials')..."
-                value={searchQuery}
-                onChange={handleSearchQuery}
-              />
-              <button className="action-btn" onClick={handleYTVideoSearch}>
-                <FaSearch /> Search URLs
-              </button>
-            </div>
-            {loading && (
-              <div className="loading-spinner">
-                <div className="spinner"></div>
-                <p>Loading videos...</p>
-              </div>
-            )}
-            {error && <p className="error-message">{error}</p>}
-            {searchResults.length > 0 && (
-              <div className="results-section">
-                <ul className="video-list">
-                  {searchResults.map((result, index) => (
-                    <li key={index} className="video-item">
-                      <input
-                        type="checkbox"
-                        checked={selectedVideos.includes(result.link)}
-                        onChange={() => handleVideoCheckboxChange(result.link)}
-                        className="video-checkbox"
-                      />
-                      <div className="video-content">
-                        <a
-                          href={result.link}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="video-title"
-                        >
-                          {result.title}
-                        </a>
-                        <p className="video-description">{result.snippet || "No description available"}</p>
-                        <iframe
-                          width="100%"
-                          height="315"
-                          src={result.link.replace("watch?v=", "embed/")}
-                          title={result.title}
-                          frameBorder="0"
-                          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                          allowFullScreen
-                          className="video-player"
-                        ></iframe>
-                      </div>
-                    </li>
-                  ))}
-                </ul>
-                <button className="action-btn secondary" onClick={handleCreateCourse}>
-                  Create Course from Selected ({selectedVideos.length})
+                      </li>
+                    ))}
+                  </div>
+                ))}
+              </ul>
+              {selectedLinks.length > 0 && (
+                <button className="action-btn secondary" onClick={handleProcessSelected}>
+                  Process Selected
                 </button>
-              </div>
-            )}
-            {searchResults.length === 0 && !loading && !error && searchQuery.trim() && (
-              <p className="no-results">No results found for "{searchQuery}".</p>
-            )}
-          </div>
-        )}
-      </div>
-
-      <div style={serverStatusStyle}>Server is {serverStatus.toUpperCase()}</div>
-
-      {isSaveModalOpen && (
-        <div className="modal-overlay">
-          <div className="modal">
-            <h3 className="modal-title">Save to Repository</h3>
-            <input
-              type="text"
-              value={repoName}
-              onChange={(e) => setRepoName(e.target.value)}
-              placeholder="Enter name for repository entry"
-              className="modal-input"
-            />
-            <div className="modal-actions">
-              <button className="action-btn secondary" onClick={handleViewScrapedContent}>
-                <FaEye /> View Content
-              </button>
-              <button className="action-btn" onClick={handleSaveToRepo}>
-                Save
-              </button>
-              <button className="action-btn cancel" onClick={() => setIsSaveModalOpen(false)}>
-                Cancel
-              </button>
+              )}
             </div>
-          </div>
+          )}
+          {keyScraped.length === 0 && !loading && !error && keyword.trim() && (
+            <p className="no-results">No results found for "{keyword}".</p>
+          )}
         </div>
       )}
 
-      {isViewModalOpen && (
-        <div className="modal-overlay">
-          <div className="modal view-modal">
-            <h3 className="modal-title">Scraped Content</h3>
-            <pre className="scraped-text">{scrapedText}</pre>
-            <div className="modal-actions">
-              <button className="action-btn cancel" onClick={() => setIsViewModalOpen(false)}>
-                Close
+      {activeTab === "yt-video-courses" && (
+        <div className="tab-panel yt-video-courses-panel">
+          <div className="panel-header">
+            <h2 className="section-title">🎥 YT Video Courses</h2>
+            <p className="section-subtitle">Discover and curate YouTube video courses for your learning journey.</p>
+          </div>
+          <div className="search-container">
+            <input
+              className="search-input"
+              type="text"
+              placeholder="Enter topic (e.g., 'React tutorials')..."
+              value={searchQuery}
+              onChange={handleSearchQuery}
+            />
+            <button className="action-btn" onClick={handleYTVideoSearch}>
+              <FaSearch /> Search URLs
+            </button>
+          </div>
+          {loading && (
+            <div className="loading-spinner">
+              <div className="spinner"></div>
+              <p>Loading videos...</p>
+            </div>
+          )}
+          {error && <p className="error-message">{error}</p>}
+          {searchResults.length > 0 && (
+            <div className="results-section">
+              <ul className="video-list">
+                {searchResults.map((result, index) => (
+                  <li key={index} className="video-item">
+                    <input
+                      type="checkbox"
+                      checked={selectedVideos.includes(result.link)}
+                      onChange={() => handleVideoCheckboxChange(result.link)}
+                      className="video-checkbox"
+                    />
+                    <div className="video-content">
+                      <a
+                        href={result.link}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="video-title"
+                      >
+                        {result.title}
+                      </a>
+                      <p className="video-description">{result.snippet || "No description available"}</p>
+                      <iframe
+                        width="100%"
+                        height="315"
+                        src={result.link.replace("watch?v=", "embed/")}
+                        title={result.title}
+                        frameBorder="0"
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                        allowFullScreen
+                        className="video-player"
+                      ></iframe>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+              <button className="action-btn secondary" onClick={handleCreateCourse}>
+                Create Course from Selected ({selectedVideos.length})
               </button>
             </div>
-          </div>
+          )}
+          {searchResults.length === 0 && !loading && !error && searchQuery.trim() && (
+            <p className="no-results">No results found for "{searchQuery}".</p>
+          )}
         </div>
       )}
     </div>
-  );
+
+    <div style={serverStatusStyle}>Server is {serverStatus.toUpperCase()}</div>
+
+    {isSaveModalOpen && (
+      <div className="modal-overlay">
+        <div className="modal">
+          <h3 className="modal-title">Save to Repository</h3>
+          <input
+            type="text"
+            value={repoName}
+            onChange={(e) => setRepoName(e.target.value)}
+            placeholder="Enter name for repository entry"
+            className="modal-input"
+          />
+          <div className="modal-actions">
+            <button className="action-btn secondary" onClick={handleViewScrapedContent}>
+              <FaEye /> View Content
+            </button>
+            <button className="action-btn" onClick={handleSaveToRepo}>
+              Save
+            </button>
+            <button className="action-btn cancel" onClick={() => setIsSaveModalOpen(false)}>
+              Cancel
+            </button>
+          </div>
+        </div>
+      </div>
+    )}
+
+    {isViewModalOpen && (
+      <div className="modal-overlay">
+        <div className="modal view-modal">
+          <h3 className="modal-title">Scraped Content</h3>
+          <pre className="scraped-text">{scrapedText}</pre>
+          <div className="modal-actions">
+            <button className="action-btn cancel" onClick={() => setIsViewModalOpen(false)}>
+              Close
+            </button>
+          </div>
+        </div>
+      </div>
+    )}
+  </div>
+);
 }
