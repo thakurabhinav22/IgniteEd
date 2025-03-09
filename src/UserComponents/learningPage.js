@@ -42,6 +42,48 @@ function LearningPage() {
   const genAI = new GoogleGenerativeAI(API_KEY);
   const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
+  // Function to bold "data" in text and handle ** markers for bolding
+  const boldData = (text) => {
+    if (!text || typeof text !== "string") return text;
+
+    // First, handle ** markers for bolding
+    let parts = [text];
+    const boldRegex = /\*\*(.*?)\*\*/g;
+    let result = [];
+    let lastIndex = 0;
+    let match;
+
+    while ((match = boldRegex.exec(text)) !== null) {
+      if (match.index > lastIndex) {
+        result.push(text.slice(lastIndex, match.index));
+      }
+      result.push(<strong key={match.index}>{match[1]}</strong>);
+      lastIndex = boldRegex.lastIndex;
+    }
+
+    if (lastIndex < text.length) {
+      result.push(text.slice(lastIndex));
+    }
+
+    if (result.length === 0) {
+      result = [text];
+    }
+
+    return result.map((part, index) => {
+      if (typeof part !== "string") {
+        return part;
+      }
+      const dataParts = part.split(/(\bdata\b)/gi);
+      return dataParts.map((subPart, subIndex) =>
+        subPart.toLowerCase() === "data" ? (
+          <strong key={`${index}-${subIndex}`}>{subPart}</strong>
+        ) : (
+          <span key={`${index}-${subIndex}`}>{subPart}</span>
+        )
+      );
+    });
+  };
+
   // Timer functions
   const startTimer = () => {
     if (!timerInterval) {
@@ -295,7 +337,7 @@ function LearningPage() {
           setCriticalWarningCount((prev) => prev + 1);
           const performanceData = {
             totalWarning: warningCount + 1,
-            criticalWarning: criticalWarningCount + 1, // Explicitly include criticalWarning
+            criticalWarning: criticalWarningCount + 1,
             understandingScore: 0,
             memoryScore: 0,
             analysisScore: 0,
@@ -349,7 +391,7 @@ function LearningPage() {
           setWarningCount((prev) => prev + 1);
           const performanceData = {
             totalWarning: warningCount + 1,
-            criticalWarning: criticalWarningCount, // Include current criticalWarningCount
+            criticalWarning: criticalWarningCount,
             understandingScore: 0,
             memoryScore: 0,
             analysisScore: 0,
@@ -645,11 +687,17 @@ function LearningPage() {
       setIsModuleCompleted(true);
       Swal.fire({
         title: score === 100 ? "Perfect Score!" : `Good Job! Score: ${score}%`,
-        text: `You got ${correctAnswersCount} out of ${totalQuestions} correct in ${formatTime(timer)}! Moving to the next module.`,
+        text: `You got ${correctAnswersCount} out of ${totalQuestions} correct in ${formatTime(timer)}! Moving to the next module...`,
         icon: "success",
-        confirmButtonText: "OK",
+        timer: 2000, // Auto-close after 2 seconds
+        showConfirmButton: false, // Remove the "OK" button
       }).then(() => {
-        handleNextModule();
+        // This will run after the timer or if manually closed (though no button is shown)
+        if (currentModule === moduleLength) {
+          handleNextModule(); // Complete the course
+        } else {
+          handleNextModule(); // Move to the next module
+        }
       });
     } else if (score > 0) {
       Swal.fire({
@@ -797,6 +845,8 @@ function LearningPage() {
 
     if (!isModuleCompleted) {
       await showTestRulesAndGenerateQuestions();
+    } else {
+      await handleNextModule();
     }
   };
 
@@ -936,10 +986,10 @@ function LearningPage() {
                           return (
                             <>
                               <h2>Course Title</h2>
-                              <p>{parsedContent.title}</p>
+                              <p>{boldData(parsedContent.title)}</p>
 
                               <h2>Introduction</h2>
-                              <p style={{ whiteSpace: "pre-wrap" }}>{parsedContent.introduction}</p>
+                              <p style={{ whiteSpace: "pre-wrap" }}>{boldData(parsedContent.introduction)}</p>
 
                               <h2>Number of Modules</h2>
                               <p>{parsedContent.noOfModules}</p>
@@ -947,17 +997,17 @@ function LearningPage() {
                               <h2>Modules</h2>
                               {parsedContent.modules.map((module, index) => (
                                 <div key={index} className="module-section">
-                                  <h3>Module {index + 1}: {module.moduleTitle}</h3>
-                                  <h4>Overview</h4>
-                                  <p>{module.moduleOverview}</p>
-                                  <h4>Detailed Explanation</h4>
-                                  <p>{module.detailedExplanation}</p>
-                                  <h4>Examples and Analogies</h4>
-                                  <p>{module.examplesAndAnalogies}</p>
-                                  <h4>Key Takeaways</h4>
+                                  <h3>Module {index + 1}: {boldData(module.moduleTitle)}</h3>
+                                  <h4><strong>Overview</strong></h4>
+                                  <p>{boldData(module.moduleOverview)}</p>
+                                  <h4><strong>Detailed Explanation</strong></h4>
+                                  <p>{boldData(module.detailedExplanation)}</p>
+                                  <h4><strong>Examples and Analogies</strong></h4>
+                                  <p>{boldData(module.examplesAndAnalogies)}</p>
+                                  <h4><strong>Key Takeaways</strong></h4>
                                   <ul>
                                     {module.keyTakeaways.map((takeaway, idx) => (
-                                      <li key={idx}>{takeaway}</li>
+                                      <li key={idx}>{boldData(takeaway)}</li>
                                     ))}
                                   </ul>
                                 </div>
@@ -998,52 +1048,58 @@ function LearningPage() {
                   const module = parsedContent.modules[currentModule - 1];
                   return (
                     <>
-                      <h3>{module.moduleTitle}</h3>
-                      <h4>Overview</h4>
-                      <p>{module.moduleOverview}</p>
-                      <h4>Detailed Explanation</h4>
-                      <p>{module.detailedExplanation}</p>
-                      <h4>Examples and Analogies</h4>
-                      <p>{module.examplesAndAnalogies}</p>
-                      <h4>Key Takeaways</h4>
-                      <ul>
-                        {module.keyTakeaways.map((takeaway, idx) => (
-                          <li key={idx}>{takeaway}</li>
-                        ))}
-                      </ul>
+                      {/* Show reading module only if showQuestions is false */}
+                      {!showQuestions && (
+                        <div className="module-content">
+                          <h3>{boldData(module.moduleTitle)}</h3>
+                          <h4><strong>Overview</strong></h4>
+                          <p>{boldData(module.moduleOverview)}</p>
+                          <h4><strong>Detailed Explanation</strong></h4>
+                          <p>{boldData(module.detailedExplanation)}</p>
+                          <h4><strong>Examples and Analogies</strong></h4>
+                          <p>{boldData(module.examplesAndAnalogies)}</p>
+                          <h4><strong>Key Takeaways</strong></h4>
+                          <ul>
+                            {module.keyTakeaways.map((takeaway, idx) => (
+                              <li key={idx}>{boldData(takeaway)}</li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
+
+                      {showQuestions && (
+                        <div className="question-course-info">
+                          <p>Time: {formatTime(timer)}</p>
+                          <h2>Answer the Questions</h2>
+                          {aiQuestions.map((question, index) => (
+                            <div key={index} className="question-course-section">
+                              <h3>
+                                {index + 1}. {boldData(question.question)} ({question.type})
+                              </h3>
+                              <div className="options-container">
+                                {question.options &&
+                                  question.options.map((option, optionIndex) => (
+                                    <label key={optionIndex}>
+                                      <input
+                                        type="radio"
+                                        value={option.option}
+                                        name={`question-${index}`}
+                                      />
+                                      <span className="option-label">{boldData(option.option)}</span>
+                                    </label>
+                                  ))}
+                              </div>
+                            </div>
+                          ))}
+                          <button className="NextQuestion" onClick={handleQuestionValidate}>
+                            Submit
+                          </button>
+                        </div>
+                      )}
                     </>
                   );
                 })()}
 
-                {showQuestions && (
-                  <div className="question-course-info">
-                    <p>Time: {formatTime(timer)}</p>
-                    <h2>Answer the Questions</h2>
-                    {aiQuestions.map((question, index) => (
-                      <div key={index} className="question-course-section">
-                        <h3>
-                          {index + 1}. {question.question} ({question.type})
-                        </h3>
-                        <div className="options-container">
-                          {question.options &&
-                            question.options.map((option, optionIndex) => (
-                              <label key={optionIndex}>
-                                <input
-                                  type="radio"
-                                  value={option.option}
-                                  name={`question-${index}`}
-                                />
-                                <span className="option-label">{option.option}</span>
-                              </label>
-                            ))}
-                        </div>
-                      </div>
-                    ))}
-                    <button className="NextQuestion" onClick={handleQuestionValidate}>
-                      Submit
-                    </button>
-                  </div>
-                )}
                 <div>
                   <button
                     className="previous-button"
@@ -1058,7 +1114,7 @@ function LearningPage() {
                     className="next-button"
                     onClick={handleNext}
                     style={{
-                      display: isQuestionGenerated || isCourseCompleted ? "none" : "inline-block",
+                      display: isQuestionGenerated ? "none" : "inline-block", // Hide only during questions
                     }}
                   >
                     {currentModule === moduleLength ? "Complete" : "Next"}

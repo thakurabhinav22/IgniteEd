@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from "react";
-import { FaAngleDown, FaAngleUp, FaEye, FaSave } from "react-icons/fa";
+import React, { useState, useEffect, useRef } from "react";
+import { FaAngleDown, FaAngleUp, FaEye, FaSave, FaSearch } from "react-icons/fa";
 import "./webcrawler.css";
 import AdminSidebar from "./adminSideBar";
 import { getDatabase, ref, push, set } from "firebase/database";
@@ -19,18 +19,26 @@ export default function WebCrawler() {
   const [selectedLinks, setSelectedLinks] = useState([]); // For Keyword Searcher
   const [selectedScrapedLinks, setSelectedScrapedLinks] = useState([]); // For Link Scraper
   const [searchQuery, setSearchQuery] = useState("");
+  const [searchResults, setSearchResults] = useState([]); // For YT Video Courses
   const [isSaveModalOpen, setIsSaveModalOpen] = useState(false);
   const [repoName, setRepoName] = useState("");
   const [scrapedText, setScrapedText] = useState("");
   const [isViewModalOpen, setIsViewModalOpen] = useState(false);
+  const [isSearchPopupOpen, setIsSearchPopupOpen] = useState(false); // For search popup
+  const [cseLoading, setCseLoading] = useState(false); // New state for CSE loading
 
   const server_end_point = "https://b978747b-0cfa-4ac8-aa74-e01288e8d3c1-00-2tmnjhgcuv5r3.pike.replit.dev/scrape";
   const download_endpoint = "https://b978747b-0cfa-4ac8-aa74-e01288e8d3c1-00-2tmnjhgcuv5r3.pike.replit.dev/download-pdfs-as-text";
+  // Fallback local endpoint (uncomment if Replit fails)
+  // const server_end_point = "http://localhost:5000/scrape";
+  // const download_endpoint = "http://localhost:5000/download-pdfs-as-text";
 
-  // Check server status
+  const cseRef = useRef(null); // Ref to the CSE container div
+
   const checkServerStatus = async () => {
     try {
-      const response = await fetch(server_end_point);
+      const response = await fetch(server_end_point, { method: "HEAD", mode: "cors" });
+      console.log("Server status check response:", response.status);
       if (response.status === 405 || response.ok) {
         setServerStatus("online");
       } else {
@@ -48,16 +56,36 @@ export default function WebCrawler() {
     return () => clearInterval(interval);
   }, []);
 
+  // Load Google CSE script
   useEffect(() => {
-    if (activeTab === "search-engine") {
-      const script = document.createElement("script");
-      script.async = true;
-      script.src = "https://cse.google.com/cse.js?cx=13cbaf0acfe7f4937";
-      script.onload = () => console.log("CSE script loaded successfully.");
-      script.onerror = () => console.error("Error loading CSE script.");
-      document.body.appendChild(script);
+    const script = document.createElement("script");
+    script.type = "text/javascript";
+    script.async = true;
+    script.src = "https://cse.google.com/cse.js?cx=13cbaf0acfe7f4937";
+    script.onload = () => {
+      console.log("CSE script loaded successfully.");
+      setCseLoading(false);
+    };
+    script.onerror = () => {
+      console.error("Error loading CSE script.");
+      setCseLoading(false);
+      setError("Failed to load Google Custom Search Engine.");
+    };
+    document.body.appendChild(script);
+
+    // Cleanup script on unmount
+    return () => {
+      document.body.removeChild(script);
+    };
+  }, []);
+
+  // Ensure CSE is rendered when popup opens
+  useEffect(() => {
+    if (isSearchPopupOpen && cseRef.current) {
+      setCseLoading(true);
+      setTimeout(() => setCseLoading(false), 1000); // Fallback to stop loading after 1s
     }
-  }, [activeTab]);
+  }, [isSearchPopupOpen]);
 
   const handleLinksChange = (e) => {
     setLinks(e.target.value);
@@ -76,7 +104,9 @@ export default function WebCrawler() {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ urls: linkArray }),
+          mode: "cors",
         });
+        console.log("Scrape request to:", server_end_point, "Status:", response.status);
 
         if (!response.ok) {
           const errorData = await response.json();
@@ -124,14 +154,13 @@ export default function WebCrawler() {
     try {
       setLoading(true);
       setError(null);
-      const response = await fetch(
-        "https://b978747b-0cfa-4ac8-aa74-e01288e8d3c1-00-2tmnjhgcuv5r3.pike.replit.dev/search",
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ topic: keyword, author: "", keywords: "" }),
-        }
-      );
+      const response = await fetch("https://b978747b-0cfa-4ac8-aa74-e01288e8d3c1-00-2tmnjhgcuv5r3.pike.replit.dev/search", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ topic: keyword, author: "", keywords: "" }),
+        mode: "cors",
+      });
+      console.log("Search request to:", "https://b978747b-0cfa-4ac8-aa74-e01288e8d3c1-00-2tmnjhgcuv5r3.pike.replit.dev/search", "Status:", response.status);
 
       if (!response.ok) {
         const errorData = await response.json();
@@ -173,11 +202,15 @@ export default function WebCrawler() {
     try {
       setLoading(true);
       setError(null);
+      console.log("Requesting:", download_endpoint, "Payload:", JSON.stringify({ pdf_links: selectedLinks }));
+
       const response = await fetch(download_endpoint, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ pdf_links: selectedLinks }),
+        mode: "cors",
       });
+      console.log("Download request to:", download_endpoint, "Status:", response.status);
 
       if (!response.ok) {
         const errorData = await response.json();
@@ -186,11 +219,15 @@ export default function WebCrawler() {
 
       const data = await response.json();
       setScrapedText(data.text_content || "No content extracted.");
-      setIsSaveModalOpen(true); // Open save modal
+      setIsSaveModalOpen(true);
       setLoading(false);
     } catch (error) {
+      if (error.name === "TypeError" && error.message.includes("Failed to fetch")) {
+        setError(`Network error: Could not connect to the server at ${download_endpoint}. Please ensure the server is running on Replit or try the local fallback (http://localhost:5000).`);
+      } else {
+        setError(error.message || "Failed to fetch text content.");
+      }
       console.error("Error fetching text content:", error);
-      setError(error.message || "Failed to fetch text content.");
       setLoading(false);
     }
   };
@@ -201,14 +238,13 @@ export default function WebCrawler() {
       return;
     }
 
-    // Combine only selected scraped content into a single string
     const combinedContent = scrapedContent
       .filter(item => selectedScrapedLinks.includes(item.url))
       .map(item => `--- Content from ${item.url} ---\n\n${item.content}`)
       .join("\n\n");
 
     setScrapedText(combinedContent);
-    setIsSaveModalOpen(true); // Open save modal
+    setIsSaveModalOpen(true);
   };
 
   const handleViewScrapedContent = () => {
@@ -261,8 +297,8 @@ export default function WebCrawler() {
 
       setIsSaveModalOpen(false);
       setRepoName("");
-      setScrapedText(""); // Clear after saving
-      setSelectedScrapedLinks([]); // Clear selected links after saving
+      setScrapedText("");
+      setSelectedScrapedLinks([]);
     } catch (error) {
       console.error("Error saving to repository:", error);
       Swal.fire({
@@ -279,6 +315,32 @@ export default function WebCrawler() {
 
   const handleSearchQuery = (e) => {
     setSearchQuery(e.target.value);
+  };
+
+  const handleYTVideoSearch = async () => {
+    if (!searchQuery.trim()) {
+      alert("Please enter a search query.");
+      return;
+    }
+
+    try {
+      setLoading(true);
+      setError(null);
+      const response = await fetch(
+        `https://www.googleapis.com/customsearch/v1?key=YOUR_API_KEY&cx=13cbaf0acfe7f4937&q=${encodeURIComponent(
+          searchQuery + " site:youtube.com -inurl:(signup | login)"
+        )}&num=5`
+      );
+      if (!response.ok) throw new Error("Failed to fetch YouTube video results");
+
+      const data = await response.json();
+      setSearchResults(data.items || []);
+      setLoading(false);
+    } catch (err) {
+      setError(err.message || "Error fetching YouTube video results");
+      setLoading(false);
+      console.error("Error fetching YouTube video results:", err);
+    }
   };
 
   return (
@@ -300,10 +362,10 @@ export default function WebCrawler() {
           Keyword Searcher
         </button>
         <button
-          className={activeTab === "search-engine" ? "tab-active" : "tab-btn"}
-          onClick={() => setActiveTab("search-engine")}
+          className={activeTab === "yt-video-courses" ? "tab-active" : "tab-btn"}
+          onClick={() => setActiveTab("yt-video-courses")}
         >
-          Search Engine
+          YT Video Courses
         </button>
       </div>
 
@@ -442,17 +504,48 @@ export default function WebCrawler() {
           </div>
         )}
 
-        {/* Search Engine Tab */}
-        {activeTab === "search-engine" && (
+        {/* YT Video Courses Tab */}
+        {activeTab === "yt-video-courses" && (
           <div className="tab-panel">
-            <h2>🌍 Search Engine</h2>
-            <p>Perform intelligent searches across the web.</p>
-            <div className="google-search">
-              <div className="gcse-search"></div>
+            <h2>🎥 YT Video Courses</h2>
+            <p>Search for YouTube video courses related to your topic.</p>
+            <div className="search-input-container">
+              <input
+                type="text"
+                className="search-input"
+                placeholder="Enter topic (e.g., 'React tutorials')..."
+                value={searchQuery}
+                onChange={handleSearchQuery}
+              />
+              <button className="search-btn" onClick={handleYTVideoSearch}>
+                <FaSearch /> Search
+              </button>
             </div>
+            {loading && <p>Loading...</p>}
+            {error && <p style={{ color: "red" }}>{error}</p>}
+            {searchResults.length > 0 && (
+              <ul className="search-results-list">
+                {searchResults.map((result, index) => (
+                  <li key={index}>
+                    <a href={result.link} target="_blank" rel="noopener noreferrer">
+                      {result.title}
+                    </a>
+                    <p>{result.snippet}</p>
+                  </li>
+                ))}
+              </ul>
+            )}
           </div>
         )}
       </div>
+
+      {/* Floating Search Button (Global) */}
+      {/* <button
+        className="floating-search-btn"
+        onClick={() => setIsSearchPopupOpen(true)}
+      >
+        <FaSearch /> Search
+      </button> */}
 
       {/* Server Status */}
       <div style={serverStatusStyle}>Server is {serverStatus.toUpperCase()}</div>
@@ -498,6 +591,40 @@ export default function WebCrawler() {
           </div>
         </div>
       )}
+
+      {/* Search Popup Modal with Google CSE */}
+      {/* {isSearchPopupOpen && (
+        <div className="modal-overlay search-popup-overlay">
+          <div className="modal search-popup">
+            <h3>Search</h3>
+            {cseLoading ? (
+              <p>Loading Google Search... Please wait.</p>
+            ) : error ? (
+              <p style={{ color: "red" }}>{error}</p>
+            ) : (
+              <div
+                className="google-search"
+                ref={cseRef}
+                dangerouslySetInnerHTML={{
+                  __html: '<gcse:searchbox-only resultsUrl="/searchresults"></gcse:searchbox-only>',
+                }}
+              />
+            )}
+            <div className="modal-actions">
+              <button
+                className="modal-btn close-btn"
+                onClick={() => {
+                  setIsSearchPopupOpen(false);
+                  setSearchQuery("");
+                  setError(null); // Clear error on close
+                }}
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )} */}
     </div>
   );
 }
