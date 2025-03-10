@@ -4,6 +4,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { FaHome, FaCertificate, FaQuestionCircle, FaCog, FaUser, FaLock, FaTools, FaTimes, FaPlay } from "react-icons/fa";
 import { getDatabase, ref, get, update, remove, set } from "firebase/database";
 import Swal from "sweetalert2";
+import { getAuth, sendPasswordResetEmail } from "firebase/auth";
 
 function Sidebar({ isQuestionAnswered, isQuestionGenerated }) {
   const [userName, setUserName] = useState("");
@@ -278,47 +279,87 @@ function Sidebar({ isQuestionAnswered, isQuestionGenerated }) {
     });
   };
 
+  
   const handleResetPassword = () => {
-    Swal.fire({
-      title: "Reset Password",
-      text: "A password reset link would be sent to your registered email address.",
-      icon: "info",
-      confirmButtonText: "OK",
-      confirmButtonColor: "#1E3A8A",
-    });
-  };
-
-  const handleForgotPassword = () => {
-    Swal.fire({
-      title: "Forgot Password",
-      html: `
-        <p>Enter your email to receive a reset link:</p>
-        <input type="email" id="swal-email" class="swal2-input user-details-box" placeholder="Email">
-      `,
-      showCancelButton: true,
-      confirmButtonText: "Send",
-      cancelButtonText: "Cancel",
-      confirmButtonColor: "#1E3A8A",
-      cancelButtonColor: "#6B7280",
-      preConfirm: () => {
-        const email = document.getElementById("swal-email").value;
-        if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-          Swal.showValidationMessage("Please enter a valid email address!");
-          return false;
+    const auth = getAuth(); // Get the Firebase Auth instance
+    const db = getDatabase(); // Get the Firebase Realtime Database instance
+  
+    // Retrieve the user ID from the cookie
+    const userId = getCookie("userSessionCred");
+  
+    if (!userId) {
+      Swal.fire({
+        title: "Error",
+        text: "User not logged in. Please log in first.",
+        icon: "error",
+        confirmButtonText: "OK",
+        confirmButtonColor: "#DC2626",
+      });
+      return;
+    }
+  
+    // Fetch the user's email from Firebase Realtime Database
+    const userRef = ref(db, `user/${userId}`); 
+    // console.log("User Reference:", userId);
+    get(userRef)
+      .then((snapshot) => {
+        if (snapshot.exists()) {
+          const userData = snapshot.val();
+          const userEmail = userData.email; // Assuming the email is stored in the `Email` field
+  
+          if (userEmail) {
+          // console.log("User Email:", userEmail);
+            sendPasswordResetEmail(auth, userEmail)
+              .then(() => {
+                Swal.fire({
+                  title: "Reset Password",
+                  text: "A password reset link has been sent to your registered email address.",
+                  icon: "success",
+                  confirmButtonText: "OK",
+                  confirmButtonColor: "#1E3A8A",
+                });
+              })
+              .catch((error) => {
+                console.error("Error sending password reset email:", error);
+                Swal.fire({
+                  title: "Error",
+                  text: "Failed to send password reset email. Please try again.",
+                  icon: "error",
+                  confirmButtonText: "OK",
+                  confirmButtonColor: "#DC2626",
+                });
+              });
+          } else {
+            Swal.fire({
+              title: "Error",
+              text: "User email not found in the database.",
+              icon: "error",
+              confirmButtonText: "OK",
+              confirmButtonColor: "#DC2626",
+            });
+          }
+        } else {
+          Swal.fire({
+            title: "Error",
+            text: "User data not found in the database.",
+            icon: "error",
+            confirmButtonText: "OK",
+            confirmButtonColor: "#DC2626",
+          });
         }
-        return email;
-      },
-    }).then((result) => {
-      if (result.isConfirmed) {
+      })
+      .catch((error) => {
+        console.error("Error fetching user data:", error);
         Swal.fire({
-          title: "Reset Link Sent",
-          text: `A password reset link has been sent to ${result.value}. Please check your inbox.`,
-          icon: "success",
-          confirmButtonColor: "#1E3A8A",
+          title: "Error",
+          text: "Failed to fetch user data. Please try again.",
+          icon: "error",
+          confirmButtonText: "OK",
+          confirmButtonColor: "#DC2626",
         });
-      }
-    });
+      });
   };
+  
 
   const [activeTab, setActiveTab] = useState("profile");
 
@@ -440,11 +481,6 @@ function Sidebar({ isQuestionAnswered, isQuestionGenerated }) {
                     <button className="swal2-settings-btn" onClick={handleResetPassword}>
                       Send Reset Password Link
                     </button>
-                    <p className="forgot-password">
-                      <a href="#" onClick={(e) => { e.preventDefault(); handleForgotPassword(); }}>
-                        Forgot Password?
-                      </a>
-                    </p>
                   </div>
                 )}
                 {activeTab === "voice" && (
@@ -466,7 +502,7 @@ function Sidebar({ isQuestionAnswered, isQuestionGenerated }) {
                         <option value="microsoft-susan">Microsoft Susan - English (United Kingdom)</option>
                         <option value="microsoft-heera">Microsoft Heera - English (India)</option>
                         <option value="microsoft-ravi">Microsoft Ravi - English (India)</option>
-                        <option value="google-hindi">Google हिन्दी</option>
+                        {/* <option value="google-hindi">Google हिन्दी</option> */}
                       </select>
                       <button
                         className="swal2-settings-btn"
@@ -484,9 +520,9 @@ function Sidebar({ isQuestionAnswered, isQuestionGenerated }) {
                     <button className="swal2-settings-btn" onClick={handleViewInfo}>
                       View Info
                     </button>
-                    <button className="swal2-settings-btn" onClick={handleDownloadAnalytics}>
+                    {/* <button className="swal2-settings-btn" onClick={handleDownloadAnalytics}>
                       Download Analytics CSV
-                    </button>
+                    </button> */}
                     <button className="swal2-settings-btn swal2-danger-btn" onClick={handleDeleteAccount}>
                       Delete Account
                     </button>
