@@ -79,6 +79,8 @@ export default function AdminDashboardContent() {
     try {
       const courseRef = ref(database, `admin/${cookieValue}/courses/${courseId}`);
       await remove(courseRef);
+      const CourseRef = ref(database, `Courses/${courseId}`);
+    await remove(CourseRef);
       setCourses(courses.filter((course) => course.courseId !== courseId));
       Swal.fire({
         title: "Deleted!",

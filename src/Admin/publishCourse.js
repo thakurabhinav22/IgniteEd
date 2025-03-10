@@ -14,8 +14,8 @@ const PublishCourse = () => {
 
   const [courseName, setCourseName] = useState(fileName || "");
   const [authorName, setAuthorName] = useState("");
-  const [thumbnail, setThumbnail] = useState("");
-  const [bannerImage, setBannerImage] = useState("");
+  const [thumbnailUrl, setThumbnailUrl] = useState("");
+  const [bannerImageUrl, setBannerImageUrl] = useState("");
   const [createAnnouncement, setCreateAnnouncement] = useState(false);
   const [numQuestions, setNumQuestions] = useState(3);
   const [isProcessing, setIsProcessing] = useState(false);
@@ -25,18 +25,19 @@ const PublishCourse = () => {
 
   const API_KEY = process.env.REACT_APP_GEMINI;
   const genAI = new GoogleGenerativeAI(API_KEY);
-  const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
+  const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
   let generatedCourse;
+
   const handleGemini = async () => {
     if (isProcessing) return;
     setIsProcessing(true);
 
     try {
       const result = await model.generateContent(`
-        Convert the provided course content into a structured JSON format while keeping all data intact. Ensure that no modifications are made to the original content except for formatting it into JSON. Return only JSON, nothing else.
-    
+        Convert the provided course content into a structured JSON format while keeping all data intact. Ensure that no modifications are made to the original content except for formatting it into JSON. Return only JSON, nothing else. Additionally, provide relevant YouTube video suggestions for each module based on the content video should exist in youtube.
+      
         Follow this JSON structure:
-    
+      
         {
           "title": "<Course Title>",
           "introduction": "<Course Introduction>",
@@ -51,6 +52,10 @@ const PublishCourse = () => {
                 "<Key Takeaway 1>",
                 "<Key Takeaway 2>",
                 "<Key Takeaway 3>"
+              ],
+              "Refytvideo": [
+                "<YouTube Video URL 1>",
+                "<YouTube Video URL 2>"
               ]
             },
             {
@@ -62,21 +67,27 @@ const PublishCourse = () => {
                 "<Key Takeaway 1>",
                 "<Key Takeaway 2>",
                 "<Key Takeaway 3>"
+              ],
+              "Refytvideo": [
+                "<YouTube Video URL 1>",
+                "<YouTube Video URL 2>"
               ]
             }
             // Additional modules will follow the same structure
           ]
         }
-    
+      
         Ensure that:
         - The JSON is well-formatted and follows the above schema precisely.
         - The module count reflects the actual number of modules in the content.
         - Key takeaways are listed as an array for better readability.
-    
+        - YouTube video suggestions are relevant to the module's content and provide additional learning resources.
+        - Each module should have at least 2 YouTube video suggestions.
+        - YouTube video URLs should be valid and directly related to the module's topic.
+      
         **Course Content:**  
         ${updatedContent}
-    `);
-    
+      `);
 
       const response = await result.response;
       generatedCourse = await response.text();
@@ -94,6 +105,7 @@ const PublishCourse = () => {
         timer: 3000,
       }).then(() => {
         setIsProcessing(false);
+        navigate("/Admin/Dashboard")
       });
     } catch (error) {
       Swal.fire({
@@ -136,7 +148,7 @@ const PublishCourse = () => {
   };
 
   const handlePublish = async () => {
-    if (!courseName || !authorName || !thumbnail) {
+    if (!courseName || !authorName || !thumbnailUrl) {
       alert("Please fill all the required fields!");
       return;
     }
@@ -166,9 +178,8 @@ const PublishCourse = () => {
       await set(courseRef, {
         courseName,
         authorName,
-        thumbnail,
-        bannerImage,
-        // createAnnouncement,
+        thumbnailUrl,
+        bannerImageUrl,
         numQuestions,
         courseContent: generatedCourse,
       });
@@ -176,8 +187,8 @@ const PublishCourse = () => {
       await set(ref(db, `Courses/${newCourseId}`), {
         courseName,
         authorName,
-        thumbnail,
-        bannerImage,
+        thumbnailUrl,
+        bannerImageUrl,
         numQuestions,
         courseContent: generatedCourse,
       });
@@ -237,42 +248,21 @@ const PublishCourse = () => {
             />
           </div>
 
-          {/* Thumbnail Upload */}
+          {/* Thumbnail URL */}
           <div className="input-group">
             <label>
-              <strong>Square Thumbnail Image (JPEG Only):</strong>
+              <strong>Thumbnail Image URL:</strong>
             </label>
             <input
-              type="file"
-              accept="image/jpeg"
-              onChange={(e) => setThumbnail(e.target.files[0])}
+              type="text"
+              value={thumbnailUrl}
+              onChange={(e) => setThumbnailUrl(e.target.value)}
+              placeholder="Enter thumbnail image URL"
               required
             />
           </div>
 
-          {/* Promotion Banner Image Upload */}
-          <div className="input-group">
-            <label>
-              <strong>Promotion Banner Image (Landscape):</strong>
-            </label>
-            <input
-              type="file"
-              accept="image/jpeg"
-              onChange={(e) => setBannerImage(e.target.files[0])}
-            />
-          </div>
 
-          {/* Announcement Checkbox */}
-          <div className="checkbox-group">
-            <input
-              type="checkbox"
-              checked={createAnnouncement}
-              onChange={(e) => setCreateAnnouncement(e.target.checked)}
-            />
-            <label>
-              <strong>Do you want to create a course announcement?</strong>
-            </label>
-          </div>
 
           {/* Number of Questions per Module */}
           <div className="input-group">
@@ -281,9 +271,9 @@ const PublishCourse = () => {
             </label>
             <input
               type="number"
-              value={numQuestions}
+              value={5}
               onChange={(e) => setNumQuestions(Math.max(1, e.target.value))}
-              min="1"
+              min="3"
               max="10"
             />
           </div>
@@ -318,14 +308,13 @@ const PublishCourse = () => {
               <FaTimes />
             </button>
             <div className="pdf-content-text">
-              <textarea
+              {/* <textarea
                 value={updatedContent}
                 onChange={handleContentChange}
                 rows="10"
                 cols="50"
-              />
-              <pre>{updatedContent}</pre>{" "}
-              {/* Display and allow editing of course content */}
+              /> */}
+              <pre>{updatedContent}</pre>
             </div>
           </div>
         </div>

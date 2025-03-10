@@ -73,7 +73,7 @@ nav {
   font-size: 1.4em;
 }
 .nav-item:hover {
-  background-color: #4169E1 !important;
+ border: 2px solid #4169E1 !important;
   color: #ffffff;
 }
 
@@ -106,8 +106,9 @@ nav {
   .nav-item:focus {
     transform: translateY(-5px);
     box-shadow: 0 10px 20px rgba(65, 105, 225, 0.3); /* Light blue shadow */
-    background-color: #4169E1; /* Light blue background on hover */
-    color: #FFFFFF; /* White text on hover */
+    border: 2px solid #4169E1; /* Light blue border on hover */
+   
+    color: #4169E1; /* White text on hover */
   }
   
   .nav-item:hover .nav-icon,

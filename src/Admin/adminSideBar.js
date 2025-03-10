@@ -65,7 +65,7 @@ function AdminSidebar() {
       </div>
       <nav>
         <Link to="/Admin/Dashboard" className="nav-item">
-          <box-icon type="solid" name="home" className="nav-icon"></box-icon>
+          <box-icon type="solid" name="home" color="#4169E1" className="nav-icon"></box-icon>
           <span>Dashboard</span>
         </Link>
         <Link to="/Admin/CreateCourse" className="nav-item">
@@ -73,11 +73,12 @@ function AdminSidebar() {
             type="solid"
             name="file-plus"
             className="nav-icon"
+            color="#4169E1"
           ></box-icon>
           <span>Create Course</span>
         </Link>
         <Link to="/Admin/ManageRepo" className="nav-item">
-          <box-icon type="solid" name="data" className="nav-icon"></box-icon>
+          <box-icon type="solid" name="data" color="#4169E1" className="nav-icon"></box-icon>
           <span>Manage Course DB</span>
         </Link>
       </nav>

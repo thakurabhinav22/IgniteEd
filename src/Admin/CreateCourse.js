@@ -40,6 +40,7 @@ export default function CreateCourse({ AdminName, Role }) {
   const [repoCourses, setRepoCourses] = useState([]);
   const [isProcessing, setIsProcessing] = useState(false);
   const [courseCreated, setCourseCreated] = useState(false);
+  const [showGenerateButton, setShowGenerateButton] = useState(false); // New state to control Generate button visibility
 
   useEffect(() => {
     document.title = "TheLearnMax - Course Create";
@@ -49,6 +50,15 @@ export default function CreateCourse({ AdminName, Role }) {
       return;
     }
   }, [navigate]);
+
+  useEffect(() => {
+    // Show the Generate button only if there are PDFs or repo data selected
+    if (pdfFiles.length > 0) {
+      setShowGenerateButton(true);
+    } else {
+      setShowGenerateButton(false);
+    }
+  }, [pdfFiles]);
 
   const handleSessionExpired = (message) => {
     Swal.fire({
@@ -224,7 +234,6 @@ export default function CreateCourse({ AdminName, Role }) {
           **Content Source:**  
           ${combinedContent}
       `);
-      
 
         const response = await result.response;
         const generatedCourse = await response.text();
@@ -247,6 +256,7 @@ export default function CreateCourse({ AdminName, Role }) {
           timer: 3000,
         }).then(() => {
           setCourseCreated(true);
+          setShowGenerateButton(false); // Hide Generate button after course creation
         });
       } else {
         Swal.fire({
@@ -293,9 +303,7 @@ export default function CreateCourse({ AdminName, Role }) {
               hidden
             />
           </label>
-          <button className="create-course-button" onClick={fetchCoursesFromRepo}>
-            <FaFolderOpen /> Select from Repository
-          </button>
+
           <Link to="/Admin/magicWritter">
             <button className="create-course-button">
               <FaEdit /> Magic Writer
@@ -306,6 +314,9 @@ export default function CreateCourse({ AdminName, Role }) {
               <FaEye /> Web Search
             </button>
           </Link>
+          <button className="add-courses-button" onClick={fetchCoursesFromRepo}>
+            <FaFolderOpen /> Select from Repository
+          </button>
         </div>
 
         <div className="pdf-list">
@@ -349,7 +360,7 @@ export default function CreateCourse({ AdminName, Role }) {
           )}
         </div>
 
-        {isAllProcessed && !courseCreated && (
+        {showGenerateButton && isAllProcessed && !courseCreated && (
           <button
             className="create-final-button"
             onClick={handleCreateCourse}
@@ -411,7 +422,7 @@ export default function CreateCourse({ AdminName, Role }) {
             </ul>
             <div className="popup-actions">
               <button
-                className="create-course-button"
+                className="create-course-button-popup"
                 onClick={addSelectedToPdfList}
                 disabled={repoSelected.length === 0}
               >
@@ -425,11 +436,11 @@ export default function CreateCourse({ AdminName, Role }) {
       {/* PDF View Modal */}
       {viewPdfContent && (
         <div className="pdf-content-overlay">
-          <div className="pdf-content-box">
+          <div className="pdf-content-box-data">
             <button className="close-button" onClick={closeViewPdf}>
               <FaTimes />
             </button>
-            <div className="pdf-content-text">{viewPdfContent}</div>
+            <div className="pdf-content-text-data">{viewPdfContent}</div>
           </div>
         </div>
       )}

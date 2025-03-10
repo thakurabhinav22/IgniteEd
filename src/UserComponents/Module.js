@@ -81,8 +81,8 @@ function Module() {
             >
               <img
                 src={
-                  course.imageURL ||
-                  "https://academy.hackthebox.com/storage/modules/290/logo.png"
+                  course.thumbnailUrl ||
+                  "https://developers.elementor.com/docs/assets/img/elementor-placeholder-image.png"
                 }
                 alt={course.courseName}
                 className="course-image"
