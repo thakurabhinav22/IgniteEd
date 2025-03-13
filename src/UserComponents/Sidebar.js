@@ -297,18 +297,16 @@ function Sidebar({ isQuestionAnswered, isQuestionGenerated }) {
       });
       return;
     }
-  
-    // Fetch the user's email from Firebase Realtime Database
+
     const userRef = ref(db, `user/${userId}`); 
-    // console.log("User Reference:", userId);
+
     get(userRef)
       .then((snapshot) => {
         if (snapshot.exists()) {
           const userData = snapshot.val();
-          const userEmail = userData.email; // Assuming the email is stored in the `Email` field
+          const userEmail = userData.email; 
   
           if (userEmail) {
-          // console.log("User Email:", userEmail);
             sendPasswordResetEmail(auth, userEmail)
               .then(() => {
                 Swal.fire({
