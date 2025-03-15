@@ -2,19 +2,21 @@ import React, { useState, useEffect } from "react";
 import "./Assessment.css";
 import Sidebar from "./Sidebar";
 import Cookies from "js-cookie";
-import { database } from "../Admin/firebase"; // Adjust path to your firebase.js
-import { ref, onValue, off, get } from "firebase/database";
-import { FaUser, FaQuestionCircle, FaClock, FaCheckCircle, FaTimes } from "react-icons/fa";
+import { database } from "../Admin/firebase";
+import { ref, onValue, off } from "firebase/database";
+import { FaUser, FaQuestionCircle, FaClock, FaCheckCircle } from "react-icons/fa";
 import { CircularProgressbar, buildStyles } from "react-circular-progressbar";
 import "react-circular-progressbar/dist/styles.css";
+import { useNavigate } from "react-router-dom";
+import Swal from "sweetalert2";
 
 function Assessment() {
   const [inProgressCourses, setInProgressCourses] = useState([]);
   const [courseDetails, setCourseDetails] = useState({});
+  const [assessmentStatus, setAssessmentStatus] = useState({}); // New state for assessment completion
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [selectedContent, setSelectedContent] = useState(null); // State for course content
-  const [showContent, setShowContent] = useState(false); // Toggle overlay visibility
+  const navigate = useNavigate();
 
   useEffect(() => {
     const userSessionCred = Cookies.get("userSessionCred");
@@ -38,7 +40,9 @@ function Assessment() {
           setInProgressCourses(coursesArray);
           console.log("In-Progress Course IDs:", coursesArray.map((c) => c.id));
 
+          // Fetch course details and assessment status for each course
           coursesArray.forEach((course) => {
+            // Fetch course details
             const courseDetailRef = ref(database, `Courses/${course.id}`);
             onValue(
               courseDetailRef,
@@ -53,6 +57,25 @@ function Assessment() {
               },
               (err) => {
                 setError(`Failed to fetch details for ${course.id}: ${err.message}`);
+              }
+            );
+
+            // Fetch assessment completion status
+            const assessmentRef = ref(
+              database,
+              `user/${userSessionCred}/${course.id}/assessmentComplete`
+            );
+            onValue(
+              assessmentRef,
+              (assessmentSnapshot) => {
+                const isComplete = assessmentSnapshot.exists() && assessmentSnapshot.val() === true;
+                setAssessmentStatus((prev) => ({
+                  ...prev,
+                  [course.id]: isComplete,
+                }));
+              },
+              (err) => {
+                console.error(`Failed to fetch assessment status for ${course.id}: ${err.message}`);
               }
             );
           });
@@ -71,31 +94,16 @@ function Assessment() {
     return () => off(inProgressRef, "value", unsubscribeInProgress);
   }, []);
 
-  // Function to fetch course content and show it
-  const handleStartAssessment = async (courseId) => {
-    try {
-      const contentRef = ref(database, `Courses/${courseId}/courseContent`);
-      const snapshot = await get(contentRef);
-      if (snapshot.exists()) {
-        const courseContent = snapshot.val();
-        setSelectedContent(courseContent);
-        setShowContent(true); // Show the overlay
-      } else {
-        console.log(`No course content found for ${courseId}`);
-        setSelectedContent({ message: "No content available for this course." });
-        setShowContent(true);
-      }
-    } catch (err) {
-      console.error(`Error fetching course content for ${courseId}:`, err.message);
-      setSelectedContent({ error: `Error: ${err.message}` });
-      setShowContent(true);
-    }
+  // Navigate to assessmenttest with courseId in state
+  const handleStartAssessment = (courseId) => {
+    navigate("/assessmenttest", { state: { courseId } });
   };
 
-  // Function to close the content overlay
-  const closeContent = () => {
-    setShowContent(false);
-    setSelectedContent(null);
+  // Handle certificate download
+  const handleDownloadCertificate = (courseId) => {
+    // Placeholder for certificate download logic
+    Swal.fire("Success", `Certificate for course ${courseId} download initiated!`, "success");
+    // Example: navigate("/certificate", { state: { courseId } });
   };
 
   return (
@@ -124,6 +132,7 @@ function Assessment() {
               const details = courseDetails[course.id] || {};
               const progress =
                 ((course.ModuleCovered || 0) / (course.TotalModules || 1)) * 100;
+              const isAssessmentComplete = assessmentStatus[course.id] || false;
 
               return (
                 <div key={course.id} className="assessment-card">
@@ -158,7 +167,14 @@ function Assessment() {
                     </div>
                   </div>
                   <div className="card-footer">
-                    {course.completed ? (
+                    {isAssessmentComplete ? (
+                      <button
+                        className="start-btn"
+                        onClick={() => handleDownloadCertificate(course.id)}
+                      >
+                        Download Certificate
+                      </button>
+                    ) : course.completed ? (
                       <button
                         className="start-btn"
                         onClick={() => handleStartAssessment(course.id)}
@@ -174,25 +190,6 @@ function Assessment() {
                 </div>
               );
             })}
-          </div>
-        )}
-
-        {/* Full-screen black overlay for course content */}
-        {showContent && (
-          <div className="content-overlay">
-            <button className="close-btn" onClick={closeContent}>
-              <FaTimes />
-            </button>
-            <div className="content-display">
-              <h2>Course Content</h2>
-              {selectedContent?.error ? (
-                <p className="content-error">{selectedContent.error}</p>
-              ) : selectedContent?.message ? (
-                <p className="content-message">{selectedContent.message}</p>
-              ) : (
-                <pre>{JSON.stringify(selectedContent, null, 2)}</pre>
-              )}
-            </div>
           </div>
         )}
       </div>

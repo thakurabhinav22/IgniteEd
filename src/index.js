@@ -23,7 +23,7 @@ import AnalyticsPage from './UserComponents/AnalyticsPage';
 import AddTeam from './Admin/addTeam';
 import Code from './Admin/code';
 import Assessment from './UserComponents/assessment';
-
+import AssessmentContent from './UserComponents/AssessmentContent';
 
 const router = createBrowserRouter([
   {
@@ -37,6 +37,10 @@ const router = createBrowserRouter([
   {
     path: "/assessment",
     element: <Assessment />,
+  },
+  {
+    path: "/assessmenttest",
+    element: <AssessmentContent />,
   },
   {
     path: "/Admin",

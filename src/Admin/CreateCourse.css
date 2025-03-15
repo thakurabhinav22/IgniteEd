@@ -91,8 +91,10 @@
 }
 
 .add-courses-button {
-  width: 150px;
-  height: 150px;
+  width: 250px;
+  height: 100px;
+  margin-top: 12rem;
+  margin-left: -25rem;
   background: linear-gradient(135deg, #e74c3c, #3498db);
   color: #ffffff;
   border-radius: 12px;

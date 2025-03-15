@@ -1,0 +1,247 @@
+/* Base Styles */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  background-color: #F9FAFB;
+  color: #1F2A44;
+}
+
+/* Page Layout */
+.quiz-page {
+  display: flex;
+  min-height: 100vh;
+  justify-content: center;
+  align-items: center;
+  background-color: #F9FAFB;
+}
+
+.quiz-wrapper {
+  max-width: 800px;
+  width: 100%;
+  padding: 40px;
+}
+
+/* Loading Screen */
+.loading-screen {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 50vh;
+  text-align: center;
+}
+
+.spinner {
+  width: 40px;
+  height: 40px;
+  border: 4px solid #E5E7EB;
+  border-top: 4px solid #007AFF;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+.loading-screen p {
+  margin-top: 16px;
+  font-size: 16px;
+  color: #6B7280;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* Error Panel */
+.error-panel {
+  background-color: #FEE2E2;
+  border-radius: 12px;
+  padding: 24px;
+  text-align: center;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+}
+
+.error-panel p {
+  font-size: 16px;
+  color: #991B1B;
+  margin-bottom: 16px;
+}
+
+.back-btn {
+  padding: 10px 20px;
+  background-color: #EF4444;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.back-btn:hover {
+  background-color: #DC2626;
+}
+
+/* Quiz Start Panel */
+.quiz-start-panel {
+  text-align: center;
+  background-color: white;
+  padding: 40px;
+  border-radius: 12px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+}
+
+.quiz-start-panel h1 {
+  font-size: 28px;
+  font-weight: 600;
+  color: #1F2A44;
+  margin-bottom: 16px;
+}
+
+.quiz-start-panel p {
+  font-size: 16px;
+  color: #6B7280;
+  margin-bottom: 24px;
+}
+
+.start-btn, .certificate-btn {
+  padding: 12px 24px;
+  border: none;
+  border-radius: 8px;
+  font-size: 16px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.start-btn {
+  background-color: #007AFF;
+  color: white;
+}
+
+.start-btn:hover {
+  background-color: #0062CC;
+}
+
+.certificate-btn {
+  background-color: #34C759;
+  color: white;
+}
+
+.certificate-btn:hover {
+  background-color: #2CA644;
+}
+
+/* Quiz Content */
+.quiz-content {
+  background-color: white;
+  padding: 32px;
+  border-radius: 12px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+}
+
+.quiz-content h1 {
+  font-size: 24px;
+  font-weight: 600;
+  color: #1F2A44;
+  margin-bottom: 20px;
+}
+
+.progress-indicator {
+  width: 100%;
+  height: 8px;
+  background-color: #E5E7EB;
+  border-radius: 4px;
+  margin-bottom: 24px;
+  overflow: hidden;
+}
+
+.progress-fill {
+  height: 100%;
+  background-color: #007AFF;
+  transition: width 0.3s ease-in-out;
+}
+
+/* Question Panel */
+.question-panel {
+  padding: 20px;
+  border: 1px solid #E5E7EB;
+  border-radius: 8px;
+}
+
+.question-info {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.question-number {
+  font-size: 18px;
+  font-weight: 600;
+  color: #007AFF;
+}
+
+.question-type {
+  font-size: 14px;
+  color: #6B7280;
+  font-style: italic;
+}
+
+.question-text {
+  font-size: 16px;
+  color: #374151;
+  margin-bottom: 20px;
+}
+
+.answer-input {
+  width: 100%;
+  padding: 12px;
+  border: 1px solid #D1D5DB;
+  border-radius: 8px;
+  font-size: 14px;
+  color: #374151;
+  margin-bottom: 20px;
+  transition: border-color 0.2s;
+}
+
+.answer-input:focus {
+  border-color: #007AFF;
+  outline: none;
+}
+
+.short-answer {
+  max-width: 300px;
+}
+
+.long-form, .coding {
+  resize: vertical;
+  min-height: 120px;
+  font-family: "SFMono-Regular", Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+}
+
+.coding {
+  background-color: #F9FAFB;
+  border-color: #E5E7EB;
+}
+
+.submit-btn {
+  padding: 12px 24px;
+  background-color: #007AFF;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 16px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.submit-btn:hover {
+  background-color: #0062CC;
+}
