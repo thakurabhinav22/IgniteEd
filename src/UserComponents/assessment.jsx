@@ -9,13 +9,15 @@ import { CircularProgressbar, buildStyles } from "react-circular-progressbar";
 import "react-circular-progressbar/dist/styles.css";
 import { useNavigate } from "react-router-dom";
 import Swal from "sweetalert2";
+import axios from "axios";
 
 function Assessment() {
   const [inProgressCourses, setInProgressCourses] = useState([]);
   const [courseDetails, setCourseDetails] = useState({});
-  const [assessmentStatus, setAssessmentStatus] = useState({}); // New state for assessment completion
+  const [assessmentStatus, setAssessmentStatus] = useState({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [userName, setUserName] = useState("");
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -26,8 +28,24 @@ function Assessment() {
       return;
     }
 
-    const inProgressRef = ref(database, `user/${userSessionCred}/InProgressCourses`);
+    const userNameRef = ref(database, `user/${userSessionCred}/Name`);
+    onValue(
+      userNameRef,
+      (snapshot) => {
+        const name = snapshot.val();
+        if (name) {
+          setUserName(name);
+          console.log("User Name:", name);
+        } else {
+          console.warn("No name found for user.");
+        }
+      },
+      (err) => {
+        console.error("Failed to fetch user name:", err.message);
+      }
+    );
 
+    const inProgressRef = ref(database, `user/${userSessionCred}/InProgressCourses`);
     const unsubscribeInProgress = onValue(
       inProgressRef,
       (snapshot) => {
@@ -40,9 +58,7 @@ function Assessment() {
           setInProgressCourses(coursesArray);
           console.log("In-Progress Course IDs:", coursesArray.map((c) => c.id));
 
-          // Fetch course details and assessment status for each course
           coursesArray.forEach((course) => {
-            // Fetch course details
             const courseDetailRef = ref(database, `Courses/${course.id}`);
             onValue(
               courseDetailRef,
@@ -60,7 +76,6 @@ function Assessment() {
               }
             );
 
-            // Fetch assessment completion status
             const assessmentRef = ref(
               database,
               `user/${userSessionCred}/${course.id}/assessmentComplete`
@@ -94,16 +109,55 @@ function Assessment() {
     return () => off(inProgressRef, "value", unsubscribeInProgress);
   }, []);
 
-  // Navigate to assessmenttest with courseId in state
   const handleStartAssessment = (courseId) => {
     navigate("/assessmenttest", { state: { courseId } });
   };
 
   // Handle certificate download
-  const handleDownloadCertificate = (courseId) => {
-    // Placeholder for certificate download logic
-    Swal.fire("Success", `Certificate for course ${courseId} download initiated!`, "success");
-    // Example: navigate("/certificate", { state: { courseId } });
+  const handleDownloadCertificate = async (courseId, courseName, authorName) => {
+    if (!userName || !courseName || !authorName) {
+      Swal.fire(
+        "Error",
+        "User name, course name, and author name are required. Cannot generate certificate.",
+        "error"
+      );
+      return;
+    }
+
+    try {
+      const response = await axios.post(
+        "https://tlm-server.onrender.com/generate",
+        {
+          name: userName,
+          course_name: courseName,
+          author_name: authorName,
+        },
+        {
+          headers: {
+            "Content-Type": "application/json",
+          },
+          responseType: "blob",
+        }
+      );
+
+      const blob = new Blob([response.data], { type: "image/png" });
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.setAttribute("download", `${userName}_certificate.png`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+
+      Swal.fire("Success", `Certificate for course ${courseId} downloaded!`, "success");
+    } catch (error) {
+      console.error("Error downloading certificate:", error);
+      const errorMessage = error.response?.data
+        ? await new Response(error.response.data).text()
+        : error.message;
+      Swal.fire("Error", `Failed to download certificate: ${errorMessage}`, "error");
+    }
   };
 
   return (
@@ -170,7 +224,13 @@ function Assessment() {
                     {isAssessmentComplete ? (
                       <button
                         className="start-btn"
-                        onClick={() => handleDownloadCertificate(course.id)}
+                        onClick={() =>
+                          handleDownloadCertificate(
+                            course.id,
+                            details.courseName || "Untitled Course",
+                            details.authorName || "N/A"
+                          )
+                        }
                       >
                         Download Certificate
                       </button>
