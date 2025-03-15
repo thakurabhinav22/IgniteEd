@@ -1,0 +1,245 @@
+.code-container {
+    width: 60%;
+    margin: 40px auto;
+    padding: 30px;
+    background: #ffffff;
+    border-radius: 10px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    max-width: 800px;
+  }
+  
+  .repo-button {
+    background-color: #007bff;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    font-size: 16px;
+    cursor: pointer;
+    border-radius: 5px;
+    margin-bottom: 20px;
+    transition: background-color 0.3s;
+  }
+  
+  .repo-button:hover {
+    background-color: #0056b3;
+  }
+  
+  .question-form {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+  
+  .form-title {
+    color: #333;
+    font-size: 24px;
+    font-weight: 600;
+    margin-bottom: 20px;
+    text-align: center;
+  }
+  
+  .form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  
+  .form-group label {
+    font-weight: 500;
+    color: #444;
+    font-size: 16px;
+  }
+  
+  .form-group input,
+  .form-group textarea {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    font-size: 14px;
+    background-color: #f9f9f9;
+    transition: border-color 0.3s, box-shadow 0.3s;
+  }
+  
+  .form-group input:focus,
+  .form-group textarea:focus {
+    border-color: #007bff;
+    outline: none;
+    box-shadow: 0 0 5px rgba(0, 123, 255, 0.3);
+  }
+  
+  .form-group textarea {
+    min-height: 100px;
+    resize: vertical;
+  }
+  
+  .submit-button {
+    background-color: #28a745;
+    color: white;
+    border: none;
+    padding: 12px 20px;
+    font-size: 16px;
+    cursor: pointer;
+    border-radius: 6px;
+    transition: background-color 0.3s;
+    align-self: center;
+    width: 200px;
+  }
+  
+  .submit-button:hover {
+    background-color: #218838;
+  }
+  
+  /* Responsive Design */
+  @media (max-width: 768px) {
+    .code-container {
+      width: 90%;
+      padding: 20px;
+    }
+  
+    .form-title {
+      font-size: 20px;
+    }
+  
+    .submit-button {
+      width: 100%;
+    }
+  }
+
+  /* Existing styles remain the same, add the following at the end */
+
+/* Modal Styles */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+  }
+  
+  .modal {
+    background: #ffffff;
+    border-radius: 12px;
+    width: 90%;
+    max-width: 500px;
+    padding: 20px;
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+    position: relative;
+  }
+  
+  .modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid #ecf0f1;
+    padding-bottom: 15px;
+    margin-bottom: 20px;
+  }
+  
+  .modal-header h2 {
+    color: #2c3e50;
+    font-size: 20px;
+    font-weight: 600;
+    margin: 0;
+  }
+  
+  .modal-close-button {
+    background: none;
+    border: none;
+    font-size: 24px;
+    cursor: pointer;
+    color: #7f8c8d;
+    transition: color 0.3s;
+  }
+  
+  .modal-close-button:hover {
+    color: #e74c3c;
+  }
+  
+  .modal-body {
+    max-height: 300px;
+    overflow-y: auto;
+    padding: 10px 0;
+  }
+  
+  .course-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 0;
+    border-bottom: 1px solid #ecf0f1;
+  }
+  
+  .course-item input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+    cursor: pointer;
+  }
+  
+  .course-item label {
+    color: #34495e;
+    font-size: 15px;
+    cursor: pointer;
+  }
+  
+  .modal-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    border-top: 1px solid #ecf0f1;
+    padding-top: 15px;
+    margin-top: 20px;
+  }
+  
+  .modal-button {
+    padding: 10px 20px;
+    border: none;
+    border-radius: 6px;
+    font-size: 14px;
+    cursor: pointer;
+    transition: background-color 0.3s, transform 0.2s;
+  }
+  
+  .modal-button.cancel {
+    background-color: #ecf0f1;
+    color: #7f8c8d;
+  }
+  
+  .modal-button.cancel:hover {
+    background-color: #dfe6e9;
+    transform: translateY(-2px);
+  }
+  
+  .modal-button.confirm {
+    background-color: #3498db;
+    color: white;
+  }
+  
+  .modal-button.confirm:hover {
+    background-color: #2980b9;
+    transform: translateY(-2px);
+  }
+  
+  /* Scrollbar Styling for Modal Body */
+  .modal-body::-webkit-scrollbar {
+    width: 8px;
+  }
+  
+  .modal-body::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 10px;
+  }
+  
+  .modal-body::-webkit-scrollbar-thumb {
+    background: #bdc3c7;
+    border-radius: 10px;
+  }
+  
+  .modal-body::-webkit-scrollbar-thumb:hover {
+    background: #95a5a6;
+  }

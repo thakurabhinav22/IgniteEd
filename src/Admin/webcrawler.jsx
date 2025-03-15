@@ -30,8 +30,10 @@ export default function WebCrawler() {
   const apiKey = process.env.REACT_APP_YOUTUBE_API;
   // alert(apiKey)
 
-  const server_end_point = "https://b978747b-0cfa-4ac8-aa74-e01288e8d3c1-00-2tmnjhgcuv5r3.pike.replit.dev/scrape";
-  const download_endpoint = "https://b978747b-0cfa-4ac8-aa74-e01288e8d3c1-00-2tmnjhgcuv5r3.pike.replit.dev/download-pdfs-as-text";
+  const server_end_point =  process.env.REACT_APP_SCRAPE_SERVER_ENDPOINT;;
+  console.log(server_end_point)
+  const download_endpoint = process.env.REACT_APP_DOWNLOAD_SERVER_ENDPOINT;
+  console.log(download_endpoint)
   const youtube_search_endpoint = "https://d7150945-fc09-42e1-800c-b55c84548d79-00-1r5xa442n98oj.sisko.replit.dev/search_videos";
 
   const cseRef = useRef(null);
@@ -146,13 +148,13 @@ export default function WebCrawler() {
     try {
       setLoading(true);
       setError(null);
-      const response = await fetch("https://b978747b-0cfa-4ac8-aa74-e01288e8d3c1-00-2tmnjhgcuv5r3.pike.replit.dev/search", {
+      const response = await fetch("https://tlm-server.onrender.com/search", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ topic: keyword, author: "", keywords: "" }),
         mode: "cors",
       });
-      console.log("Search request to:", "https://b978747b-0cfa-4ac8-aa74-e01288e8d3c1-00-2tmnjhgcuv5r3.pike.replit.dev/search", "Status:", response.status);
+      console.log("Search request to:", process.env.REACT_APP_SCRAPE_SERVER_ENDPOINT, "Status:", response.status);
 
       if (!response.ok) {
         const errorData = await response.json();
@@ -211,7 +213,7 @@ export default function WebCrawler() {
       setLoading(false);
     } catch (error) {
       if (error.name === "TypeError" && error.message.includes("Failed to fetch")) {
-        setError(`Network error: Could not connect to the server at ${download_endpoint}. Please ensure the server is running on Replit or try the local fallback (http://localhost:5000).`);
+        setError(`Network error: Could not connect to the server at ${download_endpoint}. `);
       } else {
         setError(error.message || "Failed to fetch text content.");
       }

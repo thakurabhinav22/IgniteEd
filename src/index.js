@@ -20,8 +20,9 @@ import Webcrawler from './Admin/webcrawler';
 import MagicWritter from './Admin/MagicWritter';
 import Stats from './UserComponents/Stats';
 import AnalyticsPage from './UserComponents/AnalyticsPage';
-
-
+import AddTeam from './Admin/addTeam';
+import Code from './Admin/code';
+import Assessment from './UserComponents/assessment';
 
 
 const router = createBrowserRouter([
@@ -34,12 +35,24 @@ const router = createBrowserRouter([
     element: <App />,
   },
   {
+    path: "/assessment",
+    element: <Assessment />,
+  },
+  {
     path: "/Admin",
     element: <Adminlogin />,
   },
   {
     path: "/Admin/Dashboard",
     element: <AdminDashboard />,
+  },
+  {
+    path: "/Admin/Code",
+    element: <Code />,
+  },
+  {
+    path: "/Admin/addteam",
+    element: <AddTeam />,
   },
   {
     path: "/Admin/CreateCourse",

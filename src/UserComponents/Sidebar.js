@@ -1,7 +1,18 @@
 import React, { useEffect, useState, useRef } from "react";
 import "./Sidebar.css";
 import { Link, useNavigate } from "react-router-dom";
-import { FaHome, FaCertificate, FaQuestionCircle, FaCog, FaUser, FaLock, FaTools, FaTimes, FaPlay } from "react-icons/fa";
+import {
+  FaHome,
+  FaCertificate,
+  FaQuestionCircle,
+  FaCog,
+  FaUser,
+  FaLock,
+  FaTools,
+  FaTimes,
+  FaPlay,
+} from "react-icons/fa";
+import { BiSolidGraduation } from "react-icons/bi";
 import { getDatabase, ref, get, update, remove, set } from "firebase/database";
 import Swal from "sweetalert2";
 import { getAuth, sendPasswordResetEmail } from "firebase/auth";
@@ -11,7 +22,8 @@ function Sidebar({ isQuestionAnswered, isQuestionGenerated }) {
   const [surName, setSurName] = useState("");
   const [branch, setBranch] = useState("");
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
-  const [selectedVoiceModel, setSelectedVoiceModel] = useState("microsoft-david");
+  const [selectedVoiceModel, setSelectedVoiceModel] =
+    useState("microsoft-david");
   const navigate = useNavigate();
   const settingsRef = useRef(null);
   const hasPlayedInitialSample = useRef(false);
@@ -28,7 +40,8 @@ function Sidebar({ isQuestionAnswered, isQuestionGenerated }) {
   // Function to handle logout
   const handleLogout = () => {
     // Clear the userSessionCred cookie by setting it to expire in the past
-    document.cookie = "userSessionCred=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/";
+    document.cookie =
+      "userSessionCred=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/";
     // Optionally, show a success message
     Swal.fire({
       title: "Logged Out",
@@ -112,22 +125,40 @@ function Sidebar({ isQuestionAnswered, isQuestionGenerated }) {
 
     switch (voice) {
       case "microsoft-david":
-        selectedVoice = voices.find((v) => v.name.includes("David") && v.lang === "en-US") || voices.find((v) => v.lang === "en-US") || voices[0];
+        selectedVoice =
+          voices.find((v) => v.name.includes("David") && v.lang === "en-US") ||
+          voices.find((v) => v.lang === "en-US") ||
+          voices[0];
         break;
       case "microsoft-hazel":
-        selectedVoice = voices.find((v) => v.name.includes("Hazel") && v.lang === "en-GB") || voices.find((v) => v.lang === "en-GB") || voices[0];
+        selectedVoice =
+          voices.find((v) => v.name.includes("Hazel") && v.lang === "en-GB") ||
+          voices.find((v) => v.lang === "en-GB") ||
+          voices[0];
         break;
       case "microsoft-susan":
-        selectedVoice = voices.find((v) => v.name.includes("Susan") && v.lang === "en-GB") || voices.find((v) => v.lang === "en-GB") || voices[0];
+        selectedVoice =
+          voices.find((v) => v.name.includes("Susan") && v.lang === "en-GB") ||
+          voices.find((v) => v.lang === "en-GB") ||
+          voices[0];
         break;
       case "microsoft-heera":
-        selectedVoice = voices.find((v) => v.name.includes("Heera") && v.lang === "en-IN") || voices.find((v) => v.lang === "en-IN") || voices[0];
+        selectedVoice =
+          voices.find((v) => v.name.includes("Heera") && v.lang === "en-IN") ||
+          voices.find((v) => v.lang === "en-IN") ||
+          voices[0];
         break;
       case "microsoft-ravi":
-        selectedVoice = voices.find((v) => v.name.includes("Ravi") && v.lang === "en-IN") || voices.find((v) => v.lang === "en-IN") || voices[0];
+        selectedVoice =
+          voices.find((v) => v.name.includes("Ravi") && v.lang === "en-IN") ||
+          voices.find((v) => v.lang === "en-IN") ||
+          voices[0];
         break;
       case "google-hindi":
-        selectedVoice = voices.find((v) => v.lang === "hi-IN") || voices.find((v) => v.lang.includes("hi")) || voices[0];
+        selectedVoice =
+          voices.find((v) => v.lang === "hi-IN") ||
+          voices.find((v) => v.lang.includes("hi")) ||
+          voices[0];
         break;
       default:
         selectedVoice = voices[0];
@@ -145,7 +176,7 @@ function Sidebar({ isQuestionAnswered, isQuestionGenerated }) {
   const saveAudioPreference = () => {
     const db = getDatabase();
     const audioRef = ref(db, `/user/${userId}/PrefferedAudio`);
-    
+
     set(audioRef, selectedVoiceModel)
       .then(() => {
         Swal.fire({
@@ -218,7 +249,8 @@ function Sidebar({ isQuestionAnswered, isQuestionGenerated }) {
           if (snapshot.exists() && snapshot.val().Password === result.value) {
             remove(userRef)
               .then(() => {
-                document.cookie = "userSessionCred=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/";
+                document.cookie =
+                  "userSessionCred=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/";
                 Swal.fire({
                   title: "Account Deleted",
                   text: "Your account has been successfully deleted.",
@@ -279,14 +311,13 @@ function Sidebar({ isQuestionAnswered, isQuestionGenerated }) {
     });
   };
 
-  
   const handleResetPassword = () => {
     const auth = getAuth(); // Get the Firebase Auth instance
     const db = getDatabase(); // Get the Firebase Realtime Database instance
-  
+
     // Retrieve the user ID from the cookie
     const userId = getCookie("userSessionCred");
-  
+
     if (!userId) {
       Swal.fire({
         title: "Error",
@@ -298,14 +329,14 @@ function Sidebar({ isQuestionAnswered, isQuestionGenerated }) {
       return;
     }
 
-    const userRef = ref(db, `user/${userId}`); 
+    const userRef = ref(db, `user/${userId}`);
 
     get(userRef)
       .then((snapshot) => {
         if (snapshot.exists()) {
           const userData = snapshot.val();
-          const userEmail = userData.email; 
-  
+          const userEmail = userData.email;
+
           if (userEmail) {
             sendPasswordResetEmail(auth, userEmail)
               .then(() => {
@@ -357,7 +388,6 @@ function Sidebar({ isQuestionAnswered, isQuestionGenerated }) {
         });
       });
   };
-  
 
   const [activeTab, setActiveTab] = useState("profile");
 
@@ -379,21 +409,43 @@ function Sidebar({ isQuestionAnswered, isQuestionGenerated }) {
           alt="Profile"
           className="profile-img"
         />
-        <h3>{userName || "Loading..."} {surName || ""}</h3>
+        <h3>
+          {userName || "Loading..."} {surName || ""}
+        </h3>
         <p>{branch || "Loading..."}</p>
       </div>
       <nav>
-        <Link to="/Dashboard" className="stud-nav-item" onClick={handleSidebarLinkClick}>
+        <Link
+          to="/Dashboard"
+          className="stud-nav-item"
+          onClick={handleSidebarLinkClick}
+        >
           <FaHome className="stud-nav-icon" />
           <span>Dashboard</span>
         </Link>
-        <Link to="/analytics" className="stud-nav-item" onClick={handleSidebarLinkClick}>
+        <Link
+          to="/analytics"
+          className="stud-nav-item"
+          onClick={handleSidebarLinkClick}
+        >
           <FaCertificate className="stud-nav-icon" />
           <span>Analytics</span>
         </Link>
-        <Link to="/Courses" className="stud-nav-item" onClick={handleSidebarLinkClick}>
+        <Link
+          to="/Courses"
+          className="stud-nav-item"
+          onClick={handleSidebarLinkClick}
+        >
           <FaQuestionCircle className="stud-nav-icon" />
           <span>Courses</span>
+        </Link>
+        <Link
+          to="/Assessment"
+          className="stud-nav-item"
+          onClick={handleSidebarLinkClick}
+        >
+         <BiSolidGraduation className="stud-nav-icon" />
+          <span>Assessment</span>
         </Link>
         <div className="stud-nav-item" onClick={() => setIsSettingsOpen(true)}>
           <FaCog className="stud-nav-icon" />
@@ -417,25 +469,33 @@ function Sidebar({ isQuestionAnswered, isQuestionGenerated }) {
             <div className="settings-container">
               <div className="settings-sidebar">
                 <div
-                  className={`settings-section ${activeTab === "profile" ? "active" : ""}`}
+                  className={`settings-section ${
+                    activeTab === "profile" ? "active" : ""
+                  }`}
                   onClick={() => handleTabChange("profile")}
                 >
                   <FaUser className="section-icon" /> Profile
                 </div>
                 <div
-                  className={`settings-section ${activeTab === "security" ? "active" : ""}`}
+                  className={`settings-section ${
+                    activeTab === "security" ? "active" : ""
+                  }`}
                   onClick={() => handleTabChange("security")}
                 >
                   <FaLock className="section-icon" /> Security
                 </div>
                 <div
-                  className={`settings-section ${activeTab === "voice" ? "active" : ""}`}
+                  className={`settings-section ${
+                    activeTab === "voice" ? "active" : ""
+                  }`}
                   onClick={() => handleTabChange("voice")}
                 >
                   <FaPlay className="section-icon" /> Voice
                 </div>
                 <div
-                  className={`settings-section ${activeTab === "actions" ? "active" : ""}`}
+                  className={`settings-section ${
+                    activeTab === "actions" ? "active" : ""
+                  }`}
                   onClick={() => handleTabChange("actions")}
                 >
                   <FaTools className="section-icon" /> Actions
@@ -467,7 +527,13 @@ function Sidebar({ isQuestionAnswered, isQuestionGenerated }) {
                     </div>
                     <button
                       className="swal2-settings-btn"
-                      onClick={() => updateUserData({ Name: userName, Surname: surName, Branch: branch })}
+                      onClick={() =>
+                        updateUserData({
+                          Name: userName,
+                          Surname: surName,
+                          Branch: branch,
+                        })
+                      }
                     >
                       Save
                     </button>
@@ -476,7 +542,10 @@ function Sidebar({ isQuestionAnswered, isQuestionGenerated }) {
                 {activeTab === "security" && (
                   <div className="settings-tab">
                     <h3>Security</h3>
-                    <button className="swal2-settings-btn" onClick={handleResetPassword}>
+                    <button
+                      className="swal2-settings-btn"
+                      onClick={handleResetPassword}
+                    >
                       Send Reset Password Link
                     </button>
                   </div>
@@ -495,11 +564,21 @@ function Sidebar({ isQuestionAnswered, isQuestionGenerated }) {
                           playAudioSample(voice);
                         }}
                       >
-                        <option value="microsoft-david">Microsoft David - English (United States)</option>
-                        <option value="microsoft-hazel">Microsoft Hazel - English (United Kingdom)</option>
-                        <option value="microsoft-susan">Microsoft Susan - English (United Kingdom)</option>
-                        <option value="microsoft-heera">Microsoft Heera - English (India)</option>
-                        <option value="microsoft-ravi">Microsoft Ravi - English (India)</option>
+                        <option value="microsoft-david">
+                          Microsoft David - English (United States)
+                        </option>
+                        <option value="microsoft-hazel">
+                          Microsoft Hazel - English (United Kingdom)
+                        </option>
+                        <option value="microsoft-susan">
+                          Microsoft Susan - English (United Kingdom)
+                        </option>
+                        <option value="microsoft-heera">
+                          Microsoft Heera - English (India)
+                        </option>
+                        <option value="microsoft-ravi">
+                          Microsoft Ravi - English (India)
+                        </option>
                         {/* <option value="google-hindi">Google हिन्दी</option> */}
                       </select>
                       <button
@@ -515,13 +594,19 @@ function Sidebar({ isQuestionAnswered, isQuestionGenerated }) {
                 {activeTab === "actions" && (
                   <div className="settings-tab">
                     <h3>Actions</h3>
-                    <button className="swal2-settings-btn" onClick={handleViewInfo}>
+                    <button
+                      className="swal2-settings-btn"
+                      onClick={handleViewInfo}
+                    >
                       View Info
                     </button>
                     {/* <button className="swal2-settings-btn" onClick={handleDownloadAnalytics}>
                       Download Analytics CSV
                     </button> */}
-                    <button className="swal2-settings-btn swal2-danger-btn" onClick={handleDeleteAccount}>
+                    <button
+                      className="swal2-settings-btn swal2-danger-btn"
+                      onClick={handleDeleteAccount}
+                    >
                       Delete Account
                     </button>
                   </div>
