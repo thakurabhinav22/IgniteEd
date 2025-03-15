@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import Sidebar from "./Sidebar";
 import "./learningPage.css";
 import { useLocation, useNavigate } from "react-router-dom";
@@ -15,6 +15,12 @@ import Swal from "sweetalert2";
 import Loading from "../icons/Loading.gif";
 import speaker from "../icons/speaker.png";
 import speaking from "../icons/speaking.gif";
+import Modal from "react-modal";
+import * as d3 from "d3";
+import { render } from "d3-graphviz";
+
+// Bind modal to the app element (for accessibility)
+Modal.setAppElement("#root");
 
 function LearningPage() {
   const location = useLocation();
@@ -28,6 +34,7 @@ function LearningPage() {
   const [moduleLength, setModuleLength] = useState(3);
   const [isModuleCompleted, setIsModuleCompleted] = useState(false);
   const [isCourseCompleted, setIsCourseCompleted] = useState(false);
+  const [isAssessmentCompleted, setIsAssessmentCompleted] = useState(false);
   const [showQuestions, setShowQuestions] = useState(false);
   const [aiQuestions, setAiQuestions] = useState([]);
   const [isGenerating, setIsGenerating] = useState(false);
@@ -41,6 +48,8 @@ function LearningPage() {
   const [warningCount, setWarningCount] = useState(0);
   const [criticalWarningCount, setCriticalWarningCount] = useState(0);
   const [preferredVoice, setPreferredVoice] = useState("microsoft-david");
+  const [isMindMapModalOpen, setIsMindMapModalOpen] = useState(false);
+  const mindMapRef = useRef(null);
 
   const db = getDatabase();
   const courseRef = ref(db, `Courses/${courseId}`);
@@ -53,7 +62,6 @@ function LearningPage() {
   const boldData = (text) => {
     if (!text || typeof text !== "string") return text;
 
-    // First, handle ** markers for bolding
     let parts = [text];
     const boldRegex = /\*\*(.*?)\*\*/g;
     let result = [];
@@ -556,6 +564,10 @@ function LearningPage() {
       );
       const userRef = ref(db, `user/${userId}`);
       const CourseRef = ref(db, `Courses/${courseId}`);
+      const assessmentRef = ref(
+        db,
+        `users/${userId}/${courseId}/assessmentComplete`
+      );
 
       get(userCourseRef)
         .then((snapshot) => {
@@ -606,6 +618,14 @@ function LearningPage() {
         if (snapshot.exists()) {
           const CourseData = snapshot.val();
           setQuestionCount(CourseData.numQuestions || 3);
+        }
+      });
+
+      get(assessmentRef).then((snapshot) => {
+        if (snapshot.exists() && snapshot.val() === true) {
+          setIsAssessmentCompleted(true);
+        } else {
+          setIsAssessmentCompleted(false);
         }
       });
     }
@@ -708,16 +728,16 @@ function LearningPage() {
       const module = parsedContent.modules[moduleNumber - 1];
       const result = await model.generateContent(`
         Generate ${questionCount} questions based on the below content, categorized by Bloom's Taxonomy levels:
-        - 1 question at "Remember" level (recall facts) [ Keep all option length same to create a dought among options],
-        - 1 question at "Understand" level (explain concepts)  [ Keep all option length same to create a dought among options],
-        - 1 question at "Analyze" level (compare, contrast, or infer)  [ Keep all option length same to create a dought among options].
+        - 1 question at "Remember" level (recall facts) [ Keep all option length same to create a doubt among options],
+        - 1 question at "Understand" level (explain concepts)  [ Keep all option length same to create a doubt among options],
+        - 1 question at "Analyze" level (compare, contrast, or infer)  [ Keep all option length same to create a doubt among options].
       
         Follow these guidelines for generating questions and options:
         1. Ensure the correct answer is not always the first option.
         2. Vary the length and complexity of the options to make them look realistic.
         3. Include at least one option that is partially correct but not the best answer.
         4. Ensure the options are plausible and relevant to the question.
-        5. Keep all option length same to create a dought among options
+        5. Keep all option lengths similar to create doubt among options
       
         Provide the output in this JSON format:
         {
@@ -874,14 +894,13 @@ function LearningPage() {
           timer
         )}! Moving to the next module...`,
         icon: "success",
-        timer: 2000, // Auto-close after 2 seconds
-        showConfirmButton: false, // Remove the "OK" button
+        timer: 2000,
+        showConfirmButton: false,
       }).then(() => {
-        // This will run after the timer or if manually closed (though no button is shown)
         if (currentModule === moduleLength) {
-          handleNextModule(); // Complete the course
+          handleNextModule();
         } else {
-          handleNextModule(); // Move to the next module
+          handleNextModule();
         }
       });
     } else if (score > 0) {
@@ -977,11 +996,11 @@ function LearningPage() {
       setIsCourseCompleted(true);
       Swal.fire({
         title: "Course Completed!",
-        text: "Congratulations on completing the course!",
+        text: "Congratulations on completing the course! You will now be redirected to the assessment.",
         icon: "success",
         confirmButtonText: "OK",
       }).then(() => {
-        navigate("/dashboard");
+        navigate("/assessment", { state: { courseId } }); // Redirect to assessment with courseId
       });
       return;
     }
@@ -1043,6 +1062,11 @@ function LearningPage() {
     } else {
       await handleNextModule();
     }
+  };
+
+  const handleDownloadCertificate = () => {
+    Swal.fire("Success", "Certificate download initiated!", "success");
+    // Add certificate download logic here, e.g., navigate("/certificate", { state: { courseId } });
   };
 
   const [speech, setSpeech] = useState(null);
@@ -1174,6 +1198,121 @@ function LearningPage() {
     }
   }, []);
 
+  // Helper function to check if module has YouTube videos or mind maps
+  const hasYouTubeVideos = (module) => {
+    return (
+      module &&
+      module.Refytvideo &&
+      Array.isArray(module.Refytvideo) &&
+      module.Refytvideo.length > 0
+    );
+  };
+
+  const hasMindMaps = (module) => {
+    return (
+      module &&
+      module.mindMaps &&
+      typeof module.mindMaps === "string" &&
+      module.mindMaps.trim() !== ""
+    );
+  };
+
+  // Function to parse Markdown and generate a Graphviz DOT string
+  const generateDotFromMarkdown = (markdown) => {
+    const lines = markdown.split("\n").map((line) => line.trim());
+    const hierarchy = {};
+    const nodeStyles = {
+      "🔗 What is Blockchain?": { color: "blue", shape: "ellipse" },
+      "🏛️ Key Components": { color: "green", shape: "box" },
+      "⚡ How It Works": { color: "orange", shape: "diamond" },
+      "🌍 Applications": { color: "purple", shape: "parallelogram" },
+      "✅ Advantages": { color: "darkgreen", shape: "note" },
+      "❌ Challenges": { color: "red", shape: "hexagon" },
+    };
+
+    let currentParent = null;
+    let currentLevel = 0;
+
+    lines.forEach((line) => {
+      if (line.startsWith("#")) {
+        const title = line.replace(/^#+\s*/, "").trim();
+        currentParent = title;
+        hierarchy[currentParent] = [];
+        currentLevel = 1;
+      } else if (line.startsWith("-")) {
+        const indentLevel = line.match(/^\s*-/)[0].length / 2 + 1;
+        const item = line.replace(/^\s*-\s*/, "").replace(/\*\*/g, "").trim();
+
+        if (indentLevel === 1 && currentParent) {
+          hierarchy[currentParent].push(item);
+        } else if (indentLevel > 1 && currentParent) {
+          const parentItems = hierarchy[currentParent];
+          let targetParent = parentItems[parentItems.length - 1];
+          for (let i = 2; i < indentLevel; i++) {
+            if (!hierarchy[targetParent]) hierarchy[targetParent] = [];
+            targetParent = hierarchy[targetParent][
+              hierarchy[targetParent].length - 1
+            ];
+          }
+          if (!hierarchy[targetParent]) hierarchy[targetParent] = [];
+          hierarchy[targetParent].push(item);
+        }
+      }
+    });
+
+    // Generate DOT string
+    let dot = `digraph G {
+      rankdir=LR;
+      bgcolor="#F9F9F9";
+      splines=ortho;
+    `;
+
+    // Add nodes and edges
+    for (const [parent, children] of Object.entries(hierarchy)) {
+      const parentStyle = nodeStyles[parent] || {
+        color: "black",
+        shape: "oval",
+      };
+      dot += `  "${parent}" [style=filled, fillcolor="${parentStyle.color}", shape=${parentStyle.shape}, fontcolor="white"];\n`;
+      children.forEach((child) => {
+        const childStyle = nodeStyles[child] || {
+          color: "#AAAAAA",
+          shape: "rect",
+        };
+        dot += `  "${child}" [style=filled, fillcolor="${childStyle.color}", shape=${childStyle.shape}, fontcolor="black"];\n`;
+        dot += `  "${parent}" -> "${child}" [color="black"];\n`;
+      });
+    }
+
+    dot += "}";
+    return dot;
+  };
+
+  // Function to render the mind map using d3-graphviz
+  const renderMindMap = (markdown) => {
+    if (!mindMapRef.current || !markdown) return;
+
+    const dot = generateDotFromMarkdown(markdown);
+    d3.select(mindMapRef.current)
+      .graphviz()
+      .renderDot(dot)
+      .on("end", () => {
+        console.log("Mind map rendered");
+      });
+  };
+
+  // Open the mind map modal and render the mind map
+  const openMindMapModal = (markdown) => {
+    setIsMindMapModalOpen(true);
+    setTimeout(() => {
+      renderMindMap(markdown);
+    }, 0); // Ensure the DOM is ready
+  };
+
+  const closeMindMapModal = () => {
+    setIsMindMapModalOpen(false);
+  };
+
   return (
     <div className="learning-page-container">
       <Sidebar
@@ -1267,7 +1406,6 @@ function LearningPage() {
                     const module = parsedContent.modules[currentModule - 1];
                     return (
                       <>
-                        {/* Show reading module only if showQuestions is false */}
                         {!showQuestions && (
                           <div className="module-content">
                             <h3>{boldData(module.moduleTitle)}</h3>
@@ -1291,22 +1429,50 @@ function LearningPage() {
                                 <li key={idx}>{boldData(takeaway)}</li>
                               ))}
                             </ul>
-                            <h4>
-                              <strong>YouTube Video Reference</strong>
-                            </h4>
-                            <ul>
-                              {module.Refytvideo.map((videoUrl, idx) => (
-                                <li key={idx}>
+                            {/* Conditionally render YouTube Video Reference */}
+                            {hasYouTubeVideos(module) ? (
+                              <>
+                                <h4>
+                                  <strong>YouTube Video Reference</strong>
+                                </h4>
+                                <ul>
+                                  {module.Refytvideo.map((videoUrl, idx) => (
+                                    <li key={idx}>
+                                      <a
+                                        href={videoUrl}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                      >
+                                        {`YouTube Video ${idx + 1}`}
+                                      </a>
+                                    </li>
+                                  ))}
+                                </ul>
+                              </>
+                            ) : (
+                              <p>No YouTube video references available.</p>
+                            )}
+                            {/* Conditionally render Mind Map Link */}
+                            {hasMindMaps(module) ? (
+                              <>
+                                <h4>
+                                  <strong>Mind Map</strong>
+                                </h4>
+                                <p>
                                   <a
-                                    href={videoUrl}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
+                                    href="#"
+                                    onClick={(e) => {
+                                      e.preventDefault();
+                                      openMindMapModal(module.mindMaps);
+                                    }}
                                   >
-                                    {"Youtube Video ["+idx+"]"}
+                                    View Mind Map
                                   </a>
-                                </li>
-                              ))}
-                            </ul>
+                                </p>
+                              </>
+                            ) : (
+                              <p>No mind map available for this module.</p>
+                            )}
                           </div>
                         )}
 
@@ -1368,13 +1534,31 @@ function LearningPage() {
                     Previous
                   </button>
                   <button
-                    className="next-button"
-                    onClick={handleNext}
+                    className={
+                      currentModule === moduleLength &&
+                      isCourseCompleted &&
+                      isAssessmentCompleted
+                        ? "certificate-button"
+                        : "next-button"
+                    }
+                    onClick={
+                      currentModule === moduleLength &&
+                      isCourseCompleted &&
+                      isAssessmentCompleted
+                        ? handleDownloadCertificate
+                        : handleNext
+                    }
                     style={{
-                      display: isQuestionGenerated ? "none" : "inline-block", // Hide only during questions
+                      display: isQuestionGenerated ? "none" : "inline-block",
                     }}
                   >
-                    {currentModule === moduleLength ? "Complete" : "Next"}
+                    {currentModule === moduleLength &&
+                    isCourseCompleted &&
+                    isAssessmentCompleted
+                      ? "Download Certificate"
+                      : currentModule === moduleLength
+                      ? "Complete"
+                      : "Next"}
                   </button>
                 </div>
               </div>
@@ -1382,6 +1566,49 @@ function LearningPage() {
           </>
         )}
       </div>
+
+      {/* Mind Map Modal */}
+      <Modal
+        isOpen={isMindMapModalOpen}
+        onRequestClose={closeMindMapModal}
+        style={{
+          content: {
+            top: "50%",
+            left: "50%",
+            right: "auto",
+            bottom: "auto",
+            marginRight: "-50%",
+            transform: "translate(-50%, -50%)",
+            width: "80%",
+            maxWidth: "800px",
+            maxHeight: "80vh",
+            overflow: "auto",
+            backgroundColor: "#F9F9F9",
+            borderRadius: "8px",
+            padding: "20px",
+          },
+          overlay: {
+            backgroundColor: "rgba(0, 0, 0, 0.5)",
+          },
+        }}
+      >
+        <h2>Mind Map</h2>
+        <button
+          onClick={closeMindMapModal}
+          style={{
+            position: "absolute",
+            top: "10px",
+            right: "10px",
+            background: "none",
+            border: "none",
+            fontSize: "20px",
+            cursor: "pointer",
+          }}
+        >
+          ✕
+        </button>
+        <div ref={mindMapRef} style={{ width: "100%", height: "500px" }}></div>
+      </Modal>
     </div>
   );
 }

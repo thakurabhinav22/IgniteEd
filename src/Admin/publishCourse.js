@@ -16,7 +16,8 @@ const PublishCourse = () => {
   const [authorName, setAuthorName] = useState("");
   const [thumbnailUrl, setThumbnailUrl] = useState("");
   const [bannerImageUrl, setBannerImageUrl] = useState("");
-  const [createAnnouncement, setCreateAnnouncement] = useState(false);
+  const [includeYouTubeLinks, setIncludeYouTubeLinks] = useState(false);
+  const [includeMindMaps, setIncludeMindMaps] = useState(false);
   const [numQuestions, setNumQuestions] = useState(3);
   const [isProcessing, setIsProcessing] = useState(false);
   const [showContentModal, setShowContentModal] = useState(false);
@@ -33,66 +34,67 @@ const PublishCourse = () => {
     setIsProcessing(true);
 
     try {
-      const result = await model.generateContent(`
-        Convert the provided course content into a structured JSON format while keeping all data intact. Ensure that no modifications are made to the original content except for formatting it into JSON. Return only JSON, nothing else. Additionally, provide relevant YouTube video suggestions for each module based on the content video should exist in youtube.
-      
-        Follow this JSON structure:
-      
-        {
-          "title": "<Course Title>",
-          "introduction": "<Course Introduction>",
-          "noOfModules": <number_of_modules>,
-          "modules": [
-            {
-              "moduleTitle": "<Module 1 Title>",
-              "moduleOverview": "<Module 1 Overview>",
-              "detailedExplanation": "<Module 1 Detailed Explanation>",
-              "examplesAndAnalogies": "<Module 1 Examples and Analogies>",
-              "keyTakeaways": [
-                "<Key Takeaway 1>",
-                "<Key Takeaway 2>",
-                "<Key Takeaway 3>"
-              ],
+      const youtubeInstruction = includeYouTubeLinks
+      ? "Additionally, provide relevant YouTube video suggestions for each module based on the content. Each module should have at least 2 valid YouTube video URLs directly related to the module’s topic."
+      : "Do not include YouTube video suggestions.";
+    
+    const mindMapInstruction = includeMindMaps
+      ? "Add a 'mindMaps' field for each module with a concise mind map (50-100 words) formatted in Markdown. Use '# ' for main topics and '- ' for subtopics to create a hierarchical structure, organizing the module’s key concepts visually. Include at least one main topic and 2-3 subtopics per module, using emojis (e.g., 🔗, 🏛️) to enhance readability where applicable."
+      : "Do not include mind maps.";
+    
+    const result = await model.generateContent(`
+      Convert the provided course content into a structured JSON format while keeping all data intact. Ensure that no modifications are made to the original content except for formatting it into JSON. Return only JSON, nothing else.
+    
+      Follow this JSON structure:
+    
+      {
+        "title": "<Course Title>",
+        "introduction": "<Course Introduction>",
+        "noOfModules": <number_of_modules>,
+        "modules": [
+          {
+            "moduleTitle": "<Module 1 Title>",
+            "moduleOverview": "<Module 1 Overview>",
+            "detailedExplanation": "<Module 1 Detailed Explanation>",
+            "examplesAndAnalogies": "<Module 1 Examples and Analogies>",
+            "keyTakeaways": [
+              "<Key Takeaway 1>",
+              "<Key Takeaway 2>",
+              "<Key Takeaway 3>"
+            ]${
+              includeYouTubeLinks
+                ? `,
               "Refytvideo": [
                 "<YouTube Video URL 1>",
                 "<YouTube Video URL 2>"
-              ]
-            },
-            {
-              "moduleTitle": "<Module 2 Title>",
-              "moduleOverview": "<Module 2 Overview>",
-              "detailedExplanation": "<Module 2 Detailed Explanation>",
-              "examplesAndAnalogies": "<Module 2 Examples and Analogies>",
-              "keyTakeaways": [
-                "<Key Takeaway 1>",
-                "<Key Takeaway 2>",
-                "<Key Takeaway 3>"
-              ],
-              "Refytvideo": [
-                "<YouTube Video URL 1>",
-                "<YouTube Video URL 2>"
-              ]
+              ]`
+                : ""
+            }${
+              includeMindMaps
+                ? `,
+              "mindMaps": "<Concise mind map (50-100 words) in Markdown>"
+              `
+                : ""
             }
-            // Additional modules will follow the same structure
-          ]
-        }
-      
-        Ensure that:
-        - The JSON is well-formatted and follows the above schema precisely.
-        - The module count reflects the actual number of modules in the content.
-        - Key takeaways are listed as an array for better readability.
-        - YouTube video suggestions are relevant to the module's content and provide additional learning resources.
-        - Each module should have at least 2 YouTube video suggestions.
-        - YouTube video URLs should be valid and directly related to the module's topic.
-      
-        **Course Content:**  
-        ${updatedContent}
-      `);
+          }
+          // Additional modules will follow the same structure
+        ]
+      }
+    
+      Ensure that:
+      - The JSON is well-formatted and follows the above schema precisely.
+      - The module count reflects the actual number of modules in the content.
+      - Key takeaways are listed as an array for better readability.
+      - ${youtubeInstruction}
+      - ${mindMapInstruction}
+    
+      **Course Content:**  
+      ${updatedContent}
+    `);
 
       const response = await result.response;
       generatedCourse = await response.text();
-      generatedCourse = generatedCourse.replace("```json", "");
-      generatedCourse = generatedCourse.replace("```", "");
+      generatedCourse = generatedCourse.replace("```json", "").replace("```", "");
 
       console.log(generatedCourse);
 
@@ -105,7 +107,7 @@ const PublishCourse = () => {
         timer: 3000,
       }).then(() => {
         setIsProcessing(false);
-        navigate("/Admin/Dashboard")
+        navigate("/Admin/Dashboard");
       });
     } catch (error) {
       Swal.fire({
@@ -179,7 +181,7 @@ const PublishCourse = () => {
         courseName,
         authorName,
         thumbnailUrl,
-        bannerImageUrl,
+        bannerImageUrl: bannerImageUrl || "",
         numQuestions,
         courseContent: generatedCourse,
       });
@@ -188,7 +190,7 @@ const PublishCourse = () => {
         courseName,
         authorName,
         thumbnailUrl,
-        bannerImageUrl,
+        bannerImageUrl: bannerImageUrl || "",
         numQuestions,
         courseContent: generatedCourse,
       });
@@ -262,8 +264,6 @@ const PublishCourse = () => {
             />
           </div>
 
-
-
           {/* Number of Questions per Module */}
           <div className="input-group">
             <label>
@@ -278,7 +278,29 @@ const PublishCourse = () => {
             />
           </div>
 
-          {/* Show Course Content Button */}
+          {/* Checkboxes for YouTube Links and Mind Maps */}
+          <div className="checkbox-group">
+            <label>
+              <input
+                type="checkbox"
+                checked={includeYouTubeLinks}
+                onChange={(e) => setIncludeYouTubeLinks(e.target.checked)}
+              />{" "}
+              <strong>Include YouTube Video Links</strong>
+            </label>
+          </div>
+          <div className="checkbox-group">
+            <label>
+              <input
+                type="checkbox"
+                checked={includeMindMaps}
+                onChange={(e) => setIncludeMindMaps(e.target.checked)}
+              />{" "}
+              <strong>Include Mind Maps</strong>
+            </label>
+          </div>
+
+          {/* Buttons */}
           <div className="button-group">
             <button
               onClick={() => navigate("/Admin/CreateCourse")}
@@ -308,12 +330,6 @@ const PublishCourse = () => {
               <FaTimes />
             </button>
             <div className="pdf-content-text">
-              {/* <textarea
-                value={updatedContent}
-                onChange={handleContentChange}
-                rows="10"
-                cols="50"
-              /> */}
               <pre>{updatedContent}</pre>
             </div>
           </div>

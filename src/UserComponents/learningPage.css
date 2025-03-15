@@ -286,4 +286,36 @@ body {
   background-color: #F9FAFB;
   border: 1px solid #E5E7EB;
   border-radius: 12px;
+}/* learningPage.css */
+
+/* Style for the mind map link */
+.module-content a {
+  color: #007bff;
+  text-decoration: none;
+  font-weight: bold;
+}
+
+.module-content a:hover {
+  text-decoration: underline;
+}
+
+/* Ensure the mind map container is centered */
+div[ref="mindMapRef"] {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  overflow: auto;
+}
+
+/* Style for the modal content */
+.modal-content {
+  background-color: #f9f9f9;
+  border-radius: 8px;
+  padding: 20px;
+}
+
+/* Ensure SVG elements in the mind map are visible */
+svg {
+  max-width: 100%;
+  height: auto;
 }
