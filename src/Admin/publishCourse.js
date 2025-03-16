@@ -101,12 +101,16 @@ const PublishCourse = () => {
           ]
         }
       
-        Ensure that:
-        - The JSON is well-formatted and follows the above schema precisely.
-        - The module count reflects the actual number of modules in the content.
-        - Key takeaways are listed as an array for better readability.
-        - ${youtubeInstruction}
-        - ${mindMapInstruction}
+          Ensure that:
+          - The JSON is well-formatted and follows the above schema precisely.
+          - The module count reflects the actual number of modules in the content.
+          - Key takeaways are listed as an array for better readability.
+          - ${youtubeInstruction}
+          - ${mindMapInstruction}
+          - Mind maps should contain **detailed and meaningful nodes** relevant to the module’s content.
+          - Avoid generic or placeholder nodes like **"undefined"**, as they provide no value and are redundant across modules.
+          - Ensure hierarchical structuring is clear, with well-defined **main topics and subtopics**.
+          - Each mind map should capture the **core concepts effectively** while maintaining clarity and conciseness.
       
         **Course Content:**  
         ${updatedContent}
