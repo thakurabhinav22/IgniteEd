@@ -49,7 +49,7 @@ function AdminSidebar() {
   const handleLogout = () => {
     document.cookie =
       "userSessionCredAd=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/";
-    navigate("/Admin/");
+    navigate("/");
   };
 
   return (
@@ -85,10 +85,10 @@ function AdminSidebar() {
           <box-icon type="solid" name="data" color="#4169E1" className="nav-icon"></box-icon>
           <span>Manage Course DB</span>
         </Link>
-        <Link to="/Admin/addteam" className="nav-item">
+        {/* <Link to="/Admin/addteam" className="nav-item">
           <box-icon type="solid" name="message-square-add" color="#4169E1" className="nav-icon"></box-icon>
           <span>Add Team</span>
-        </Link>
+        </Link> */}
       </nav>
 
       <div className="logout" onClick={handleLogout}>

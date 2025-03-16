@@ -338,10 +338,10 @@ export default function AdminDashboardContent() {
                       />
                       <span className="tooltip-text">View Stats</span>
                     </span>
-                    <span className="tooltip">
+                    {/* <span className="tooltip">
                       <Pencil className="icon modify-icon" style={{ color: "#f39c12", cursor: "pointer" }} />
                       <span className="tooltip-text">Modify Course</span>
-                    </span>
+                    </span> */}
                     <span className="tooltip">
                       <Trash2
                         className="icon delete-icon"
