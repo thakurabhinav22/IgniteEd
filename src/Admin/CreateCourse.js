@@ -12,6 +12,8 @@ import {
 } from "react-icons/fa";
 import AdminSidebar from "./adminSideBar";
 import { pdfjs } from "react-pdf";
+import mammoth from "mammoth"; // For Word documents
+import { read, utils } from "xlsx"; // Named imports for Excel processing
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import { ref, onValue } from "firebase/database";
 import { database } from "./firebase";
@@ -32,15 +34,15 @@ export default function CreateCourse({ AdminName, Role }) {
   const navigate = useNavigate();
   const [adminName, setAdminName] = useState(AdminName);
   const [adminRole, setAdminRole] = useState(Role);
-  const [pdfFiles, setPdfFiles] = useState([]);
-  const [pdfStatuses, setPdfStatuses] = useState({});
-  const [viewPdfContent, setViewPdfContent] = useState(null);
+  const [files, setFiles] = useState([]);
+  const [fileStatuses, setFileStatuses] = useState({});
+  const [viewContent, setViewContent] = useState(null);
   const [repoPopup, setRepoPopup] = useState(false);
   const [repoSelected, setRepoSelected] = useState([]);
   const [repoCourses, setRepoCourses] = useState([]);
   const [isProcessing, setIsProcessing] = useState(false);
   const [courseCreated, setCourseCreated] = useState(false);
-  const [showGenerateButton, setShowGenerateButton] = useState(false); // New state to control Generate button visibility
+  const [showGenerateButton, setShowGenerateButton] = useState(false);
 
   useEffect(() => {
     document.title = "TheLearnMax - Course Create";
@@ -52,13 +54,12 @@ export default function CreateCourse({ AdminName, Role }) {
   }, [navigate]);
 
   useEffect(() => {
-    // Show the Generate button only if there are PDFs or repo data selected
-    if (pdfFiles.length > 0) {
+    if (files.length > 0) {
       setShowGenerateButton(true);
     } else {
       setShowGenerateButton(false);
     }
-  }, [pdfFiles]);
+  }, [files]);
 
   const handleSessionExpired = (message) => {
     Swal.fire({
@@ -74,69 +75,136 @@ export default function CreateCourse({ AdminName, Role }) {
     });
   };
 
-  const handlePdfSelect = (event) => {
-    const files = Array.from(event.target.files);
-    files.forEach((file) => processPdf(file));
+  const handleFileSelect = (event) => {
+    const selectedFiles = Array.from(event.target.files);
+    selectedFiles.forEach((file) => processFile(file));
+  };
+
+  const processFile = async (file) => {
+    const fileType = file.name.split('.').pop().toLowerCase();
+    
+    try {
+      let text = "";
+      
+      if (fileType === 'pdf') {
+        text = await processPdf(file);
+      } else if (fileType === 'docx') {
+        text = await processWord(file);
+      } else if (['xls', 'xlsx'].includes(fileType)) {
+        text = await processExcel(file);
+      } else {
+        throw new Error("Unsupported file type (only PDF, DOCX, and Excel are supported)");
+      }
+
+      if (text.trim()) {
+        setFiles((prev) => [...prev, file]);
+        setFileStatuses((prev) => ({
+          ...prev,
+          [file.name]: { status: "Processed", content: text },
+        }));
+      } else {
+        throw new Error("Empty content");
+      }
+    } catch (error) {
+      setFiles((prev) => [...prev, file]);
+      setFileStatuses((prev) => ({
+        ...prev,
+        [file.name]: { status: `Error: ${error.message}` },
+      }));
+    }
   };
 
   const processPdf = async (file) => {
     const reader = new FileReader();
-    reader.onload = async (e) => {
-      try {
-        const pdfData = new Uint8Array(e.target.result);
-        const pdf = await pdfjs.getDocument({ data: pdfData }).promise;
-
-        let text = "";
-        for (let i = 1; i <= pdf.numPages; i++) {
-          const page = await pdf.getPage(i);
-          const content = await page.getTextContent();
-          text += content.items.map((item) => item.str).join(" ");
+    return new Promise((resolve, reject) => {
+      reader.onload = async (e) => {
+        try {
+          const pdfData = new Uint8Array(e.target.result);
+          const pdf = await pdfjs.getDocument({ data: pdfData }).promise;
+          let text = "";
+          for (let i = 1; i <= pdf.numPages; i++) {
+            const page = await pdf.getPage(i);
+            const content = await page.getTextContent();
+            text += content.items.map((item) => item.str).join(" ");
+          }
+          resolve(text);
+        } catch (error) {
+          reject(error);
         }
-
-        if (text.trim()) {
-          setPdfFiles((prev) => [...prev, file]);
-          setPdfStatuses((prev) => ({
-            ...prev,
-            [file.name]: { status: "Processed", content: text },
-          }));
-        } else {
-          throw new Error("Empty content");
-        }
-      } catch {
-        setPdfFiles((prev) => [...prev, file]);
-        setPdfStatuses((prev) => ({
-          ...prev,
-          [file.name]: { status: "Error: Unable to process PDF" },
-        }));
-      }
-    };
-    reader.readAsArrayBuffer(file);
+      };
+      reader.readAsArrayBuffer(file);
+    });
   };
 
-  const handleRemovePdf = (fileName) => {
-    setPdfFiles((prev) => prev.filter((file) => file.name !== fileName));
-    setPdfStatuses((prev) => {
+  const processWord = async (file) => {
+    const reader = new FileReader();
+    return new Promise((resolve, reject) => {
+      reader.onload = async (e) => {
+        try {
+          const result = await mammoth.extractRawText({ arrayBuffer: e.target.result });
+          resolve(result.value);
+        } catch (error) {
+          reject(error);
+        }
+      };
+      reader.readAsArrayBuffer(file);
+    });
+  };
+
+  const processExcel = async (file) => {
+    const reader = new FileReader();
+    return new Promise((resolve, reject) => {
+      reader.onload = (e) => {
+        try {
+          const data = new Uint8Array(e.target.result);
+          const workbook = read(data, { type: "array" }); // Use named import 'read'
+          let text = "";
+          
+          // Iterate through all sheets
+          workbook.SheetNames.forEach((sheetName) => {
+            const sheet = workbook.Sheets[sheetName];
+            const json = utils.sheet_to_json(sheet, { header: 1 }); // Use named import 'utils'
+            json.forEach((row) => {
+              row.forEach((cell) => {
+                if (cell) text += cell.toString() + " ";
+              });
+              text += "\n"; // Add newline between rows
+            });
+          });
+          
+          resolve(text.trim());
+        } catch (error) {
+          reject(error);
+        }
+      };
+      reader.readAsArrayBuffer(file);
+    });
+  };
+
+  const handleRemoveFile = (fileName) => {
+    setFiles((prev) => prev.filter((file) => file.name !== fileName));
+    setFileStatuses((prev) => {
       const { [fileName]: _, ...rest } = prev;
       return rest;
     });
   };
 
-  const handleViewPdf = (fileName) => {
-    const content = pdfStatuses[fileName]?.content;
+  const handleViewFile = (fileName) => {
+    const content = fileStatuses[fileName]?.content;
     if (content) {
-      setViewPdfContent(content);
+      setViewContent(content);
     } else {
       Swal.fire({
         title: "Error",
-        text: "This PDF has no content to display.",
+        text: "This file has no content to display.",
         icon: "error",
         confirmButtonText: "OK",
       });
     }
   };
 
-  const closeViewPdf = () => {
-    setViewPdfContent(null);
+  const closeViewContent = () => {
+    setViewContent(null);
   };
 
   const fetchCoursesFromRepo = () => {
@@ -181,15 +249,15 @@ export default function CreateCourse({ AdminName, Role }) {
     );
   };
 
-  const addSelectedToPdfList = () => {
+  const addSelectedToFileList = () => {
     const selectedCourses = repoCourses.filter((course) =>
       repoSelected.includes(course.title)
     );
     
     selectedCourses.forEach((course) => {
-      if (!pdfFiles.some((file) => file.name === course.title)) {
-        setPdfFiles((prev) => [...prev, { name: course.title }]);
-        setPdfStatuses((prev) => ({
+      if (!files.some((file) => file.name === course.title)) {
+        setFiles((prev) => [...prev, { name: course.title }]);
+        setFileStatuses((prev) => ({
           ...prev,
           [course.title]: { 
             status: "Processed", 
@@ -209,16 +277,16 @@ export default function CreateCourse({ AdminName, Role }) {
 
     try {
       let combinedContent = "";
-      for (const file of pdfFiles) {
-        const pdfContent = pdfStatuses[file.name]?.content;
-        if (pdfContent) {
-          combinedContent += pdfContent + "\n";
+      for (const file of files) {
+        const fileContent = fileStatuses[file.name]?.content;
+        if (fileContent) {
+          combinedContent += fileContent + "\n";
         }
       }
 
       if (combinedContent.trim()) {
         const result = await model.generateContent(`
-          Read the provided PDF content carefully and create a well-structured, module-wise course with clarity and depth. The course should be professionally structured, engaging, and easy to understand. Ensure the following elements are included:
+          Read the provided content carefully and create a well-structured, module-wise course with clarity and depth. The course should be professionally structured, engaging, and easy to understand. Ensure the following elements are included:
       
           1. **Course Title**: A meaningful and concise title that reflects the essence of the course.  
           2. **Introduction to the Course**: Write a compelling introduction (approximately two paragraphs) that outlines what the course covers, its objectives, and the key skills or knowledge learners will gain. Make it engaging and informative.  
@@ -238,7 +306,7 @@ export default function CreateCourse({ AdminName, Role }) {
         const response = await result.response;
         const generatedCourse = await response.text();
 
-        setPdfStatuses((prev) => ({
+        setFileStatuses((prev) => ({
           ...prev,
           ["Generated Course"]: {
             status: "Course Created",
@@ -256,12 +324,12 @@ export default function CreateCourse({ AdminName, Role }) {
           timer: 3000,
         }).then(() => {
           setCourseCreated(true);
-          setShowGenerateButton(false); // Hide Generate button after course creation
+          setShowGenerateButton(false);
         });
       } else {
         Swal.fire({
           title: "Error",
-          text: "No content to process from the uploaded PDFs.",
+          text: "No content to process from the uploaded files.",
           icon: "error",
         });
       }
@@ -283,7 +351,7 @@ export default function CreateCourse({ AdminName, Role }) {
     });
   };
 
-  const isAllProcessed = Object.values(pdfStatuses).every(
+  const isAllProcessed = Object.values(fileStatuses).every(
     (status) => status.status === "Processed"
   );
 
@@ -294,12 +362,12 @@ export default function CreateCourse({ AdminName, Role }) {
         <h1 className="create-course-header">Create a New Course</h1>
         <div className="create-course-actions">
           <label className="create-course-button">
-            <FaFilePdf /> Select PDFs
+            <FaFilePdf /> Select Files
             <input
               type="file"
-              accept="application/pdf"
+              accept=".pdf,.docx,.xls,.xlsx"
               multiple
-              onChange={handlePdfSelect}
+              onChange={handleFileSelect}
               hidden
             />
           </label>
@@ -320,7 +388,7 @@ export default function CreateCourse({ AdminName, Role }) {
         </div>
 
         <div className="pdf-list">
-          {Object.entries(pdfStatuses).map(
+          {Object.entries(fileStatuses).map(
             ([fileName, { status, content }]) => (
               <div key={fileName} className="pdf-item">
                 <span>{fileName}</span>
@@ -342,17 +410,17 @@ export default function CreateCourse({ AdminName, Role }) {
                       title="Edit Course in Magic Editor"
                     />
                   )}
-                  {status !== "Error: Unable to process PDF" && (
+                  {!status.startsWith("Error") && (
                     <FaEye
                       className="view-icon"
-                      onClick={() => handleViewPdf(fileName)}
-                      title="View PDF Content"
+                      onClick={() => handleViewFile(fileName)}
+                      title="View File Content"
                     />
                   )}
                   <FaTrashAlt
                     className="delete-icon"
-                    onClick={() => handleRemovePdf(fileName)}
-                    title="Remove PDF"
+                    onClick={() => handleRemoveFile(fileName)}
+                    title="Remove File"
                   />
                 </div>
               </div>
@@ -384,14 +452,14 @@ export default function CreateCourse({ AdminName, Role }) {
           <div className="course-actions">
             <button
               className="course-action-button view-button"
-              onClick={() => handleViewPdf("Generated Course")}
+              onClick={() => handleViewFile("Generated Course")}
             >
               <FaEye style={{ marginRight: "8px" }} />
               View Generated Course
             </button>
             <button
               className="course-action-button edit-button"
-              onClick={() => handleEditCourse("Generated Course", pdfStatuses["Generated Course"].content)}
+              onClick={() => handleEditCourse("Generated Course", fileStatuses["Generated Course"].content)}
             >
               <FaEdit style={{ marginRight: "8px" }} />
               Edit Generated Course
@@ -400,7 +468,6 @@ export default function CreateCourse({ AdminName, Role }) {
         )}
       </div>
 
-      {/* Repository Popup */}
       {repoPopup && (
         <div className="repo-popup">
           <div className="repo-popup-content">
@@ -423,7 +490,7 @@ export default function CreateCourse({ AdminName, Role }) {
             <div className="popup-actions">
               <button
                 className="create-course-button-popup"
-                onClick={addSelectedToPdfList}
+                onClick={addSelectedToFileList}
                 disabled={repoSelected.length === 0}
               >
                 Process Selected Courses
@@ -433,14 +500,13 @@ export default function CreateCourse({ AdminName, Role }) {
         </div>
       )}
 
-      {/* PDF View Modal */}
-      {viewPdfContent && (
+      {viewContent && (
         <div className="pdf-content-overlay">
           <div className="pdf-content-box-data">
-            <button className="close-button" onClick={closeViewPdf}>
+            <button className="close-button" onClick={closeViewContent}>
               <FaTimes />
             </button>
-            <div className="pdf-content-text-data">{viewPdfContent}</div>
+            <div className="pdf-content-text-data">{viewContent}</div>
           </div>
         </div>
       )}
