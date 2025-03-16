@@ -91,7 +91,7 @@ function AdminSidebar() {
         </Link> */}
       </nav>
 
-      <div className="logout" onClick={handleLogout}>
+      <div className="admin-logout" onClick={handleLogout}>
         <p>Logout</p>
       </div>
     </div>

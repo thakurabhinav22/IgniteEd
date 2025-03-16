@@ -1,7 +1,8 @@
+// PublishCourse.jsx
 import React, { useState, useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import AdminSidebar from "./adminSideBar";
-import { FaTimes } from "react-icons/fa";
+import { FaTimes, FaPlus, FaSearch } from "react-icons/fa";
 import { getDatabase, ref, get, set } from "firebase/database";
 import Swal from "sweetalert2";
 import "./PublicCourse.css";
@@ -18,9 +19,11 @@ const PublishCourse = () => {
   const [bannerImageUrl, setBannerImageUrl] = useState("");
   const [includeYouTubeLinks, setIncludeYouTubeLinks] = useState(false);
   const [includeMindMaps, setIncludeMindMaps] = useState(false);
-  const [numQuestions, setNumQuestions] = useState(3);
-  const [isProcessing, setIsProcessing] = useState(false);
+  const [numQuestions, setNumQuestions] = useState(5);
   const [showContentModal, setShowContentModal] = useState(false);
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [showFabModal, setShowFabModal] = useState(false);
+  const [showSearchModal, setShowSearchModal] = useState(false);
   const [courseCount, setCourseCount] = useState(0);
   const [updatedContent, setUpdatedContent] = useState(editedContent);
 
@@ -29,72 +32,91 @@ const PublishCourse = () => {
   const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
   let generatedCourse;
 
+  // Load Google CSE script when component mounts
+  useEffect(() => {
+    const script = document.createElement("script");
+    script.src = "https://cse.google.com/cse.js?cx=13cbaf0acfe7f4937";
+    script.async = true;
+    document.body.appendChild(script);
+
+    const usercredAd = getCookie("usercredAd");
+    if (usercredAd) {
+      fetchCourseCount(usercredAd);
+    }
+
+    return () => {
+      document.body.removeChild(script);
+    };
+  }, []);
+
   const handleGemini = async () => {
+    // ... (keeping handleGemini unchanged)
     if (isProcessing) return;
     setIsProcessing(true);
 
     try {
       const youtubeInstruction = includeYouTubeLinks
-      ? "Additionally, provide relevant YouTube video suggestions for each module based on the content. Each module should have at least 2 valid YouTube video URLs directly related to the module’s topic."
-      : "Do not include YouTube video suggestions.";
-    
-    const mindMapInstruction = includeMindMaps
-      ? "Add a 'mindMaps' field for each module with a concise mind map (50-100 words) formatted in Markdown. Use '# ' for main topics and '- ' for subtopics to create a hierarchical structure, organizing the module’s key concepts visually. Include at least one main topic and 2-3 subtopics per module, using emojis (e.g., 🔗, 🏛️) to enhance readability where applicable."
-      : "Do not include mind maps.";
-    
-    const result = await model.generateContent(`
-      Convert the provided course content into a structured JSON format while keeping all data intact. Ensure that no modifications are made to the original content except for formatting it into JSON. Return only JSON, nothing else.
-    
-      Follow this JSON structure:
-    
-      {
-        "title": "<Course Title>",
-        "introduction": "<Course Introduction>",
-        "noOfModules": <number_of_modules>,
-        "modules": [
-          {
-            "moduleTitle": "<Module 1 Title>",
-            "moduleOverview": "<Module 1 Overview>",
-            "detailedExplanation": "<Module 1 Detailed Explanation>",
-            "examplesAndAnalogies": "<Module 1 Examples and Analogies>",
-            "keyTakeaways": [
-              "<Key Takeaway 1>",
-              "<Key Takeaway 2>",
-              "<Key Takeaway 3>"
-            ]${
-              includeYouTubeLinks
-                ? `,
-              "Refytvideo": [
-                "<YouTube Video URL 1>",
-                "<YouTube Video URL 2>"
-              ]`
-                : ""
-            }${
-              includeMindMaps
-                ? `,
-              "mindMaps": "<Concise mind map (50-100 words) in Markdown>"
-              `
-                : ""
+        ? "Additionally, provide relevant YouTube video suggestions for each module based on the content. Each module should have at least 2 valid YouTube video URLs directly related to the module’s topic."
+        : "Do not include YouTube video suggestions.";
+
+      const mindMapInstruction = includeMindMaps
+        ? "Add a 'mindMaps' field for each module with a concise mind map (50-100 words) formatted in Markdown. Use '# ' for main topics and '- ' for subtopics to create a hierarchical structure, organizing the module’s key concepts visually. Include at least one main topic and 2-3 subtopics per module, using emojis (e.g., 🔗, 🏛️) to enhance readability where applicable."
+        : "Do not include mind maps.";
+
+      const result = await model.generateContent(`
+        Convert the provided course content into a structured JSON format while keeping all data intact. Ensure that no modifications are made to the original content except for formatting it into JSON. Return only JSON, nothing else.
+      
+        Follow this JSON structure:
+      
+        {
+          "title": "<Course Title>",
+          "introduction": "<Course Introduction>",
+          "noOfModules": <number_of_modules>,
+          "modules": [
+            {
+              "moduleTitle": "<Module 1 Title>",
+              "moduleOverview": "<Module 1 Overview>",
+              "detailedExplanation": "<Module 1 Detailed Explanation>",
+              "examplesAndAnalogies": "<Module 1 Examples and Analogies>",
+              "keyTakeaways": [
+                "<Key Takeaway 1>",
+                "<Key Takeaway 2>",
+                "<Key Takeaway 3>"
+              ]${
+                includeYouTubeLinks
+                  ? `,
+                "Refytvideo": [
+                  "<YouTube Video URL 1>",
+                  "<YouTube Video URL 2>"
+                ]`
+                  : ""
+              }${
+                includeMindMaps
+                  ? `,
+                "mindMaps": "<Concise mind map (50-100 words) in Markdown>"
+                `
+                  : ""
+              }
             }
-          }
-          // Additional modules will follow the same structure
-        ]
-      }
-    
-      Ensure that:
-      - The JSON is well-formatted and follows the above schema precisely.
-      - The module count reflects the actual number of modules in the content.
-      - Key takeaways are listed as an array for better readability.
-      - ${youtubeInstruction}
-      - ${mindMapInstruction}
-    
-      **Course Content:**  
-      ${updatedContent}
-    `);
+          ]
+        }
+      
+        Ensure that:
+        - The JSON is well-formatted and follows the above schema precisely.
+        - The module count reflects the actual number of modules in the content.
+        - Key takeaways are listed as an array for better readability.
+        - ${youtubeInstruction}
+        - ${mindMapInstruction}
+      
+        **Course Content:**  
+        ${updatedContent}
+      `);
 
       const response = await result.response;
       generatedCourse = await response.text();
-      generatedCourse = generatedCourse.replace("```json", "").replace("```", "");
+      generatedCourse = generatedCourse
+        .replace("```json", "")
+        .replace("```", "");
 
       console.log(generatedCourse);
 
@@ -119,13 +141,6 @@ const PublishCourse = () => {
       setIsProcessing(false);
     }
   };
-
-  useEffect(() => {
-    const usercredAd = getCookie("usercredAd");
-    if (usercredAd) {
-      fetchCourseCount(usercredAd);
-    }
-  }, []);
 
   const getCookie = (name) => {
     const match = document.cookie.match(
@@ -162,7 +177,7 @@ const PublishCourse = () => {
       await handleGemini();
       const usercredAd = getCookie("userSessionCredAd");
       const userSessionCredAd = getCookie("userSessionCredAd");
-
+      
       const db = getDatabase();
       const courseCountRef = ref(db, `admin/${userSessionCredAd}/courseCount`);
       const snapshot = await get(courseCountRef);
@@ -215,6 +230,22 @@ const PublishCourse = () => {
     setUpdatedContent(event.target.value);
   };
 
+  const handleFabClick = () => {
+    setShowFabModal(true);
+  };
+
+  const closeFabModal = () => {
+    setShowFabModal(false);
+  };
+
+  const handleSearchClick = () => {
+    setShowSearchModal(true);
+  };
+
+  const closeSearchModal = () => {
+    setShowSearchModal(false);
+  };
+
   return (
     <>
       <AdminSidebar />
@@ -222,7 +253,6 @@ const PublishCourse = () => {
         <div className="form-container">
           <h1>Publish Course</h1>
 
-          {/* Course Name */}
           <div className="input-group">
             <label>
               <strong>Course Name:</strong>
@@ -236,7 +266,6 @@ const PublishCourse = () => {
             />
           </div>
 
-          {/* Author Name */}
           <div className="input-group">
             <label>
               <strong>Author Name:</strong>
@@ -250,7 +279,6 @@ const PublishCourse = () => {
             />
           </div>
 
-          {/* Thumbnail URL */}
           <div className="input-group">
             <label>
               <strong>Thumbnail Image URL:</strong>
@@ -264,21 +292,23 @@ const PublishCourse = () => {
             />
           </div>
 
-          {/* Number of Questions per Module */}
           <div className="input-group">
             <label>
               <strong>Number of Questions per Module:</strong>
             </label>
             <input
               type="number"
-              value={5}
-              onChange={(e) => setNumQuestions(Math.max(1, e.target.value))}
+              value={numQuestions}
+              onChange={(e) =>
+                setNumQuestions(
+                  Math.max(3, Math.min(10, Number(e.target.value)))
+                )
+              }
               min="3"
               max="10"
             />
           </div>
 
-          {/* Checkboxes for YouTube Links and Mind Maps */}
           <div className="checkbox-group">
             <label>
               <input
@@ -300,7 +330,6 @@ const PublishCourse = () => {
             </label>
           </div>
 
-          {/* Buttons */}
           <div className="button-group">
             <button
               onClick={() => navigate("/Admin/CreateCourse")}
@@ -320,9 +349,24 @@ const PublishCourse = () => {
             </button>
           </div>
         </div>
+
+        <button
+          className="fab-button fab-plus"
+          onClick={handleFabClick}
+          title="Quick Actions"
+        >
+          <FaPlus />
+        </button>
+
+        <button
+          className="fab-button fab-search"
+          onClick={handleSearchClick}
+          title="Search"
+        >
+          <FaSearch />
+        </button>
       </div>
 
-      {/* Modal for Course Content */}
       {showContentModal && (
         <div className="pdf-content-overlay">
           <div className="pdf-content-box">
@@ -331,6 +375,57 @@ const PublishCourse = () => {
             </button>
             <div className="pdf-content-text">
               <pre>{updatedContent}</pre>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showFabModal && (
+        <div className="fab-modal-overlay">
+          <div className="fab-modal-box">
+            <button className="close-button" onClick={closeFabModal}>
+              <FaTimes />
+            </button>
+            <h2>Quick Actions</h2>
+            <div className="fab-modal-content">
+              <button
+                onClick={() => {
+                  closeFabModal();
+                  handlePublish();
+                }}
+              >
+                Publish Now
+              </button>
+              <button
+                onClick={() => {
+                  closeFabModal();
+                  handleShowContent();
+                }}
+              >
+                View Content
+              </button>
+              <button
+                onClick={() => {
+                  closeFabModal();
+                  navigate("/Admin/CreateCourse");
+                }}
+              >
+                Back to Edit
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showSearchModal && (
+        <div className="fab-modal-overlay">
+          <div className="fab-modal-box search-modal">
+            <button className="close-button" onClick={closeSearchModal}>
+              <FaTimes />
+            </button>
+            <h2>Search</h2>
+            <div className="search-container">
+              <div className="gcse-search" />
             </div>
           </div>
         </div>

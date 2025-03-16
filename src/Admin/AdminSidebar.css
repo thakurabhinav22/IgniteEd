@@ -141,15 +141,16 @@ nav {
     vertical-align: middle;
   }
 
-.logout p{ 
-  color: white;
+.admin-logout p{ 
+  color: rgb(255, 255, 255);
 }
-.logout {
+.admin-logout {
   text-align: center;
   margin-top: auto;
   padding: 12px;
   border-radius: 8px;
   border: 1px solid #ef0000;
+  background-color: #ef0000;
   color: #9fef00;
   cursor: pointer;
   transition: background-color 0.2s ease, color 0.2s ease;
@@ -157,8 +158,8 @@ nav {
   font-weight: 700;
 }
 
-.logout:hover {
-  background-color: #ef0000;
+.admin-logout:hover {
+  background-color: #850000;
   color: #000000;
   font-weight: 700;
 }
