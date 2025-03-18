@@ -727,6 +727,7 @@ function LearningPage() {
       const parsedContent = JSON.parse(courseDetails.courseContent);
       const module = parsedContent.modules[moduleNumber - 1];
       const result = await model.generateContent(`
+        ${console.log(questionCount)}
         Generate ${questionCount} questions based on the below content, categorized by Bloom's Taxonomy levels:
         - 1 question at "Remember" level (recall facts) [ Keep all option length same to create a doubt among options],
         - 1 question at "Understand" level (explain concepts)  [ Keep all option length same to create a doubt among options],

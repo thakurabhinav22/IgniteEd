@@ -91,26 +91,33 @@ const PublishCourse = () => {
                 ]`
                   : ""
               }${
-                includeMindMaps
-                  ? `,
+        includeMindMaps
+          ? `,
                 "mindMaps": "<Concise mind map (50-100 words) in Markdown>"
                 `
-                  : ""
-              }
+          : ""
+      }
             }
           ]
         }
       
-          Ensure that:
-          - The JSON is well-formatted and follows the above schema precisely.
-          - The module count reflects the actual number of modules in the content.
-          - Key takeaways are listed as an array for better readability.
-          - ${youtubeInstruction}
-          - ${mindMapInstruction}
-          - Mind maps should contain **detailed and meaningful nodes** relevant to the module’s content.
-          - Avoid generic or placeholder nodes like **"undefined"**, as they provide no value and are redundant across modules.
-          - Ensure hierarchical structuring is clear, with well-defined **main topics and subtopics**.
-          - Each mind map should capture the **core concepts effectively** while maintaining clarity and conciseness.
+         Ensure that:
+
+          The JSON is well-formatted and follows the expected schema precisely.
+          The module count reflects the actual number of modules in the content.
+          Key takeaways are listed as an array for better readability.
+          ${youtubeInstruction}
+          ${mindMapInstruction}
+          Mind maps should contain detailed and meaningful nodes relevant to the module’s content.
+          Avoid generic or placeholder nodes like "undefined", as they provide no value and are redundant across modules.
+          Ensure hierarchical structuring is clear, with well-defined main topics and subtopics.
+          Each mind map should capture the core concepts effectively while maintaining clarity and conciseness.
+          Markdown content should follow a structured format, with proper sectioning:
+          Use # for main headings.
+          Use ## for subheadings.
+          Ensure that explanatory points follow the subheadings, rather than being inline with bullet points.
+          Use - for bullet points under subheadings, but keep definitions and descriptions in separate lines.
+          Ensure spacing between different sections for readability.
       
         **Course Content:**  
         ${updatedContent}
@@ -181,7 +188,7 @@ const PublishCourse = () => {
       await handleGemini();
       const usercredAd = getCookie("userSessionCredAd");
       const userSessionCredAd = getCookie("userSessionCredAd");
-      
+
       const db = getDatabase();
       const courseCountRef = ref(db, `admin/${userSessionCredAd}/courseCount`);
       const snapshot = await get(courseCountRef);

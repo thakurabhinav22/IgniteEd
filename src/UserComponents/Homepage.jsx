@@ -13,7 +13,7 @@ export default function HomePage() {
       {/* Navigation Bar */}
       <nav className="home-nav">
       <img src={learnmax} alt="LearnMax Logo" className="learnmax" />
-        <h2 className="nav-logo">LearnMax</h2>
+        <h2 className="nav-logo">IgnitEd</h2>
         <ul className="nav-links">
           <li>
             <a href="#hero" smooth={true} duration={500} className="nav-link-item ">
@@ -38,7 +38,7 @@ export default function HomePage() {
       <section className="section hero-section" id="hero">
         <div className="hero-content">
           <h1 className="fade-up slide-in">
-            LearnMax: <span className="highlight">AI-Powered Education</span>
+          IgnitEd: <span className="highlight">AI-Powered Education</span>
           </h1>
           <p className="fade-up slide-in">
             Elevate learning and management with AI-driven precision. Master skills and optimize resources seamlessly.
@@ -66,15 +66,15 @@ export default function HomePage() {
 
       {/* About Section */}
       <section className="section about-section" id="about">
-        <h1 className="fade-up slide-in">About LearnMax</h1>
+        <h1 className="fade-up slide-in">About IgnitEd</h1>
         <p className="fade-up slide-in">
-          LearnMax is an innovative platform leveraging artificial intelligence to transform education. We empower students with personalized skill-based learning and provide instructors with tools to manage resources efficiently.
+        IgnitEd is an innovative platform leveraging artificial intelligence to transform education. We empower students with personalized skill-based learning and provide instructors with tools to manage resources efficiently.
         </p>
       </section>
 
       {/* Features Section */}
       <section className="section features-section">
-        <h1 className="fade-up slide-in">Why LearnMax?</h1>
+        <h1 className="fade-up slide-in">Why IgnitEd?</h1>
         <div className="features">
           <div className="feature-card glow-on-hover">
             <FaTools className="feature-icon pulse" />
@@ -125,7 +125,7 @@ export default function HomePage() {
 
       {/* Education Section */}
       <section className="section education">
-        <h1 className="fade-up slide-in">Explore LearnMax</h1>
+        <h1 className="fade-up slide-in">Explore IgnitEd</h1>
         <p className="fade-up slide-in">
           An AI-driven ecosystem built to empower students and instructors with cutting-edge tools.
         </p>
@@ -149,7 +149,7 @@ export default function HomePage() {
       <section className="section contact-section" id="contact">
         <h1 className="fade-up slide-in">Contact Us</h1>
         <p className="fade-up slide-in">
-          Have questions? Reach out to us at <a href="mailto:support@learnmax.com">support@learnmax.com</a> or call us at (123) 456-7890. We’re here to help!
+          Have questions? Reach out to us at <a href="mailto:support@IgnitEd.com">support@IgnitEd.com</a> or call us at (123) 456-7890. We’re here to help!
         </p>
       </section>
     </div>
