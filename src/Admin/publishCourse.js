@@ -5,6 +5,7 @@ import AdminSidebar from "./adminSideBar";
 import { FaTimes, FaPlus, FaSearch } from "react-icons/fa";
 import { getDatabase, ref, get, set } from "firebase/database";
 import Swal from "sweetalert2";
+import axios from "axios";
 import "./PublicCourse.css";
 import { GoogleGenerativeAI } from "@google/generative-ai";
 
@@ -16,6 +17,7 @@ const PublishCourse = () => {
   const [courseName, setCourseName] = useState(fileName || "");
   const [authorName, setAuthorName] = useState("");
   const [thumbnailUrl, setThumbnailUrl] = useState("");
+  const [thumbnailFile, setThumbnailFile] = useState(null);
   const [bannerImageUrl, setBannerImageUrl] = useState("");
   const [includeYouTubeLinks, setIncludeYouTubeLinks] = useState(false);
   const [includeMindMaps, setIncludeMindMaps] = useState(false);
@@ -50,7 +52,6 @@ const PublishCourse = () => {
   }, []);
 
   const handleGemini = async () => {
-    // ... (keeping handleGemini unchanged)
     if (isProcessing) return;
     setIsProcessing(true);
 
@@ -175,9 +176,34 @@ const PublishCourse = () => {
     }
   };
 
+  const handleThumbnailFileChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setThumbnailFile(file);
+      setThumbnailUrl(URL.createObjectURL(file)); // Preview the image locally
+    }
+  };
+
+  const uploadImageToCloudinary = async (image) => {
+    const formData = new FormData();
+    formData.append("file", image);
+    formData.append("upload_preset", "unsigned_preset"); // Replace with your Cloudinary upload preset
+
+    try {
+      const response = await axios.post(
+        "https://api.cloudinary.com/v1_1/ddnkkfmej/image/upload", // Replace 'ddnkkfmej' with your Cloudinary cloud name
+        formData
+      );
+      return response.data.secure_url; // Return the generated URL
+    } catch (error) {
+      console.error("Error uploading image to Cloudinary:", error);
+      throw new Error("Failed to upload image to Cloudinary");
+    }
+  };
+
   const handlePublish = async () => {
-    if (!courseName || !authorName || !thumbnailUrl) {
-      alert("Please fill all the required fields!");
+    if (!courseName || !authorName || (!thumbnailUrl && !thumbnailFile)) {
+      alert("Please fill all the required fields or upload a thumbnail!");
       return;
     }
 
@@ -189,6 +215,13 @@ const PublishCourse = () => {
       const usercredAd = getCookie("userSessionCredAd");
       const userSessionCredAd = getCookie("userSessionCredAd");
 
+      let finalThumbnailUrl = thumbnailUrl;
+
+      // If a file is uploaded, upload it to Cloudinary and get the URL
+      if (thumbnailFile) {
+        finalThumbnailUrl = await uploadImageToCloudinary(thumbnailFile);
+      }
+
       const db = getDatabase();
       const courseCountRef = ref(db, `admin/${userSessionCredAd}/courseCount`);
       const snapshot = await get(courseCountRef);
@@ -199,32 +232,27 @@ const PublishCourse = () => {
       await set(courseCountRef, currentCourseCount);
 
       const newCourseId = `${usercredAd}${currentCourseCount}`;
-
       const coursePath = `admin/${usercredAd}/courses/${userSessionCredAd}${currentCourseCount}`;
 
-      const courseRef = ref(db, coursePath);
-      await set(courseRef, {
+      const courseData = {
         courseName,
         authorName,
-        thumbnailUrl,
+        thumbnailUrl: finalThumbnailUrl || "",
         bannerImageUrl: bannerImageUrl || "",
         numQuestions,
         courseContent: generatedCourse,
-      });
+      };
 
-      await set(ref(db, `Courses/${newCourseId}`), {
-        courseName,
-        authorName,
-        thumbnailUrl,
-        bannerImageUrl: bannerImageUrl || "",
-        numQuestions,
-        courseContent: generatedCourse,
-      });
+      const courseRef = ref(db, coursePath);
+      await set(courseRef, courseData);
+
+      await set(ref(db, `Courses/${newCourseId}`), courseData);
 
       setIsProcessing(false);
       alert("Course Created!");
     } catch (error) {
       setIsProcessing(false);
+      console.error("Error during course publishing:", error);
       alert("Error occurred during course creation");
     }
   };
@@ -292,15 +320,32 @@ const PublishCourse = () => {
 
           <div className="input-group">
             <label>
-              <strong>Thumbnail Image URL:</strong>
+              <strong>Thumbnail Image:</strong>
             </label>
-            <input
-              type="text"
-              value={thumbnailUrl}
-              onChange={(e) => setThumbnailUrl(e.target.value)}
-              placeholder="Enter thumbnail image URL"
-              required
-            />
+            <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+              <input
+                type="text"
+                value={thumbnailUrl}
+                onChange={(e) => {
+                  setThumbnailUrl(e.target.value);
+                  setThumbnailFile(null); // Clear file if URL is entered
+                }}
+                placeholder="Enter thumbnail image URL"
+              />
+              <span>OR</span>
+              <input
+                type="file"
+                accept="image/*"
+                onChange={handleThumbnailFileChange}
+              />
+              {thumbnailUrl && (
+                <img
+                  src={thumbnailUrl}
+                  alt="Thumbnail Preview"
+                  style={{ maxWidth: "200px", marginTop: "10px" }}
+                />
+              )}
+            </div>
           </div>
 
           <div className="input-group">
