@@ -1,14 +1,21 @@
-
-.dashboard-container{
-    /* display: flex;
-    align-items: center;
-    justify-content: center; */
-    width: 100vw;
-    height: 100vh;
-    background-color: white; 
-    font-family: Arial, sans-serif;
-  
+.dashboard-container {
+  /* display: flex;
+  align-items: center;
+  justify-content: center; */
+  width: 100vw;
+  height: 100vh;
+  background-color: white;
+  font-family: Arial, sans-serif;
 }
 
-
-
+/* Mobile View Adjustments */
+@media (max-width: 768px) {
+  .dashboard-container {
+    width: 100vw; /* Ensure full width */
+    height: auto; /* Dynamic height based on content */
+    min-height: calc(100vh - 80px); /* Minimum height minus sidebar height */
+    padding-bottom: 80px; /* Reserve space for sidebar to prevent overlap */
+    overflow-y: auto; /* Allow scrolling if content exceeds height */
+    box-sizing: border-box; /* Ensure padding is included in height calculations */
+  }
+}

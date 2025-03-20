@@ -11,7 +11,7 @@
   flex: 1;
   padding: 50px;
   margin-left: 250px;
-  position: relative; /* For overlay positioning */
+  position: relative;
 }
 
 .assessment-title {
@@ -172,80 +172,14 @@
   text-align: center;
 }
 
-/* New styles for the black overlay */
-.content-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100vw;
-  height: 100vh;
-  background: rgba(0, 0, 0, 0.95);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  z-index: 1000;
-  padding: 20px;
-}
-
-.close-btn {
-  position: absolute;
-  top: 20px;
-  right: 20px;
-  background: none;
-  border: none;
-  color: #fff;
-  font-size: 2rem;
-  cursor: pointer;
-  transition: color 0.3s ease;
-}
-
-.close-btn:hover {
-  color: #e74c3c;
-}
-
-.content-display {
-  max-width: 800px;
-  width: 100%;
-  background: #1a1a1a;
-  padding: 30px;
-  border-radius: 10px;
-  box-shadow: 0 0 20px rgba(255, 255, 255, 0.1);
-  color: #fff;
-  overflow-y: auto;
-  max-height: 90vh;
-}
-
-.content-display h2 {
-  font-size: 2rem;
-  font-weight: 600;
-  margin-bottom: 20px;
-  color: #3498db;
-}
-
-.content-display pre {
-  font-size: 1rem;
-  white-space: pre-wrap;
-  word-wrap: break-word;
-  background: #222;
-  padding: 15px;
-  border-radius: 5px;
-  color: #ecf0f1;
-}
-
-.content-error {
-  font-size: 1.2rem;
-  color: #e74c3c;
-}
-
-.content-message {
-  font-size: 1.2rem;
-  color: #7f8c8d;
-}
-
 @media (max-width: 768px) {
+  .assessment-container {
+    flex-direction: column;
+  }
+
   .assessment-content {
     margin-left: 0;
-    padding: 30px;
+    padding: 20px;
   }
 
   .assessment-title {
@@ -257,7 +191,7 @@
   }
 
   .assessment-card {
-    padding: 20px;
+    padding: 15px;
   }
 
   .card-header h2 {

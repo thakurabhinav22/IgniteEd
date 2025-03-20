@@ -1,3 +1,4 @@
+/* General Layout */
 .module-container {
   display: flex;
   flex-direction: column;
@@ -67,6 +68,25 @@
   overflow-y: auto;
   margin-left: 280px;
 }
+.button-container {
+  display: flex;
+  justify-content: center;
+  margin-top: 20px; /* Adjust as needed */
+}
+
+.action-button {
+  padding: 10px 20px;
+  font-size: 16px;
+  background-color: #44c4ff;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.action-button:hover {
+  background-color: #2a9ddf;
+}
 
 .course-card {
   background-color: #FFFFFF; /* White background */
@@ -107,4 +127,78 @@
   color: #6B7280; /* Medium gray */
   text-align: center;
   width: 100%;
+}
+
+/* Mobile View Adjustments */
+@media (max-width: 768px) {
+  .module-container {
+    height: auto; /* Dynamic height */
+    min-height: calc(100vh - 80px); /* Adjust for bottom sidebar */
+    overflow-x: hidden; /* Prevent horizontal scrolling */
+  }
+
+  .header-container {
+    width: 100%; /* Full width */
+    margin-left: 0; /* Remove sidebar offset */
+    padding: 15px; /* Reduce padding */
+    flex-direction: column; /* Stack elements vertically */
+    gap: 10px; /* Add spacing between stacked elements */
+  }
+
+  .header-container h1 {
+    font-size: 20px; /* Smaller title */
+  }
+
+  .filter-container {
+    width: 100%; /* Full width */
+    flex-direction: column; /* Stack filter elements */
+    gap: 8px; /* Reduce gap */
+  }
+
+  .search-input {
+    width: 100%; /* Full width to fit container */
+    padding: 6px 10px; /* Slightly smaller padding */
+    font-size: 14px; /* Smaller text */
+  }
+
+  .filter-select {
+    width: 100%; /* Full width to fit container */
+    padding: 6px; /* Slightly smaller padding */
+    font-size: 14px; /* Smaller text */
+  }
+
+  .courses-container {
+    width: 100%; /* Full width */
+    margin-left: 0; /* Remove sidebar offset */
+    padding: 15px; /* Reduce padding */
+    gap: 15px; /* Reduce gap */
+    overflow-y: auto; /* Allow vertical scrolling */
+    overflow-x: hidden; /* Prevent horizontal scrolling */
+    padding-bottom: 80px; /* Prevent overlap with fixed bottom sidebar */
+    justify-content: center; /* Center-align course cards */
+  }
+
+  .course-card {
+    width: 100%; /* Full width to fit container */
+    max-width: 300px; /* Cap width for readability */
+    height: 220px; /* Slightly smaller height */
+    padding: 10px; /* Reduce padding */
+  }
+
+  .course-image {
+    height: 130px; /* Adjust image height */
+  }
+
+  .course-title {
+    font-size: 16px; /* Smaller title */
+    margin: 8px 0; /* Reduce margin */
+  }
+
+  .course-author {
+    font-size: 12px; /* Smaller text */
+  }
+
+  .no-results {
+    font-size: 16px; /* Smaller text */
+  }
 }

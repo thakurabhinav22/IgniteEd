@@ -1,182 +1,202 @@
 /* General Layout */
 .analytics-page-container {
-    display: flex;
-    min-height: 100vh;
-    background: linear-gradient(135deg, #eef2f6 0%, #ffffff 100%);
-    font-family: 'Roboto', Arial, sans-serif;
-  }
-  
-  /* Main Content */
-  .analytics-main-content {
-    flex: 1;
-    margin-left: 250px; /* Adjust based on your Sidebar width */
-    padding: 40px;
-  }
-  
-  /* Header */
-  .analytics-header {
-    margin-bottom: 40px;
-    text-align: center;
-  }
-  
-  .analytics-header h1 {
-    margin: 0;
-    font-size: 36px;
-    font-weight: 700;
-    color: #1E40AF;
-    letter-spacing: 0.5px;
-  }
-  
-  .analytics-header p {
-    margin: 10px 0 0;
-    font-size: 18px;
-    color: #6B7280;
-    font-style: italic;
-  }
-  
-  /* Stats Overview */
-  .stats-overview {
-    display: flex;
-    justify-content: center;
-    gap: 25px;
-    margin-bottom: 40px;
-    flex-wrap: wrap;
-  }
-  
-  .stat-box {
-    background: #ffffff;
-    border-radius: 12px;
-    padding: 20px;
-    text-align: center;
-    width: 180px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
-    transition: transform 0.2s ease;
-  }
-  
-  .stat-box:hover {
-    transform: translateY(-5px);
-  }
-  
-  .stat-box h3 {
-    margin: 0;
-    font-size: 32px;
-    font-weight: 700;
-    color: #1E40AF;
-  }
-  
-  .stat-box p {
-    margin: 5px 0 0;
-    font-size: 16px;
-    color: #4B5563;
-  }
-  
-  /* Charts Container */
+  display: flex;
+  min-height: 100vh;
+  background: linear-gradient(135deg, #eef2f6 0%, #ffffff 100%);
+  font-family: 'Roboto', Arial, sans-serif;
+}
+
+/* Main Content */
+.analytics-main-content {
+  flex: 1;
+  margin-left: 250px;
+  padding: 40px;
+}
+
+/* Header */
+.analytics-header {
+  margin-bottom: 40px;
+  text-align: center;
+}
+
+.analytics-header h1 {
+  margin: 0;
+  font-size: 36px;
+  font-weight: 700;
+  color: #1E40AF;
+  letter-spacing: 0.5px;
+}
+
+.analytics-header p {
+  margin: 10px 0 0;
+  font-size: 18px;
+  color: #6B7280;
+  font-style: italic;
+}
+
+/* Stats Overview */
+.stats-overview {
+  display: flex;
+  justify-content: center;
+  gap: 25px;
+  margin-bottom: 40px;
+  flex-wrap: wrap;
+}
+
+.stat-box {
+  background: #ffffff;
+  border-radius: 12px;
+  padding: 20px;
+  text-align: center;
+  width: 180px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  transition: transform 0.2s ease;
+}
+
+.stat-box:hover {
+  transform: translateY(-5px);
+}
+
+.stat-box h3 {
+  margin: 0;
+  font-size: 32px;
+  font-weight: 700;
+  color: #1E40AF;
+}
+
+.stat-box p {
+  margin: 5px 0 0;
+  font-size: 16px;
+  color: #4B5563;
+}
+
+/* Charts Container */
+.charts-container {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 20px;
+}
+
+/* Chart Card */
+.chart-card {
+  background: #ffffff;
+  border-radius: 16px;
+  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.06);
+  padding: 20px;
+  transition: box-shadow 0.3s ease;
+}
+
+.chart-card:hover {
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+}
+
+.chart-card h2 {
+  font-size: 22px;
+  font-weight: 600;
+  color: #2D3748;
+  margin-bottom: 15px;
+  text-align: center;
+}
+
+.chart-wrapper {
+  position: relative;
+  height: 280px;
+  width: 100%;
+}
+
+/* Specific Pie Chart Wrapper */
+.chart-pie-wrapper {
+  height: 220px;
+  max-width: 280px;
+  margin: 0 auto;
+}
+
+/* Stats Details */
+.stats-details {
+  text-align: center;
+}
+
+.stats-details p {
+  margin: 10px 0;
+  font-size: 16px;
+  color: #4B5563;
+}
+
+.stats-details strong {
+  color: #1F2937;
+  font-weight: 600;
+}
+
+/* Loading */
+.loading-content {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100%;
+  font-size: 20px;
+  color: #6B7280;
+  padding: 40px;
+}
+
+/* Responsive Design */
+@media (max-width: 1024px) {
   .charts-container {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
-    gap: 30px;
-  }
-  
-  /* Chart Card */
-  .chart-card {
-    background: #ffffff;
-    border-radius: 16px;
-    box-shadow: 0 6px 14px rgba(0, 0, 0, 0.06);
-    padding: 25px;
-    transition: box-shadow 0.3s ease;
-  }
-  
-  .chart-card:hover {
-    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
-  }
-  
-  .chart-card h2 {
-    font-size: 22px;
-    font-weight: 600;
-    color: #2D3748;
-    margin-bottom: 20px;
-    text-align: center;
-  }
-  
-  .chart-wrapper {
-    position: relative;
-    height: 300px; /* Reduced height for better fit */
-    width: 100%;
-  }
-  
-  /* Specific Pie Chart Wrapper */
-  .chart-pie-wrapper {
-    height: 250px; /* Smaller height for Pie chart */
-    max-width: 300px; /* Constrain width */
-    margin: 0 auto; /* Center the Pie chart */
-  }
-  
-  /* Stats Details */
-  .stats-details {
-    text-align: center;
-  }
-  
-  .stats-details p {
-    margin: 12px 0;
-    font-size: 16px;
-    color: #4B5563;
-  }
-  
-  .stats-details strong {
-    color: #1F2937;
-    font-weight: 600;
-  }
-  
-  /* Loading */
-  .loading-content {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    height: 100%;
-    font-size: 20px;
-    color: #6B7280;
-    padding: 40px;
-  }
-  
-  /* Responsive Design */
-  @media (max-width: 1024px) {
-    .charts-container {
       grid-template-columns: 1fr;
-    }
-  
-    .analytics-main-content {
-      padding: 20px;
-    }
-  
-    .chart-pie-wrapper {
-      max-width: 250px;
-    }
   }
-  
-  @media (max-width: 768px) {
-    .analytics-main-content {
-      margin-left: 0; /* Adjust if Sidebar collapses */
+  .analytics-main-content {
+      padding: 20px;
+  }
+  .chart-pie-wrapper {
+      max-width: 250px;
+  }
+}
+
+@media (max-width: 768px) {
+  .analytics-main-content {
+      margin-left: 0;
       padding: 15px;
-    }
-  
-    .analytics-header h1 {
+  }
+  .analytics-header h1 {
       font-size: 28px;
-    }
-  
-    .analytics-header p {
+  }
+  .analytics-header p {
       font-size: 16px;
-    }
-  
-    .stat-box {
+  }
+  .stat-box {
       width: 140px;
-    }
-  
-    .chart-wrapper {
+  }
+  .chart-wrapper {
       height: 250px;
-    }
-  
-    .chart-pie-wrapper {
+  }
+  .chart-pie-wrapper {
       height: 200px;
       max-width: 200px;
-    }
   }
+}
+
+@media (max-width: 480px) {
+  .analytics-main-content {
+      padding: 10px;
+  }
+  .analytics-header h1 {
+      font-size: 24px;
+  }
+  .analytics-header p {
+      font-size: 14px;
+  }
+  .stats-overview {
+      flex-direction: column;
+      align-items: center;
+  }
+  .stat-box {
+      width: 100%;
+      max-width: 220px;
+  }
+  .chart-wrapper {
+      height: 220px;
+  }
+  .chart-pie-wrapper {
+      height: 180px;
+      max-width: 180px;
+  }
+}
