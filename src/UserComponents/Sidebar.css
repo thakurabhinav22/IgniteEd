@@ -1,3 +1,4 @@
+/* Sidebar */
 .sidebar {
   background-color: #ffffff;
   width: 280px;
@@ -77,16 +78,12 @@ nav {
   border: 1px solid #ff0000;
   cursor: pointer;
   transition: background-color 0.2s ease, color 0.2s ease;
-}
-
-.logout-btn {
   background-color: #ef0000;
 }
 
 /* Settings Popup Overlay and Glassmorphism Effect */
 .settings-overlay {
   position: fixed;
-  z-index: 999;
   top: 0;
   left: 0;
   width: 100%;
@@ -96,8 +93,8 @@ nav {
   -webkit-backdrop-filter: blur(10px); /* Safari support */
   display: flex;
   justify-content: center;
-  align-items: center;
-  z-index: 1000;
+  align-items: center; /* Centered vertically */
+  z-index: 1000; /* High z-index */
   animation: fadeIn 0.3s ease-in-out;
 }
 
@@ -116,6 +113,7 @@ nav {
   border-radius: 16px;
   box-shadow: 0 8px 30px rgba(0, 0, 0, 0.2);
   width: 700px;
+  max-width: 90%; /* Responsive width for smaller screens */
   max-height: 80vh;
   display: flex;
   flex-direction: column;
@@ -123,6 +121,7 @@ nav {
   border: 1px solid rgba(255, 255, 255, 0.3);
   backdrop-filter: blur(10px); /* Glassmorphism blur */
   -webkit-backdrop-filter: blur(10px); /* Safari support */
+  z-index: 1001; /* Above overlay */
 }
 
 /* Settings Header */
@@ -239,9 +238,9 @@ nav {
 .dark-input {
   width: 100%;
   padding: 12px;
-  background: #F9FAFB; /* Light theme background color (very light gray) */
-  border: 1px solid #D1D5DB; /* Lighter border color for light theme */
-  color: #1F2937; /* Darker text for contrast in light theme */
+  background: #F9FAFB;
+  border: 1px solid #D1D5DB;
+  color: #1F2937;
   border-radius: 8px;
   font-size: 15px;
   transition: border-color 0.3s ease, box-shadow 0.3s ease;
@@ -257,7 +256,7 @@ nav {
   appearance: none;
   background: #F9FAFB
     url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='%231F2937' viewBox='0 0 16 16'%3E%3Cpath d='M7.247 11.14 2.451 5.658C1.885 5.013 2.345 4 3.204 4h9.592a1 1 0 0 1 .753 1.659l-4.796 5.48a1 1 0 0 1-1.506 0z'/%3E%3C/svg%3E")
-    no-repeat right 10px center; /* Updated arrow color to match text */
+    no-repeat right 10px center;
   padding: 12px;
   cursor: pointer;
 }
@@ -323,15 +322,14 @@ nav {
     flex-direction: row;
     justify-content: space-between;
     align-items: center;
-    overflow-y: hidden; /* Disable vertical scroll */
+    overflow-y: hidden;
+    z-index: 10; /* Consistent with desktop */
   }
 
-  /* Hide profile section in mobile view */
   .profile {
     display: none;
   }
 
-  /* Navigation adjustments */
   nav {
     flex-direction: row;
     gap: 0;
@@ -364,19 +362,21 @@ nav {
     margin-top: 4px;
   }
 
-  /* Logout button hidden in mobile view */
   .logout-btn {
     display: none;
   }
 
-  /* Settings popup adjustments */
+  /* Settings popup adjustments for mobile */
   .settings-overlay {
-    align-items: flex-end;
+    justify-content: center; /* Center horizontally */
+    align-items: center; /* Center vertically */
+    z-index: 1000; /* Consistent high value */
   }
 
   .settings-popup {
-    width: 100%;
-    max-height: 70vh;
-    border-radius: 16px 16px 0 0;
+    width: 90%; /* Slightly narrower than full width */
+    max-height: 70vh; /* Consistent max height */
+    border-radius: 16px; /* Full rounded corners */
+    z-index: 1001; /* Above overlay */
   }
 }
