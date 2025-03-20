@@ -123,14 +123,26 @@ function Assessment() {
       );
       return;
     }
-
+  
+    // Get the current date
+    const currentDate = new Date().toLocaleDateString();
+  
+    // Log the data being sent (for debugging)
+    console.log("Sending data to backend:", {
+      name: userName,
+      course: courseName,
+      date: currentDate,
+      instructor: authorName,
+    });
+  
     try {
       const response = await axios.post(
         "https://tlm-server.onrender.com/generate",
         {
           name: userName,
-          course_name: courseName,
-          author_name: authorName,
+          course: courseName,
+          date: currentDate,
+          instructor: authorName,
         },
         {
           headers: {
@@ -138,8 +150,10 @@ function Assessment() {
           },
           responseType: "blob",
         }
-      );
-
+    );
+    console.log(userName, courseName, currentDate, authorName);  
+    
+  
       const blob = new Blob([response.data], { type: "image/png" });
       const url = window.URL.createObjectURL(blob);
       const link = document.createElement("a");
@@ -149,8 +163,8 @@ function Assessment() {
       link.click();
       document.body.removeChild(link);
       window.URL.revokeObjectURL(url);
-
-      Swal.fire("Success", `Certificate for course ${courseId} downloaded!`, "success");
+  
+      Swal.fire("Success", `Certificate for course ${courseName} downloaded!`, "success");
     } catch (error) {
       console.error("Error downloading certificate:", error);
       const errorMessage = error.response?.data
@@ -159,7 +173,6 @@ function Assessment() {
       Swal.fire("Error", `Failed to download certificate: ${errorMessage}`, "error");
     }
   };
-
   return (
     <div className="assessment-container">
       <Sidebar />

@@ -387,12 +387,12 @@ const PublishCourse = () => {
           </div>
 
           <div className="button-group">
-            <button
+            {/* <button
               onClick={() => navigate("/Admin/CreateCourse")}
               className="revert-button"
             >
               Revert to Edit
-            </button>
+            </button> */}
             <button onClick={handleShowContent} className="view-content-button">
               View Course Content
             </button>
