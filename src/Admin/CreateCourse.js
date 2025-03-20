@@ -30,7 +30,7 @@ const genAI = new GoogleGenerativeAI(API_KEY);
 const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
 
 export default function CreateCourse({ AdminName, Role }) {
-  document.title = "TheLearnMax - Admin Course Create ";
+  document.title = "IgnitEd - Admin Course Create ";
   const navigate = useNavigate();
   const [adminName, setAdminName] = useState(AdminName);
   const [adminRole, setAdminRole] = useState(Role);
@@ -45,7 +45,7 @@ export default function CreateCourse({ AdminName, Role }) {
   const [showGenerateButton, setShowGenerateButton] = useState(false);
 
   useEffect(() => {
-    document.title = "TheLearnMax - Course Create";
+    document.title = "IgnitEd - Course Create";
     const userId = Cookies.get("userSessionCredAd");
     if (!userId) {
       navigate("/Admin");

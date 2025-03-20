@@ -15,7 +15,7 @@ function AdminLogin() {
 
   useEffect(() => {
     // Set the page title
-    document.title = "LearnMax - Admin Login";
+    document.title = "IgnitEd - Admin Login";
 
     // Check for cookie and validate admin status
     const userId = Cookies.get('userSessionCredAd');

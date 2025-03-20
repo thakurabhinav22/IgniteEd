@@ -14,7 +14,7 @@ function AdminDashboard() {
   const [adminRole, setAdminRole] = useState("");
 
   useEffect(() => {
-    document.title = "TheLearnMax - Admin Dashboard";
+    document.title = "IgnitEd - Admin Dashboard";
     const userId = Cookies.get("userSessionCredAd");
 
     if (!userId) {

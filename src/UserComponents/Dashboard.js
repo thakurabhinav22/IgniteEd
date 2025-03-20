@@ -29,7 +29,7 @@ function Dashboard() {
   };
 
   useEffect(() => {
-    document.title = "TheLearnMax - Dashboard";
+    document.title = "IgnitEd - Dashboard";
     const userId = Cookies.get("userSessionCred");
     if (!userId) {
       // If there's no userId in the cookie, redirect to the login page
