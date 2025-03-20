@@ -1,89 +1,89 @@
-
 .sidebar {
-    background-color: #ffffff;
-    width: 280px;
-    padding: 20px;
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
-    position: fixed;
-    top: 0;
-    left: 0;
-    height: 100vh;
-    overflow-y: auto;
-    border-radius: 0 20px 20px 0;
-    /* box-shadow: 0px 10px 30px rgba(0, 0, 0, 0.3); */
-  }
-  
-  /* Profile Section */
-  .profile {
-    text-align: center;
-    margin-bottom: 30px;
-  }
-  
-  .profile img {
-    width: 80px;
-    height: 80px;
-    border-radius: 50%;
-    margin-bottom: 10px;
-    box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.2);
-  }
-  
-  .profile h3 {
-    font-size: 1.2em;
-    margin: 5px 0;
-    color: #44c4ff; /* HTB accent color */
-  }
-  
-  .profile p {
-    font-size: 0.9em;
-    color: #000000;
-  }
-  
-  /* Navigation Links */
-  nav {
-    display: flex;
-    flex-direction: column;
-    gap: 15px;
-  }
-  
-  .stud-nav-item {
-    color: #000000b3;
-    text-decoration: none;
-    display: flex;
-    align-items: center;
-    font-size: 1em;
-    padding: 12px;
-    border-radius: 8px;
-    transition: all 0.3s ease;
-  }
-  
-  .stud-nav-icon {
-    margin-right: 10px;
-    font-size: 1.2em;
-  }
-  
-  .stud-nav-item:hover {
-    background: #44c4ff;
-    color: #ffffff;
-  }
-  
-  /* Dark Mode Button */
-  .logout-btn {
-    font-size: 20px;
-    text-align: center;
-    margin-top: auto;
-    padding: 10px;
-    border-radius: 8px;
-    border: 1px solid #ff0000;
-    cursor: pointer;
-    transition: background-color 0.2s ease, color 0.2s ease;
-  }
-  
-  .logout-btn {
-    background-color: #ef0000;
-  }
-  /* Settings Popup Overlay and Glassmorphism Effect */
+  background-color: #ffffff;
+  width: 280px;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  position: fixed;
+  top: 0;
+  left: 0;
+  height: 100vh;
+  overflow-y: auto;
+  border-radius: 0 20px 20px 0;
+  /* box-shadow: 0px 10px 30px rgba(0, 0, 0, 0.3); */
+}
+
+/* Profile Section */
+.profile {
+  text-align: center;
+  margin-bottom: 30px;
+}
+
+.profile img {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  margin-bottom: 10px;
+  box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+.profile h3 {
+  font-size: 1.2em;
+  margin: 5px 0;
+  color: #44c4ff; /* HTB accent color */
+}
+
+.profile p {
+  font-size: 0.9em;
+  color: #000000;
+}
+
+/* Navigation Links */
+nav {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.stud-nav-item {
+  color: #000000b3;
+  text-decoration: none;
+  display: flex;
+  align-items: center;
+  font-size: 1em;
+  padding: 12px;
+  border-radius: 8px;
+  transition: all 0.3s ease;
+}
+
+.stud-nav-icon {
+  margin-right: 10px;
+  font-size: 1.2em;
+}
+
+.stud-nav-item:hover {
+  background: #44c4ff;
+  color: #ffffff;
+}
+
+/* Dark Mode Button */
+.logout-btn {
+  font-size: 20px;
+  text-align: center;
+  margin-top: auto;
+  padding: 10px;
+  border-radius: 8px;
+  border: 1px solid #ff0000;
+  cursor: pointer;
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+.logout-btn {
+  background-color: #ef0000;
+}
+
+/* Settings Popup Overlay and Glassmorphism Effect */
 .settings-overlay {
   position: fixed;
   top: 0;
@@ -101,8 +101,12 @@
 }
 
 @keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
 }
 
 /* Settings Popup Container */
@@ -250,7 +254,9 @@
 
 .dark-input select {
   appearance: none;
-  background: #F9FAFB url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='%231F2937' viewBox='0 0 16 16'%3E%3Cpath d='M7.247 11.14 2.451 5.658C1.885 5.013 2.345 4 3.204 4h9.592a1 1 0 0 1 .753 1.659l-4.796 5.48a1 1 0 0 1-1.506 0z'/%3E%3C/svg%3E") no-repeat right 10px center; /* Updated arrow color to match text */
+  background: #F9FAFB
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='%231F2937' viewBox='0 0 16 16'%3E%3Cpath d='M7.247 11.14 2.451 5.658C1.885 5.013 2.345 4 3.204 4h9.592a1 1 0 0 1 .753 1.659l-4.796 5.48a1 1 0 0 1-1.506 0z'/%3E%3C/svg%3E")
+    no-repeat right 10px center; /* Updated arrow color to match text */
   padding: 12px;
   cursor: pointer;
 }
@@ -301,4 +307,75 @@
 
 .forgot-password a:hover {
   text-decoration: underline;
+}
+
+/* Mobile View Adjustments */
+@media (max-width: 768px) {
+  .sidebar {
+    width: 100%;
+    height: auto;
+    position: fixed;
+    bottom: 0;
+    top: auto;
+    border-radius: 0;
+    padding: 10px;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    overflow-y: hidden; /* Disable vertical scroll */
+  }
+
+  /* Hide profile section in mobile view */
+  .profile {
+    display: none;
+  }
+
+  /* Navigation adjustments */
+  nav {
+    flex-direction: row;
+    gap: 0;
+    width: 100%;
+    justify-content: space-around;
+    margin: 0;
+  }
+
+  .stud-nav-item {
+    flex-direction: column;
+    padding: 8px;
+    font-size: 0.8em;
+    text-align: center;
+    border-radius: 50%;
+    width: 60px;
+    height: 60px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+
+  .stud-nav-icon {
+    margin-right: 0;
+    font-size: 1.5em;
+  }
+
+  .stud-nav-item span {
+    display: block;
+    font-size: 0.7em;
+    margin-top: 4px;
+  }
+
+  /* Logout button hidden in mobile view */
+  .logout-btn {
+    display: none;
+  }
+
+  /* Settings popup adjustments */
+  .settings-overlay {
+    align-items: flex-end;
+  }
+
+  .settings-popup {
+    width: 100%;
+    max-height: 70vh;
+    border-radius: 16px 16px 0 0;
+  }
 }

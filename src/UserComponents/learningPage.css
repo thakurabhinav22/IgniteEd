@@ -286,7 +286,7 @@ body {
   background-color: #F9FAFB;
   border: 1px solid #E5E7EB;
   border-radius: 12px;
-}/* learningPage.css */
+}
 
 /* Style for the mind map link */
 .module-content a {
@@ -318,4 +318,150 @@ div[ref="mindMapRef"] {
 svg {
   max-width: 100%;
   height: auto;
+}
+
+/* Mobile View Adjustments */
+@media (max-width: 768px) {
+  .learning-page-container {
+    flex-direction: column; /* Stack sidebar and content vertically */
+    overflow-x: hidden; /* Prevent horizontal scrolling */
+  }
+
+  .learning-content {
+    margin-left: 0; /* Remove sidebar margin since it moves to bottom */
+    width: 100%; /* Full width */
+    padding: 20px; /* Reduce padding */
+    height: auto; /* Dynamic height */
+    min-height: calc(100vh - 80px); /* Adjust for bottom sidebar */
+    padding-bottom: 80px; /* Prevent overlap with fixed bottom sidebar */
+    overflow-y: auto; /* Allow vertical scrolling */
+    overflow-x: hidden; /* Prevent horizontal scrolling */
+    box-sizing: border-box; /* Include padding in height */
+  }
+
+  .learning-title {
+    font-size: 2em; /* Smaller title */
+    margin-bottom: 20px;
+  }
+
+  .loading-container {
+    height: calc(100vh - 80px); /* Adjust for sidebar */
+    padding-bottom: 80px; /* Prevent overlap */
+  }
+
+  .loading-gif {
+    width: 100px; /* Slightly smaller */
+    height: 100px;
+  }
+
+  .course-info {
+    padding: 15px; /* Reduce padding */
+    gap: 15px; /* Smaller gap */
+  }
+
+  .course-section {
+    padding: 15px; /* Reduce padding */
+  }
+
+  .course-section h2 {
+    font-size: 1.5em; /* Smaller heading */
+    margin-bottom: 10px;
+  }
+
+  .course-section h3 {
+    font-size: 1.2em; /* Smaller subheading */
+    margin: 15px 0 8px;
+  }
+
+  .course-section h4 {
+    font-size: 1em; /* Smaller subheading */
+    margin: 10px 0 5px;
+  }
+
+  .course-section p {
+    font-size: 1em; /* Smaller text */
+    margin-bottom: 10px;
+  }
+
+  .course-section ul {
+    margin-left: 20px; /* Slightly smaller indent */
+  }
+
+  .course-section li {
+    font-size: 1em; /* Smaller list items */
+    margin-bottom: 5px;
+  }
+
+  .apply-button,
+  .previous-button,
+  .next-button,
+  .NextQuestion {
+    padding: 10px 20px; /* Slightly smaller buttons */
+    font-size: 1em;
+    margin: 8px 8px 0 0;
+  }
+
+  .empty-content {
+    padding: 30px; /* Reduce padding */
+  }
+
+  .empty-content h2 {
+    font-size: 1.8em; /* Smaller heading */
+    margin-bottom: 10px;
+  }
+
+  .empty-content p {
+    font-size: 1.1em; /* Smaller text */
+  }
+
+  .question-course-info {
+    padding: 15px; /* Reduce padding */
+    gap: 15px; /* Smaller gap */
+  }
+
+  .question-course-section {
+    padding: 15px; /* Reduce padding */
+  }
+
+  .question-course-section h2 {
+    font-size: 1.5em; /* Smaller heading */
+    margin-bottom: 10px;
+  }
+
+  .question-course-section h3 {
+    font-size: 1.1em; /* Smaller subheading */
+    margin-bottom: 15px;
+  }
+
+  .question-course-section label {
+    padding: 10px 12px; /* Smaller padding */
+    font-size: 1em; /* Smaller text */
+    margin-bottom: 8px;
+  }
+
+  .question-course-section input[type="radio"] {
+    width: 16px; /* Slightly smaller radio */
+    height: 16px;
+  }
+
+  .speak_container {
+    width: 40px; /* Smaller speaker button */
+    height: 40px;
+    margin-bottom: 15px;
+  }
+
+  .speaker_icon {
+    width: 20px; /* Smaller icon */
+    height: 20px;
+  }
+
+  .speak_container:hover .speaker_icon {
+    width: 24px; /* Adjusted hover size */
+    height: 24px;
+  }
+
+  .module-section {
+    padding: 15px; /* Reduce padding */
+    margin-bottom: 15px;
+  }
 }

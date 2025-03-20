@@ -157,3 +157,113 @@
 .stats-back-button:hover {
   background-color: #45a049;
 }
+
+/* Mobile View Adjustments */
+@media (max-width: 768px) {
+  .stats-main-container {
+    max-width: 100%; /* Full width */
+    padding: 15px; /* Reduce padding */
+    height: auto; /* Dynamic height */
+    min-height: calc(100vh - 80px); /* Adjust for bottom sidebar */
+    overflow-x: hidden; /* Prevent horizontal scrolling */
+    overflow-y: auto; /* Allow vertical scrolling */
+    border-radius: 0; /* Remove border radius for full-width look */
+    margin-left: 0; /* Remove any sidebar offset */
+    padding-bottom: 80px; /* Prevent overlap with fixed bottom sidebar */
+  }
+
+  .stats-header {
+    flex-direction: column; /* Stack header elements */
+    padding: 10px 15px; /* Reduce padding */
+    gap: 10px; /* Add spacing */
+  }
+
+  .stats-header-title {
+    font-size: 20px; /* Smaller title */
+  }
+
+  .stats-header-back-button {
+    padding: 6px 12px; /* Smaller button */
+    font-size: 14px; /* Smaller text */
+  }
+
+  .stats-course-summary {
+    padding: 15px; /* Reduce padding */
+  }
+
+  .stats-course-id {
+    font-size: 14px; /* Smaller text */
+  }
+
+  .stats-course-title {
+    font-size: 24px; /* Smaller title */
+    margin: 8px 0; /* Reduce margin */
+  }
+
+  .stats-metrics-section {
+    flex-direction: column; /* Stack metrics vertically */
+    gap: 20px; /* Reduce gap */
+    padding: 15px; /* Reduce padding */
+  }
+
+  .stats-metric-card {
+    width: 100%; /* Full width */
+    max-width: 150px; /* Cap width */
+  }
+
+  .stats-metric-label {
+    font-size: 14px; /* Smaller text */
+    margin-top: 8px; /* Reduce margin */
+  }
+
+  .stats-details-section {
+    padding: 15px; /* Reduce padding */
+    margin: 15px 0; /* Reduce margin */
+  }
+
+  .stats-details-title {
+    font-size: 18px; /* Smaller title */
+    margin-bottom: 10px; /* Reduce margin */
+  }
+
+  .stats-details-grid {
+    grid-template-columns: 1fr; /* Single column */
+    gap: 10px; /* Reduce gap */
+  }
+
+  .stats-detail-item {
+    padding: 8px; /* Reduce padding */
+  }
+
+  .stats-performance-section {
+    padding: 15px; /* Reduce padding */
+    margin: 15px 0; /* Reduce margin */
+  }
+
+  .stats-performance-title {
+    font-size: 18px; /* Smaller title */
+    margin-bottom: 10px; /* Reduce margin */
+  }
+
+  .stats-radar-chart {
+    max-width: 100%; /* Full width */
+    padding: 10px; /* Add padding for spacing */
+  }
+
+  .stats-loader-wrapper,
+  .stats-error-wrapper {
+    height: calc(100vh - 80px); /* Adjust for sidebar */
+    padding-bottom: 80px; /* Prevent overlap */
+  }
+
+  .stats-loader-text,
+  .stats-error-text {
+    font-size: 16px; /* Smaller text */
+    margin-bottom: 15px; /* Reduce margin */
+  }
+
+  .stats-back-button {
+    padding: 8px 16px; /* Smaller button */
+    font-size: 14px; /* Smaller text */
+  }
+}

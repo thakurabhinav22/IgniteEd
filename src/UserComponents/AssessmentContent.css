@@ -245,3 +245,130 @@ body {
 .submit-btn:hover {
   background-color: #0062CC;
 }
+
+/* Mobile View Adjustments */
+@media (max-width: 768px) {
+  .quiz-page {
+    min-height: calc(100vh - 80px); /* Adjust for bottom sidebar */
+    height: auto; /* Dynamic height */
+    overflow-x: hidden; /* Prevent horizontal scrolling */
+    overflow-y: auto; /* Allow vertical scrolling */
+    padding-bottom: 80px; /* Prevent overlap with fixed bottom sidebar */
+    align-items: flex-start; /* Align content to top */
+  }
+
+  .quiz-wrapper {
+    max-width: 100%; /* Full width */
+    padding: 20px; /* Reduce padding */
+  }
+
+  .loading-screen {
+    min-height: calc(50vh - 80px); /* Adjust for sidebar */
+    padding-bottom: 80px; /* Prevent overlap */
+  }
+
+  .spinner {
+    width: 32px; /* Smaller spinner */
+    height: 32px;
+    border-width: 3px; /* Adjust border thickness */
+  }
+
+  .loading-screen p {
+    font-size: 14px; /* Smaller text */
+    margin-top: 12px; /* Reduce margin */
+  }
+
+  .error-panel {
+    padding: 16px; /* Reduce padding */
+    border-radius: 8px; /* Slightly smaller radius */
+  }
+
+  .error-panel p {
+    font-size: 14px; /* Smaller text */
+    margin-bottom: 12px; /* Reduce margin */
+  }
+
+  .back-btn {
+    padding: 8px 16px; /* Smaller button */
+    font-size: 12px; /* Smaller text */
+  }
+
+  .quiz-start-panel {
+    padding: 20px; /* Reduce padding */
+    border-radius: 8px; /* Slightly smaller radius */
+  }
+
+  .quiz-start-panel h1 {
+    font-size: 24px; /* Smaller title */
+    margin-bottom: 12px; /* Reduce margin */
+  }
+
+  .quiz-start-panel p {
+    font-size: 14px; /* Smaller text */
+    margin-bottom: 16px; /* Reduce margin */
+  }
+
+  .start-btn, .certificate-btn {
+    padding: 10px 20px; /* Smaller buttons */
+    font-size: 14px; /* Smaller text */
+  }
+
+  .quiz-content {
+    padding: 20px; /* Reduce padding */
+    border-radius: 8px; /* Slightly smaller radius */
+  }
+
+  .quiz-content h1 {
+    font-size: 20px; /* Smaller title */
+    margin-bottom: 16px; /* Reduce margin */
+  }
+
+  .progress-indicator {
+    height: 6px; /* Thinner progress bar */
+    margin-bottom: 16px; /* Reduce margin */
+  }
+
+  .question-panel {
+    padding: 16px; /* Reduce padding */
+    border-radius: 6px; /* Slightly smaller radius */
+  }
+
+  .question-info {
+    flex-direction: column; /* Stack info vertically */
+    align-items: flex-start; /* Align to start */
+    gap: 8px; /* Add spacing */
+    margin-bottom: 12px; /* Reduce margin */
+  }
+
+  .question-number {
+    font-size: 16px; /* Smaller text */
+  }
+
+  .question-type {
+    font-size: 12px; /* Smaller text */
+  }
+
+  .question-text {
+    font-size: 14px; /* Smaller text */
+    margin-bottom: 16px; /* Reduce margin */
+  }
+
+  .answer-input {
+    padding: 10px; /* Reduce padding */
+    font-size: 12px; /* Smaller text */
+    margin-bottom: 16px; /* Reduce margin */
+  }
+
+  .short-answer {
+    max-width: 100%; /* Full width in mobile */
+  }
+
+  .long-form, .coding {
+    min-height: 100px; /* Slightly smaller height */
+  }
+
+  .submit-btn {
+    padding: 10px 20px; /* Smaller button */
+    font-size: 14px; /* Smaller text */
+  }
+}
