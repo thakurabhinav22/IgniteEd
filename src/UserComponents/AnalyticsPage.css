@@ -4,6 +4,8 @@
   min-height: 100vh;
   background: linear-gradient(135deg, #eef2f6 0%, #ffffff 100%);
   font-family: 'Roboto', Arial, sans-serif;
+  position: relative;
+  z-index: 1; /* Base layer */
 }
 
 /* Main Content */
@@ -11,12 +13,16 @@
   flex: 1;
   margin-left: 250px;
   padding: 40px;
+  position: relative;
+  z-index: 2; /* Above container */
 }
 
 /* Header */
 .analytics-header {
   margin-bottom: 40px;
   text-align: center;
+  position: relative;
+  z-index: 3; /* Above main content */
 }
 
 .analytics-header h1 {
@@ -41,6 +47,8 @@
   gap: 25px;
   margin-bottom: 40px;
   flex-wrap: wrap;
+  position: relative;
+  z-index: 4; /* Above header */
 }
 
 .stat-box {
@@ -50,11 +58,14 @@
   text-align: center;
   width: 180px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
-  transition: transform 0.2s ease;
+  transition: transform 0.2s ease, z-index 0s;
+  position: relative;
+  z-index: 5; /* Foreground element */
 }
 
 .stat-box:hover {
   transform: translateY(-5px);
+  z-index: 6; /* Above other stat boxes on hover */
 }
 
 .stat-box h3 {
@@ -75,6 +86,8 @@
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
   gap: 20px;
+  position: relative;
+  z-index: 4; /* Same level as stats-overview */
 }
 
 /* Chart Card */
@@ -84,10 +97,13 @@
   box-shadow: 0 6px 14px rgba(0, 0, 0, 0.06);
   padding: 20px;
   transition: box-shadow 0.3s ease;
+  position: relative;
+  z-index: 5; /* Foreground element */
 }
 
 .chart-card:hover {
   box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+  z-index: 6; /* Above other chart cards on hover */
 }
 
 .chart-card h2 {
@@ -102,6 +118,7 @@
   position: relative;
   height: 280px;
   width: 100%;
+  z-index: 5; /* Consistent with chart-card */
 }
 
 /* Specific Pie Chart Wrapper */
@@ -109,6 +126,8 @@
   height: 220px;
   max-width: 280px;
   margin: 0 auto;
+  position: relative;
+  z-index: 5; /* Consistent with chart-card */
 }
 
 /* Stats Details */
@@ -136,67 +155,69 @@
   font-size: 20px;
   color: #6B7280;
   padding: 40px;
+  position: relative;
+  z-index: 3; /* Above main content, below stats/charts */
 }
 
 /* Responsive Design */
 @media (max-width: 1024px) {
   .charts-container {
-      grid-template-columns: 1fr;
+    grid-template-columns: 1fr;
   }
   .analytics-main-content {
-      padding: 20px;
+    padding: 20px;
   }
   .chart-pie-wrapper {
-      max-width: 250px;
+    max-width: 250px;
   }
 }
 
 @media (max-width: 768px) {
   .analytics-main-content {
-      margin-left: 0;
-      padding: 15px;
+    margin-left: 0;
+    padding: 15px;
   }
   .analytics-header h1 {
-      font-size: 28px;
+    font-size: 28px;
   }
   .analytics-header p {
-      font-size: 16px;
+    font-size: 16px;
   }
   .stat-box {
-      width: 140px;
+    width: 140px;
   }
   .chart-wrapper {
-      height: 250px;
+    height: 250px;
   }
   .chart-pie-wrapper {
-      height: 200px;
-      max-width: 200px;
+    height: 200px;
+    max-width: 200px;
   }
 }
 
 @media (max-width: 480px) {
   .analytics-main-content {
-      padding: 10px;
+    padding: 10px;
   }
   .analytics-header h1 {
-      font-size: 24px;
+    font-size: 24px;
   }
   .analytics-header p {
-      font-size: 14px;
+    font-size: 14px;
   }
   .stats-overview {
-      flex-direction: column;
-      align-items: center;
+    flex-direction: column;
+    align-items: center;
   }
   .stat-box {
-      width: 100%;
-      max-width: 220px;
+    width: 100%;
+    max-width: 220px;
   }
   .chart-wrapper {
-      height: 220px;
+    height: 220px;
   }
   .chart-pie-wrapper {
-      height: 180px;
-      max-width: 180px;
+    height: 180px;
+    max-width: 180px;
   }
 }
