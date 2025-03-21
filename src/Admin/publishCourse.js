@@ -64,50 +64,50 @@ const PublishCourse = () => {
         ? "Add a 'mindMaps' field for each module with a concise mind map (50-100 words) formatted in Markdown. Use '# ' for main topics and '- ' for subtopics to create a hierarchical structure, organizing the module’s key concepts visually. Include at least one main topic and 2-3 subtopics per module, using emojis (e.g., 🔗, 🏛️) to enhance readability where applicable."
         : "Do not include mind maps.";
 
-      const result = await model.generateContent(`
-        Convert the provided course content into a structured JSON format while keeping all data intact. Ensure that no modifications are made to the original content except for formatting it into JSON. Return only JSON, nothing else.
-      
-        Follow this JSON structure:
-      
-        {
-          "title": "<Course Title>",
-          "introduction": "<Course Introduction>",
-          "noOfModules": <number_of_modules>,
-          "modules": [
-            {
-              "moduleTitle": "<Module 1 Title>",
-              "moduleOverview": "<Module 1 Overview>",
-              "detailedExplanation": "<Module 1 Detailed Explanation>",
-              "examplesAndAnalogies": "<Module 1 Examples and Analogies>",
-              "keyTakeaways": [
-                "<Key Takeaway 1>",
-                "<Key Takeaway 2>",
-                "<Key Takeaway 3>"
-              ]${
-                includeYouTubeLinks
-                  ? `,
+        const result = await model.generateContent(`
+          Convert the provided course content into a structured JSON format while keeping all data intact. Ensure that no modifications are made to the original content except for formatting it into JSON. Return only JSON, nothing else.
+        
+          Follow this JSON structure:
+        
+          {
+            "title": "<Course Title>",
+            "introduction": "<Course Introduction>",
+            "noOfModules": <number_of_modules>,
+            "modules": [
+              {
+                "moduleTitle": "<Module 1 Title>",
+                "moduleOverview": "<Module 1 Overview>",
+                "detailedExplanation": "<Module 1 Detailed Explanation>",
+                "examplesAndAnalogies": "<Module 1 Examples and Analogies>",
+                "keyTakeaways": [
+                  "<Key Takeaway 1>",
+                  "<Key Takeaway 2>",
+                  "<Key Takeaway 3>"
+                ]${
+                  includeYouTubeLinks
+                    ? `,
                 "Refytvideo": [
-                  "<YouTube Video URL 1 (no direct url generate using keyowrds [like youtube.com/watch?=blockchain+deatiled+exmplanation])>",
-                  "<YouTube Video URL 2 (no direct url generate using keyowrds [like youtube.com/watch?=blockchain+deatiled+exmplanation])>"
+                  "https://www.youtube.com/results?search_query=<relevant keywords from detailedExplanation>+explained",
+                  "https://www.youtube.com/results?search_query=<relevant keywords from examplesAndAnalogies>+tutorial"
                 ]`
-                  : ""
-              }${
-        includeMindMaps
-          ? `,
+                    : ""
+                }${
+                  includeMindMaps
+                    ? `,
                 "mindMaps": "<Concise mind map (50-100 words) in Markdown>"
                 `
-          : ""
-      }
-            }
-          ]
-        }
-      
-         Ensure that:
-
+                    : ""
+                }
+              }
+            ]
+          }
+        
+          Ensure that:
+        
           The JSON is well-formatted and follows the expected schema precisely.
           The module count reflects the actual number of modules in the content.
           Key takeaways are listed as an array for better readability.
-          ${youtubeInstruction}
+          YouTube URLs, when included, use the official YouTube search format (https://www.youtube.com/results?search_query=) with keywords extracted from the course content (e.g., from "detailedExplanation" or "examplesAndAnalogies") and appended with relevant terms like "explained" or "tutorial" to find related videos.
           ${mindMapInstruction}
           Mind maps should contain detailed and meaningful nodes relevant to the module’s content.
           Avoid generic or placeholder nodes like "undefined", as they provide no value and are redundant across modules.
@@ -119,10 +119,10 @@ const PublishCourse = () => {
           Ensure that explanatory points follow the subheadings, rather than being inline with bullet points.
           Use - for bullet points under subheadings, but keep definitions and descriptions in separate lines.
           Ensure spacing between different sections for readability.
-      
-        **Course Content:**  
-        ${updatedContent}
-      `);
+        
+          **Course Content:**  
+          ${updatedContent}
+        `);
 
       const response = await result.response;
       generatedCourse = await response.text();
