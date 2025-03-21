@@ -54,85 +54,94 @@ const PublishCourse = () => {
   const handleGemini = async () => {
     if (isProcessing) return;
     setIsProcessing(true);
-
+  
     try {
       const youtubeInstruction = includeYouTubeLinks
         ? "Additionally, provide relevant YouTube video suggestions for each module based on the content. Each module should have at least 2 valid YouTube video URLs directly related to the module’s topic."
         : "Do not include YouTube video suggestions.";
-
+  
       const mindMapInstruction = includeMindMaps
         ? "Add a 'mindMaps' field for each module with a concise mind map (50-100 words) formatted in Markdown. Use '# ' for main topics and '- ' for subtopics to create a hierarchical structure, organizing the module’s key concepts visually. Include at least one main topic and 2-3 subtopics per module, using emojis (e.g., 🔗, 🏛️) to enhance readability where applicable."
         : "Do not include mind maps.";
-
-        const result = await model.generateContent(`
-          Convert the provided course content into a structured JSON format while keeping all data intact. Ensure that no modifications are made to the original content except for formatting it into JSON. Return only JSON, nothing else.
-        
-          Follow this JSON structure:
-        
-          {
-            "title": "<Course Title>",
-            "introduction": "<Course Introduction>",
-            "noOfModules": <number_of_modules>,
-            "modules": [
-              {
-                "moduleTitle": "<Module 1 Title>",
-                "moduleOverview": "<Module 1 Overview>",
-                "detailedExplanation": "<Module 1 Detailed Explanation>",
-                "examplesAndAnalogies": "<Module 1 Examples and Analogies>",
-                "keyTakeaways": [
-                  "<Key Takeaway 1>",
-                  "<Key Takeaway 2>",
-                  "<Key Takeaway 3>"
-                ]${
-                  includeYouTubeLinks
-                    ? `,
-                "Refytvideo": [
-                  "https://www.youtube.com/results?search_query=<relevant keywords from detailedExplanation>+explained",
-                  "https://www.youtube.com/results?search_query=<relevant keywords from examplesAndAnalogies>+tutorial"
-                ]`
-                    : ""
-                }${
-                  includeMindMaps
-                    ? `,
-                "mindMaps": "<Concise mind map (50-100 words) in Markdown>"
-                `
-                    : ""
-                }
+  
+      const result = await model.generateContent(`
+        Convert the provided course content into a structured JSON format while keeping all data intact. Ensure that no modifications are made to the original content except for formatting it into JSON. Return only JSON, nothing else.
+  
+        Follow this JSON structure:
+  
+        {
+          "title": "<Course Title>",
+          "introduction": "<Course Introduction>",
+          "noOfModules": <number_of_modules>,
+          "modules": [
+            {
+              "moduleTitle": "<Module 1 Title>",
+              "moduleOverview": "<Module 1 Overview>",
+              "detailedExplanation": "<Module 1 Detailed Explanation>",
+              "examplesAndAnalogies": "<Module 1 Examples and Analogies>",
+              "keyTakeaways": [
+                "<Key Takeaway 1>",
+                "<Key Takeaway 2>",
+                "<Key Takeaway 3>"
+              ]${
+                includeYouTubeLinks
+                  ? `,
+              "Refytvideo": [
+                "https://www.youtube.com/results?search_query=<relevant keywords from detailedExplanation>+explained",
+                "https://www.youtube.com/results?search_query=<relevant keywords from examplesAndAnalogies>+tutorial"
+              ]`
+                  : ""
+              }${
+                includeMindMaps
+                  ? `,
+              "mindMaps": "<Concise mind map (50-100 words) in Markdown>"
+              `
+                  : ""
               }
-            ]
-          }
-        
-          Ensure that:
-        
-          The JSON is well-formatted and follows the expected schema precisely.
-          The module count reflects the actual number of modules in the content.
-          Key takeaways are listed as an array for better readability.
-          YouTube URLs, when included, use the official YouTube search format (https://www.youtube.com/results?search_query=) with keywords extracted from the course content (e.g., from "detailedExplanation" or "examplesAndAnalogies") and appended with relevant terms like "explained" or "tutorial" to find related videos.
-          ${mindMapInstruction}
-          Mind maps should contain detailed and meaningful nodes relevant to the module’s content.
-          Avoid generic or placeholder nodes like "undefined", as they provide no value and are redundant across modules.
-          Ensure hierarchical structuring is clear, with well-defined main topics and subtopics.
-          Each mind map should capture the core concepts effectively while maintaining clarity and conciseness.
-          Markdown content should follow a structured format, with proper sectioning:
-          Use # for main headings.
-          Use ## for subheadings.
-          Ensure that explanatory points follow the subheadings, rather than being inline with bullet points.
-          Use - for bullet points under subheadings, but keep definitions and descriptions in separate lines.
-          Ensure spacing between different sections for readability.
-        
-          **Course Content:**  
-          ${updatedContent}
-        `);
-
+            }
+          ]
+        }
+  
+        Ensure that:
+  
+        The JSON is well-formatted and follows the expected schema precisely.
+        The module count reflects the actual number of modules in the content.
+        Key takeaways are listed as an array for better readability.
+        YouTube URLs, when included, use the official YouTube search format (https://www.youtube.com/results?search_query=) with keywords extracted from the course content (e.g., from "detailedExplanation" or "examplesAndAnalogies") and appended with relevant terms like "explained" or "tutorial" to find related videos.
+        ${mindMapInstruction}
+        Mind maps should contain detailed and meaningful nodes relevant to the module’s content.
+        Avoid generic or placeholder nodes like "undefined", as they provide no value and are redundant across modules.
+        Ensure hierarchical structuring is clear, with well-defined main topics and subtopics.
+        Each mind map should capture the core concepts effectively while maintaining clarity and conciseness.
+        Markdown content should follow a structured format, with proper sectioning:
+        Use # for main headings.
+        Use ## for subheadings.
+        Ensure that explanatory points follow the subheadings, rather than being inline with bullet points.
+        Use - for bullet points under subheadings, but keep definitions and descriptions in separate lines.
+        Ensure spacing between different sections for readability.
+  
+        **Course Content:**  
+        ${updatedContent}
+      `);
+  
       const response = await result.response;
-      generatedCourse = await response.text();
+      let generatedCourse = await response.text();
+  
+      // Robustly remove code block markers and extra whitespace
       generatedCourse = generatedCourse
-        .replace("```json", "")
-        .replace("```", "");
-
+        .replace(/```json/g, "") // Remove ```json
+        .replace(/```/g, "")     // Remove ```
+        .trim();                 // Remove leading/trailing whitespace
+  
+      // Validate that the result is proper JSON
+      try {
+        JSON.parse(generatedCourse); // Check if it’s valid JSON
+      } catch (e) {
+        throw new Error("Generated content is not valid JSON: " + e.message);
+      }
+  
       console.log(generatedCourse);
-    
-
+  
       Swal.fire({
         title: "Course Created!",
         icon: "success",
@@ -147,14 +156,13 @@ const PublishCourse = () => {
     } catch (error) {
       Swal.fire({
         title: "Error",
-        text: "An error occurred while generating the course.",
+        text: "An error occurred while generating the course: " + error.message,
         icon: "error",
       });
-      console.log(error);
+      console.error(error);
       setIsProcessing(false);
     }
   };
-
   const getCookie = (name) => {
     const match = document.cookie.match(
       new RegExp("(^| )" + name + "=([^;]+)")
