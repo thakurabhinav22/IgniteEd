@@ -77,11 +77,37 @@ export default function AdminDashboardContent() {
     }
 
     try {
+      // Step 1: Fetch the list of students who applied for this course
+      const appliedStudsRef = ref(database, `admin/${cookieValue}/courses/${courseId}/appliedStuds`);
+      const snapshot = await get(appliedStudsRef);
+      let studentIds = [];
+
+      if (snapshot.exists()) {
+        const appliedStuds = snapshot.val();
+        studentIds = Object.keys(appliedStuds); // Get the list of student IDs
+      }
+
+      // Step 2: Remove the course from each student's InProgressCourses
+      const deletePromises = studentIds.map(async (studentId) => {
+        const studentCourseRef = ref(database, `user/${studentId}/InProgressCourses/${courseId}`);
+        await remove(studentCourseRef);
+        console.log(`Course ${courseId} removed from student ${studentId}`);
+      });
+
+      // Wait for all student course deletions to complete
+      await Promise.all(deletePromises);
+
+      // Step 3: Delete the course from the admin node
       const courseRef = ref(database, `admin/${cookieValue}/courses/${courseId}`);
       await remove(courseRef);
+
+      // Step 4: Delete the course from the Courses node
       const CourseRef = ref(database, `Courses/${courseId}`);
-    await remove(CourseRef);
+      await remove(CourseRef);
+
+      // Step 5: Update the local state to remove the course from the UI
       setCourses(courses.filter((course) => course.courseId !== courseId));
+
       Swal.fire({
         title: "Deleted!",
         text: "The course has been deleted successfully.",

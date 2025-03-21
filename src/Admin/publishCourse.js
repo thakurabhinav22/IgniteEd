@@ -129,6 +129,7 @@ const PublishCourse = () => {
         Key takeaways are listed as an array for better readability.
         YouTube URLs, when included, use the official YouTube search format (https://www.youtube.com/results?search_query=) with keywords extracted from the course content (e.g., from "detailedExplanation" or "examplesAndAnalogies") and appended with relevant terms like "explained" or "tutorial" to find related videos.
         ${mindMapInstruction}
+        ${youtubeInstruction}
         **Course Content:**  
         ${updatedContent}
       `);

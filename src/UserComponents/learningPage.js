@@ -348,6 +348,7 @@ function LearningPage() {
             Branch: userBranch,
             atModule: 1,
             status: "applied",
+            courseComplete: false, // Added courseComplete field
             stats: {
               currentModule: 1,
               totalWarning: 0,
@@ -367,6 +368,7 @@ function LearningPage() {
       const adminStats = {
         ...adminData,
         atModule: userStats.CurrentModule,
+        courseComplete: userStats.completed, // Update courseComplete based on userStats
         stats: {
           currentModule: userStats.CurrentModule,
           totalWarning: userStats.Warning,
@@ -393,6 +395,7 @@ function LearningPage() {
       Branch: branch,
       atModule: 1,
       status: "applied",
+      courseComplete: false, // Initialize courseComplete as false
       stats: {
         currentModule: 1,
         totalWarning: 0,
@@ -1220,72 +1223,60 @@ function LearningPage() {
 
   // Function to parse Markdown and generate a Graphviz DOT string
   const generateDotFromMarkdown = (markdown) => {
+    if (!markdown) return "digraph G { }"; // Return an empty graph if markdown is invalid
+
+    // Parse Markdown into a hierarchical structure
     const lines = markdown.split("\n").map((line) => line.trim());
-    const hierarchy = {};
-    const nodeStyles = {
-      "🔗 What is Blockchain?": { color: "blue", shape: "ellipse" },
-      "🏛️ Key Components": { color: "green", shape: "box" },
-      "⚡ How It Works": { color: "orange", shape: "diamond" },
-      "🌍 Applications": { color: "purple", shape: "parallelogram" },
-      "✅ Advantages": { color: "darkgreen", shape: "note" },
-      "❌ Challenges": { color: "red", shape: "hexagon" },
-    };
-
+    const nodes = [];
+    const edges = [];
     let currentParent = null;
-    let currentLevel = 0;
+    let nodeCounter = 0; // To ensure unique node IDs
 
+    // Parse the Markdown lines
     lines.forEach((line) => {
-      if (line.startsWith("#")) {
-        const title = line.replace(/^#+\s*/, "").trim();
-        currentParent = title;
-        hierarchy[currentParent] = [];
-        currentLevel = 1;
-      } else if (line.startsWith("-")) {
-        const indentLevel = line.match(/^\s*-/)[0].length / 2 + 1;
-        const item = line.replace(/^\s*-\s*/, "").replace(/\*\*/g, "").trim();
-
-        if (indentLevel === 1 && currentParent) {
-          hierarchy[currentParent].push(item);
-        } else if (indentLevel > 1 && currentParent) {
-          const parentItems = hierarchy[currentParent];
-          let targetParent = parentItems[parentItems.length - 1];
-          for (let i = 2; i < indentLevel; i++) {
-            if (!hierarchy[targetParent]) hierarchy[targetParent] = [];
-            targetParent = hierarchy[targetParent][
-              hierarchy[targetParent].length - 1
-            ];
-          }
-          if (!hierarchy[targetParent]) hierarchy[targetParent] = [];
-          hierarchy[targetParent].push(item);
-        }
+      if (line.startsWith("# ")) {
+        // Main topic (root node)
+        const title = line.replace("# ", "").trim();
+        const nodeId = `node${nodeCounter++}`;
+        nodes.push({
+          id: nodeId,
+          label: `📚 ${title}`,
+          style: 'style=filled, fillcolor="#4CAF50", shape=ellipse, fontcolor="white"',
+        });
+        currentParent = nodeId;
+      } else if (line.startsWith("- ")) {
+        // Subtopic
+        if (!currentParent) return; // Skip if no parent is defined
+        const subtopic = line.replace("- ", "").trim();
+        const [label, description] = subtopic.split(":").map((part) => part.trim());
+        const nodeId = `node${nodeCounter++}`;
+        nodes.push({
+          id: nodeId,
+          label: description ? `${label}\\n${description}` : label,
+          style: 'style=filled, fillcolor="#2196F3", shape=box, fontcolor="white"',
+        });
+        edges.push({ from: currentParent, to: nodeId, label: "🔗" });
       }
     });
 
     // Generate DOT string
     let dot = `digraph G {
-      rankdir=LR;
+      rankdir=BT; // Bottom to top for a vertical layout
       bgcolor="#F9F9F9";
-      splines=ortho;
-    `;
+      node [fontname="Arial"];
+      edge [color="#555555", fontcolor="#555555", fontname="Arial"];
 
-    // Add nodes and edges
-    for (const [parent, children] of Object.entries(hierarchy)) {
-      const parentStyle = nodeStyles[parent] || {
-        color: "black",
-        shape: "oval",
-      };
-      dot += `  "${parent}" [style=filled, fillcolor="${parentStyle.color}", shape=${parentStyle.shape}, fontcolor="white"];\n`;
-      children.forEach((child) => {
-        const childStyle = nodeStyles[child] || {
-          color: "#AAAAAA",
-          shape: "rect",
-        };
-        dot += `  "${child}" [style=filled, fillcolor="${childStyle.color}", shape=${childStyle.shape}, fontcolor="black"];\n`;
-        dot += `  "${parent}" -> "${child}" [color="black"];\n`;
-      });
-    }
+      // Nodes
+      ${nodes
+        .map((node) => `"${node.id}" [label="${node.label}", ${node.style}];`)
+        .join("\n      ")}
 
-    dot += "}";
+      // Edges
+      ${edges
+        .map((edge) => `"${edge.from}" -> "${edge.to}" [label="${edge.label}"];`)
+        .join("\n      ")}
+    }`;
+
     return dot;
   };
 
@@ -1294,8 +1285,17 @@ function LearningPage() {
     if (!mindMapRef.current || !markdown) return;
 
     const dot = generateDotFromMarkdown(markdown);
+    const container = mindMapRef.current;
+    const width = container.clientWidth;
+    const height = container.clientHeight;
+
     d3.select(mindMapRef.current)
       .graphviz()
+      .width(width) // Set the width to the container's width
+      .height(height) // Set the height to the container's height
+      .zoom(true) // Enable zooming
+      .fit(true) // Fit the graph to the container
+      .scale(1) // Initial scale
       .renderDot(dot)
       .on("end", () => {
         console.log("Mind map rendered");
@@ -1593,7 +1593,7 @@ function LearningPage() {
           },
         }}
       >
-        <h2>Mind Map</h2>
+        <h2 style={{ marginBottom: "10px" }}>Mind Map</h2>
         <button
           onClick={closeMindMapModal}
           style={{
@@ -1608,7 +1608,14 @@ function LearningPage() {
         >
           ✕
         </button>
-        <div ref={mindMapRef} style={{ width: "100%", height: "500px" }}></div>
+        <div
+          ref={mindMapRef}
+          style={{
+            width: "100%",
+            height: "500px", // Fixed height, but fits within modal
+            overflow: "auto", // Allow scrolling if the mind map overflows
+          }}
+        ></div>
       </Modal>
     </div>
   );
