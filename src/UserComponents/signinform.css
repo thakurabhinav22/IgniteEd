@@ -5,7 +5,7 @@
   justify-content: center;
   width: 100vw;
   height: 100vh;
-  background-color: #121c2b;
+  background-color: #f5f5f5; /* Light gray background */
   font-family: Arial, sans-serif;
 }
 
@@ -14,11 +14,11 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  background-color: #182232; /* Slightly lighter dark background */
+  background-color: #ffffff; /* White background */
   padding: 30px;
-  color: #e0e0e0; /* Light text for dark background */
+  color: #333333; /* Dark text for light background */
   border-radius: 10px;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
   width: 100%;
   max-width: 450px;
 }
@@ -38,7 +38,7 @@
 h2 {
   font-size: 24px;
   font-weight: bold;
-  color: #e0e0e0; /* Light color for text */
+  color: #333333; /* Dark color for text */
   margin-top: 10px;
 }
 
@@ -47,10 +47,10 @@ h2 {
   width: 100%;
   padding: 0.75rem;
   margin: 0.5rem 0;
-  border: none;
+  border: 1px solid #dddddd;
   border-radius: 4px;
-  background-color: var(--input-bg-color);
-  color: var(--text-color);
+  background-color: #ffffff;
+  color: #333333;
   font-size: 1rem;
 }
 
@@ -78,7 +78,7 @@ h2 {
 
 /* Link Styles */
 p {
-  color: #8799b5;
+  color: #666666;
 }
 
 .Login {
@@ -126,7 +126,8 @@ input[type="checkbox"] {
   position: relative;
   width: 20px;
   height: 20px;
-  background-color: #1e2939;
+  background-color: #ffffff;
+  border: 1px solid #dddddd;
   border-radius: 4px;
   appearance: none;
 }
@@ -152,71 +153,71 @@ input[type="checkbox"]:checked::before {
 }
 
 .showpasswordText {
-  color: #8799b5;
+  color: #666666;
   display: inline;
 }
 
 /* Mobile View Adjustments */
 @media (max-width: 768px) {
   .signup-form-page {
-    height: auto; /* Dynamic height */
-    min-height: calc(100vh - 80px); /* Adjust for bottom sidebar */
-    overflow-x: hidden; /* Prevent horizontal scrolling */
-    overflow-y: auto; /* Allow vertical scrolling */
-    padding-bottom: 80px; /* Prevent overlap with fixed bottom sidebar */
+    height: auto;
+    min-height: calc(100vh - 80px);
+    overflow-x: hidden;
+    overflow-y: auto;
+    padding-bottom: 80px;
   }
 
   .signup-container {
-    max-width: 100%; /* Full width */
-    padding: 20px; /* Reduce padding */
-    border-radius: 0; /* Remove border radius for full-width look */
-    box-shadow: none; /* Optional: Remove shadow for cleaner mobile look */
+    max-width: 100%;
+    padding: 20px;
+    border-radius: 0;
+    box-shadow: none;
   }
 
   .logo-container {
-    margin-bottom: 15px; /* Reduce margin */
+    margin-bottom: 15px;
   }
 
   .logo {
-    width: 80px; /* Smaller logo */
+    width: 80px;
   }
 
   h2 {
-    font-size: 20px; /* Smaller title */
-    margin-top: 8px; /* Reduce margin */
+    font-size: 20px;
+    margin-top: 8px;
   }
 
   .input-field {
-    padding: 0.6rem; /* Slightly smaller padding */
-    font-size: 0.9rem; /* Smaller text */
-    margin: 0.4rem 0; /* Reduce margin */
+    padding: 0.6rem;
+    font-size: 0.9rem;
+    margin: 0.4rem 0;
   }
 
   .signup-button {
-    padding: 10px; /* Smaller button */
-    font-size: 14px; /* Smaller text */
-    margin-bottom: 12px; /* Reduce margin */
+    padding: 10px;
+    font-size: 14px;
+    margin-bottom: 12px;
   }
 
   .Login {
-    margin: 2% 0 0 0; /* Reduce margin */
-    gap: 4px; /* Reduce gap */
+    margin: 2% 0 0 0;
+    gap: 4px;
   }
 
   .login-link {
-    font-size: 14px; /* Smaller text */
+    font-size: 14px;
   }
 
   input[type="checkbox"] {
-    width: 18px; /* Slightly smaller checkbox */
+    width: 18px;
     height: 18px;
   }
 
   input[type="checkbox"]::before {
-    font-size: 14px; /* Smaller checkmark */
+    font-size: 14px;
   }
 
   .showpasswordText {
-    font-size: 14px; /* Smaller text */
+    font-size: 14px;
   }
 }

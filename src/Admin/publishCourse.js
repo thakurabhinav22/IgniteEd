@@ -131,6 +131,7 @@ const PublishCourse = () => {
         .replace("```", "");
 
       console.log(generatedCourse);
+    
 
       Swal.fire({
         title: "Course Created!",
