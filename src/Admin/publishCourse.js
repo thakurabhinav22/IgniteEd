@@ -1,4 +1,3 @@
-// PublishCourse.jsx
 import React, { useState, useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import AdminSidebar from "./adminSideBar";
@@ -32,9 +31,16 @@ const PublishCourse = () => {
   const API_KEY = process.env.REACT_APP_GEMINI;
   const genAI = new GoogleGenerativeAI(API_KEY);
   const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
-  let generatedCourse;
 
-  // Load Google CSE script when component mounts
+  // Utility function to get cookie value
+  const getCookie = (name) => {
+    const match = document.cookie.match(
+      new RegExp("(^| )" + name + "=([^;]+)")
+    );
+    return match ? match[2] : null;
+  };
+
+  // Load Google CSE script and fetch course count when component mounts
   useEffect(() => {
     const script = document.createElement("script");
     script.src = "https://cse.google.com/cse.js?cx=13cbaf0acfe7f4937";
@@ -51,24 +57,39 @@ const PublishCourse = () => {
     };
   }, []);
 
+  const fetchCourseCount = async (usercredAd) => {
+    const db = getDatabase();
+    const courseRef = ref(db, "users/" + usercredAd + "/coursesCount");
+    try {
+      const snapshot = await get(courseRef);
+      if (snapshot.exists()) {
+        setCourseCount(snapshot.val());
+      } else {
+        setCourseCount(0);
+      }
+    } catch (error) {
+      console.error("Error fetching course count:", error);
+    }
+  };
+
   const handleGemini = async () => {
-    if (isProcessing) return;
+    if (isProcessing) return null;
     setIsProcessing(true);
-  
+
     try {
       const youtubeInstruction = includeYouTubeLinks
         ? "Additionally, provide relevant YouTube video suggestions for each module based on the content. Each module should have at least 2 valid YouTube video URLs directly related to the module’s topic."
         : "Do not include YouTube video suggestions.";
-  
+
       const mindMapInstruction = includeMindMaps
         ? "Add a 'mindMaps' field for each module with a concise mind map (50-100 words) formatted in Markdown. Use '# ' for main topics and '- ' for subtopics to create a hierarchical structure, organizing the module’s key concepts visually. Include at least one main topic and 2-3 subtopics per module, using emojis (e.g., 🔗, 🏛️) to enhance readability where applicable."
         : "Do not include mind maps.";
-  
+
       const result = await model.generateContent(`
         Convert the provided course content into a structured JSON format while keeping all data intact. Ensure that no modifications are made to the original content except for formatting it into JSON. Return only JSON, nothing else.
-  
+
         Follow this JSON structure:
-  
+
         {
           "title": "<Course Title>",
           "introduction": "<Course Introduction>",
@@ -101,47 +122,34 @@ const PublishCourse = () => {
             }
           ]
         }
-  
+
         Ensure that:
-  
         The JSON is well-formatted and follows the expected schema precisely.
         The module count reflects the actual number of modules in the content.
         Key takeaways are listed as an array for better readability.
         YouTube URLs, when included, use the official YouTube search format (https://www.youtube.com/results?search_query=) with keywords extracted from the course content (e.g., from "detailedExplanation" or "examplesAndAnalogies") and appended with relevant terms like "explained" or "tutorial" to find related videos.
         ${mindMapInstruction}
-        Mind maps should contain detailed and meaningful nodes relevant to the module’s content.
-        Avoid generic or placeholder nodes like "undefined", as they provide no value and are redundant across modules.
-        Ensure hierarchical structuring is clear, with well-defined main topics and subtopics.
-        Each mind map should capture the core concepts effectively while maintaining clarity and conciseness.
-        Markdown content should follow a structured format, with proper sectioning:
-        Use # for main headings.
-        Use ## for subheadings.
-        Ensure that explanatory points follow the subheadings, rather than being inline with bullet points.
-        Use - for bullet points under subheadings, but keep definitions and descriptions in separate lines.
-        Ensure spacing between different sections for readability.
-  
         **Course Content:**  
         ${updatedContent}
       `);
-  
+
       const response = await result.response;
       let generatedCourse = await response.text();
-  
+
       // Robustly remove code block markers and extra whitespace
       generatedCourse = generatedCourse
-        .replace(/```json/g, "") // Remove ```json
-        .replace(/```/g, "")     // Remove ```
-        .trim();                 // Remove leading/trailing whitespace
-  
+        .replace(/```json/g, "")
+        .replace(/```/g, "")
+        .trim();
+
       // Validate that the result is proper JSON
       try {
-        JSON.parse(generatedCourse); // Check if it’s valid JSON
+        JSON.parse(generatedCourse);
       } catch (e) {
         throw new Error("Generated content is not valid JSON: " + e.message);
       }
-  
-      console.log(generatedCourse);
-  
+
+      setIsProcessing(false);
       Swal.fire({
         title: "Course Created!",
         icon: "success",
@@ -150,9 +158,10 @@ const PublishCourse = () => {
         showConfirmButton: false,
         timer: 3000,
       }).then(() => {
-        setIsProcessing(false);
         navigate("/Admin/Dashboard");
       });
+
+      return generatedCourse; // Return the validated JSON string
     } catch (error) {
       Swal.fire({
         title: "Error",
@@ -161,27 +170,7 @@ const PublishCourse = () => {
       });
       console.error(error);
       setIsProcessing(false);
-    }
-  };
-  const getCookie = (name) => {
-    const match = document.cookie.match(
-      new RegExp("(^| )" + name + "=([^;]+)")
-    );
-    return match ? match[2] : null;
-  };
-
-  const fetchCourseCount = async (usercredAd) => {
-    const db = getDatabase();
-    const courseRef = ref(db, "users/" + usercredAd + "/coursesCount");
-    try {
-      const snapshot = await get(courseRef);
-      if (snapshot.exists()) {
-        setCourseCount(snapshot.val());
-      } else {
-        setCourseCount(0);
-      }
-    } catch (error) {
-      console.error("Error fetching course count:", error);
+      return null; // Return null on failure
     }
   };
 
@@ -220,7 +209,12 @@ const PublishCourse = () => {
     setIsProcessing(true);
 
     try {
-      await handleGemini();
+      // Get the generated course content from handleGemini
+      const courseContent = await handleGemini();
+      if (!courseContent) {
+        throw new Error("Failed to generate course content");
+      }
+
       const usercredAd = getCookie("userSessionCredAd");
       const userSessionCredAd = getCookie("userSessionCredAd");
 
@@ -249,7 +243,7 @@ const PublishCourse = () => {
         thumbnailUrl: finalThumbnailUrl || "",
         bannerImageUrl: bannerImageUrl || "",
         numQuestions,
-        courseContent: generatedCourse,
+        courseContent, // Use the returned value directly
       };
 
       const courseRef = ref(db, coursePath);
@@ -262,7 +256,7 @@ const PublishCourse = () => {
     } catch (error) {
       setIsProcessing(false);
       console.error("Error during course publishing:", error);
-      alert("Error occurred during course creation");
+      alert("Error occurred during course creation: " + error.message);
     }
   };
 
@@ -396,12 +390,6 @@ const PublishCourse = () => {
           </div>
 
           <div className="button-group">
-            {/* <button
-              onClick={() => navigate("/Admin/CreateCourse")}
-              className="revert-button"
-            >
-              Revert to Edit
-            </button> */}
             <button onClick={handleShowContent} className="view-content-button">
               View Course Content
             </button>
