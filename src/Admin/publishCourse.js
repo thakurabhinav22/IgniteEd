@@ -87,8 +87,8 @@ const PublishCourse = () => {
                 includeYouTubeLinks
                   ? `,
                 "Refytvideo": [
-                  "<YouTube Video URL 1>",
-                  "<YouTube Video URL 2>"
+                  "<YouTube Video URL 1 (no direct url generate using keyowrds [like youtube.com/watch?=blockchain+deatiled+exmplanation])>",
+                  "<YouTube Video URL 2 (no direct url generate using keyowrds [like youtube.com/watch?=blockchain+deatiled+exmplanation])>"
                 ]`
                   : ""
               }${
