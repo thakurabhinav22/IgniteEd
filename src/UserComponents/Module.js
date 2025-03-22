@@ -58,7 +58,7 @@ function Module() {
             onChange={(e) => setSearchQuery(e.target.value)}
             className="search-input"
           />
-          <select
+          {/* <select
             value={filter}
             onChange={(e) => setFilter(e.target.value)}
             className="filter-select"
@@ -66,7 +66,7 @@ function Module() {
             <option value="recent">Recently Uploaded</option>
             <option value="mostLiked">Most Liked</option>
             <option value="category">Category</option>
-          </select>
+          </select> */}
         </div>
       </div>
 
