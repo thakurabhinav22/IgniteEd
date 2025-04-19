@@ -38,7 +38,7 @@ export default function HomePage() {
       <section className="section hero-section" id="hero">
         <div className="hero-content">
           <h1 className="fade-up slide-in">
-          IgnitEd: <span className="highlight">AI-Powered Education</span>
+          IgnitEd: <span className="highlight">Learning Path Dashboard for Enhanceing Skill</span>
           </h1>
           <p className="fade-up slide-in">
             Elevate learning and management with AI-driven precision. Master skills and optimize resources seamlessly.
