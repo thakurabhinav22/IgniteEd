@@ -66,37 +66,19 @@ It integrates **AI, Firebase, and web technologies** to deliver a **unified and 
 ---
 
 ## 🚀 Deployment
-- The project is deployed live here:  
-👉 [Live Demo Link](https://your-deployment-link.com)  
-*(Live link ensures functionality is scored higher than video demo)*
+- 🔗 **Live Demo:** [https://theignited.vercel.app/](https://theignited.vercel.app/)  
+- 🎥 **Demo Video:** [Watch on YouTube](https://youtu.be/k9XP8827NJg)
 
----
-
-## 📂 Project Structure
-Ignited/
-│-- frontend/ # React.js codebase for Student & Admin portal
-│-- backend/ # Flask APIs & AI integration
-│-- firebase/ # Firebase configuration & authentication
-│-- models/ # Saved AI/ML model files (e.g., .h5 if used)
-│-- README.md # Documentation
-
+*(Live deployment ensures functionality is scored higher than just a video demo.)*
 
 ---
 
 ## 🤖 AI Model
-- AI is used for **quiz generation, course structuring, and personalized recommendations**.
+- AI is used for **quiz generation, course structuring, and personalized recommendations**.  
+- API key is used so no trained model file is included in this project.
 
 ---
 
-## 📜 Submission Notes
-- ✅ GitHub repository is maintained.  
-- ✅ Well-documented README (this file).  
-- ✅ Solo project, not team-built.  
-- ✅ Live deployment link provided (higher scoring).  
-- ✅ AI model file included.  
-- ✅ Built in the respective month (with improvements validated).  
-
----
 
 ## 👨‍💻 Author
 **Abhinav Thakur**  
